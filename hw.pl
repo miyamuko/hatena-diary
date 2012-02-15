@@ -204,7 +204,7 @@ sub diff_main {
     close $fh;
 
     my $filename = text_filename($year,$month,$day);
-    my $cmd = "diff $tmpfilename $filename";
+    my $cmd = "diff -u $tmpfilename $filename";
     system $cmd;
 }
 
