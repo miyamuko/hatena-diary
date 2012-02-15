@@ -1,3 +1,4 @@
+# -*- encoding: UTF-8 -*-
 class HTMLSplit
 =begin Start of Document
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">

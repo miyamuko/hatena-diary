@@ -1,3 +1,5 @@
+require "kconv"
+
 class HatenaPreviewHandler < WEBrick::HTTPServlet::DefaultFileHandler
   include ERB::Util
 
@@ -20,7 +22,7 @@ class HatenaPreviewHandler < WEBrick::HTTPServlet::DefaultFileHandler
 
     parser = Text::Hatena.new
     parser.parse(body)
-    body = parser.html
+    body = parser.html.toutf8
 
     res['Content-Type'] = "text/html"
     res.body = TEMPLATE.result(binding)
