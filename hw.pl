@@ -831,7 +831,7 @@ sub load_diary_entry($$$) {
     }
 
     # Check entry exist.
-    $r->content =~ /<form .*?action="\.\/edit" .*?>(.*<\/textarea>)/s;
+    $r->content =~ /<form .*?action="\/$username\/edit" .*?>(.*<\/textarea>)/s;
     my $form_data = $1;
 
     $form_data =~ /<input type="hidden" name="date" value="(\d\d\d\d\d\d\d\d)">/;
@@ -843,10 +843,10 @@ sub load_diary_entry($$$) {
     
     # Get title and body.
     my $title = "";
-    if ($form_data =~ /<input name="title" .*?value="(.*?)"/) {
+    if ($form_data =~ /<input name="title" .*?value="(.*?)".*?/) {
         $title = $1;
     }
-    $form_data =~ /<textarea .*?>(.*?)<\/textarea>/s;
+    $form_data =~ /<textarea .*?name="body".*?>(.*?)<\/textarea>/s;
     my $body = $1;
 
     # Unescape string.
