@@ -18,7 +18,7 @@ module Text
           break unless @pattern =~ l
           l = c.shiftline
           c.htmllines("#{t}\t<tr>")
-          l.scan(/([^\|]+)\|/) do |$_, *|
+          l.scan(/([^\|]+)\|/) do |_, *|
             if sub!(/^\*/, "")
               c.htmllines("#{t}\t\t<th>#{$_}</th>")
             else

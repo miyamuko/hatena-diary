@@ -1,3 +1,4 @@
+# -*- encoding: UTF-8 -*-
 require "time"
 
 HW = "perl ./hw.pl -c"
