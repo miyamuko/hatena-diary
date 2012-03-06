@@ -1,0 +1,40 @@
+
+*p1*[xyzzy][power-usage]power-usage 1.3.0 をリリースしました
+
+[http://miyamuko.s56.xrea.com/xyzzy/power-usage/intro.htm:title=power-usage] 1.3.0 をリリースしました。
+
+
+M-x show-power-usage-graph でグラフ表示ができるようになりました。
+
+
+[http://miyamuko.s56.xrea.com/xyzzy/images/power-usage-graph.png:image:w400]
+
+
+ドキュメントに書き忘れたのですが、グラフバッファでは以下のキーが使えます。
+
+- a: 自動更新をトグル
+- r: 手動で更新
+- q; バッファを閉じる
+
+
+
+*p2*[xyzzy][grep-a-lot]grep-a-lot 1.1.0 をリリースしました
+
+[http://miyamuko.s56.xrea.com/xyzzy/grep-a-lot/intro.htm:title=grep-a-lot] 1.1.0 をリリースしました。
+
+outline-tree2 と一緒に使った場合に、よりうまく動くようにしました。
+
+
+[http://miyamuko.s56.xrea.com/xyzzy/images/grep-a-lot.png:image:w400]
+
+
+
+*p3*[xyzzy][grep-a-lot]guidgen 1.2.0 をリリースしました
+
+[http://miyamuko.s56.xrea.com/xyzzy/guidgen/intro.htm:title=guidgen] 1.2.0 でグラフ表示に対応しました。
+
+
+「小文字で GUID を生成」というメニューを追加しました。
+
+
+[http://miyamuko.s56.xrea.com/xyzzy/images/guidgen.png:image:w400]

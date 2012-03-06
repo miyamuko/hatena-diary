@@ -1,0 +1,15 @@
+
+*p1*[xyzzy][cygwin-mount]cygwin-mount 1.0.0 リリース
+
+>http://white.s151.xrea.com/wiki/index.php?diary%2F2006-08-23%2Fcygwin-mount:title>
+(ed::cygwin-mount-cygdrive-prefix)
+
+しとかないと /cygmount から始まるパスが変換できない。
+<<
+
+2 年前に報告いただいていた /cygdrive 問題をやっと修正してリリースしました。
+これで Cygwin 版の Git の commit log editor に xyzzy を使えるようになります。
+
+
+あと、cygwin-mount-winpath-to-cygpath も名前を変えつつ取り込ませてもらいました。
+ありがとうございました。

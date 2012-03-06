@@ -1,0 +1,74 @@
+
+*p1*[xyzzy] cygterm
+
+xyzzy の中で cygwin を動かします。
+
+[http://www1.neweb.ne.jp/wa/sinj/xyzzy/tterm.html:title=tterm] と [http://www.dd.iij4u.or.jp/~nsym/cygwin/cygterm/:title=cygterm] が必要です。
+
+><pre class="source">
+&#40;<span class="keyword1">require</span> <span class="string">&quot;tterm&quot;</span>&#41;
+
+&#40;<span class="keyword1">defvar</span> &#42;cygterm&#45;exe&#42; <span class="string">&quot;cygterm.exe&quot;</span>&#41;
+&#40;<span class="keyword1">defvar</span> &#42;cygterm&#45;options&#42; <span class="keyword3">nil</span>&#41;
+&#40;<span class="keyword1">defvar</span> &#42;cygterm&#45;xyzzy&#45;exe&#42; &#40;<span class="keyword1">merge&#45;pathnames</span> <span class="string">&quot;xyzzycli.exe&quot;</span> &#40;<span class="keyword1">si&#58;system&#45;root</span>&#41;&#41;&#41;
+&#40;<span class="keyword1">defvar</span> &#42;cygterm&#45;register&#45;menu&#45;p&#42; <span class="keyword3">t</span>&#41;
+
+&#40;<span class="keyword1">defun</span> cygterm &#40;&#41;
+  &#40;<span class="keyword1">interactive</span>&#41;
+  &#40;<span class="keyword1">call&#45;process</span> &#40;<span class="keyword1">format</span> <span class="keyword3">nil</span> <span class="string">&quot;\&quot;~A\&quot; &#45;t '~A &#45;f cygterm&#45;run&#45;tterm %s %d' ~{~A ~}&quot;</span>
+                        &#42;cygterm&#45;exe&#42;
+                        &#42;cygterm&#45;xyzzy&#45;exe&#42;
+                        &#42;cygterm&#45;options&#42;&#41;
+                &#58;no&#45;std&#45;handles <span class="keyword3">t</span> &#58;show &#58;minimize&#41;&#41;
+
+&#40;<span class="keyword1">defun</span> cygterm&#45;run&#45;tterm &#40;&#41;
+  &#40;<span class="keyword1">let</span> &#40;&#40;host &#40;<span class="keyword1">pop</span> si&#58;&#42;command&#45;line&#45;args&#42;&#41;&#41;
+        &#40;port &#40;<span class="keyword1">parse&#45;integer</span> &#40;<span class="keyword1">pop</span> si&#58;&#42;command&#45;line&#45;args&#42;&#41;&#41;&#41;
+        &#40;tterm&#58;&#58;&#42;tterm&#45;input&#45;encoding&#42; &#40;<span class="keyword1">or</span> &#40;<span class="keyword1">pop</span> si&#58;&#42;command&#45;line&#45;args&#42;&#41;
+                                           <span class="string">&quot;sjis&#45;with&#45;esc&quot;</span>&#41;&#41;&#41;
+    &#40;tterm&#58;&#58;tterm host port&#41;
+    &#40;tterm&#58;&#58;tterm&#45;char&#45;mode <span class="keyword3">t</span>&#41;
+    &#40;tterm&#58;&#58;tterm&#45;toggle&#45;local&#45;echo&#41;
+    &#40;<span class="keyword1">rename&#45;buffer</span> <span class="string">&quot;Cygwin&quot;</span>&#41;&#41;&#41;
+
+&#40;<span class="keyword1">defun</span> cygterm&#45;setup&#45;menu &#40;&#41;
+  &#40;<span class="keyword1">when</span> &#42;cygterm&#45;register&#45;menu&#45;p&#42;
+    &#40;<span class="keyword1">let</span> &#40;&#40;tools &#40;<span class="keyword1">get&#45;menu</span> &#42;app&#45;menu&#42; 'ed&#58;&#58;tools&#41;&#41;&#41;
+      &#40;<span class="keyword1">insert&#45;menu&#45;item</span> tools
+                        &#40;<span class="keyword1">get&#45;menu&#45;position</span> tools '&#58;above&#45;kbd&#45;macro&#41;
+                        'cygterm <span class="string">&quot;Cygwin&#40;&amp;C&#41;&quot;</span> 'cygterm&#41;&#41;&#41;&#41;
+
+&#40;<span class="keyword1">add&#45;hook</span> '<span class="keyword3">&#42;init&#45;app&#45;menus&#45;hook&#42;</span> 'cygterm&#45;setup&#45;menu&#41;
+</pre><
+
+使いかた。
+
+- cygterm.cfg の TERM に /path/to/xyzzy -f cygterm-run-tterm %s %d と書いて cygterm.exe を起動。
+  デフォルトは Shift_JIS なので EUC にしたければ -f cygterm-run-tterm %s %d euc-with-esc で。
+- *cygterm-exe* を設定して M-x cygterm
+
+[http://ja.poderosa.org/:title=Poderosa] のように勝手に cygwin.dll に PATH を通すということはしないので、cygterm のセットアップは自分でやってください。
+
+参考。
+[http://hie.s64.xrea.com/xyzzy/ml/msg08605.html:title=.tterm configuration for cygterm]
+
+
+
+*p2*[xyzzy] cygterm つづき
+
+[http://xyzzy.s53.xrea.com/wiki/?cmd=read&page=Games%2FTetris:title=tetris] を使っている場合、以下のようにしないとメニューが表示されなくなったりすることがあるかもしれません。
+あと、xyzzy 0.2.2.234 が必要です。
+
+>||
+--- tetris.l.orig	Sat Mar 05 07:44:34 2005
++++ tetris.l	Wed Jul 06 16:06:41 2005
+@@ -99,7 +99,7 @@
+ 
+ (defun add-menu-tetris ()
+   (let ((tools (get-menu *app-menu* 'tools)))
+-    (add-menu-item (get-menu tools 26 t)
++    (add-menu-item (get-menu tools ':|(>_<)-popup|)
+ 		   nil "Tetris(&T)" 'tetris)))
+ 
+ (defmacro for (var begin end &body body)
+||<

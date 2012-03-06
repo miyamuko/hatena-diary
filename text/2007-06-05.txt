@@ -1,0 +1,47 @@
+
+*p1*[cairo][Lisp]cl-cairo2
+
+>http://common-lisp.net/project/cl-cairo2/:title>
+cl-cairo2 package provides Common Lisp bindings for the Cairo API
+<<
+via http://raido.sakura.ne.jp/southly/rn/index.rb?1180948925.txt
+
+お、すごいなぁ。
+
+cl-cairo2 ってのは:
+- 長らくメンテされていない cl-cairo に代わる新たな cairo の Common Lisp バインディング
+- CFFI ベース
+- フォント周りやパターンなどいくつかの API はまだ実装されていない
+- win32 はサポートしていない
+- GPL
+
+ソースは SWIG で自動生成＋手書きかぁ。
+私は cairo のドキュメントが xml だったんで、xml をパースしてソースコードを生成するスクリプトを書いて自動生成しました (lisp でテキスト処理を書く気がおきないので ruby で)。手書きは 4 割ぐらいかな。
+
+
+>|lisp|
+(setf *context* (create-ps-context "text.ps" width height))
+;; white background
+(rectangle 0 0 width height)
+(set-source-rgb 1 1 1)
+(fill-path)
+||<
+
+こういう風に cairo context を引き数に取る関数では、引数を省略できるようにしたいなぁーって思ってたんで define-with-default-context あたりは参考になりました。どうも。
+
+
+
+そして一番驚いたのが、既に [http://common-lisp.net/project/cl-cairo2/tutorial.pdf:title=チュートリアル (PDF)] が存在するという現実。
+なんてこと。
+
+rcairo の[http://jp.rubyist.net/magazine/?0019-cairo:title=チュートリアル]と[http://cairo.rubyforge.org/doc/ja/:title=リファレンス]を見てね（はーと）で誤魔化している某 xycairo バインディングの作者とは大違いだな。
+
+とりあえず (incf Tamas) しておくか。
+
+あと、ハートをちりばめた example がかわいいので即効でインスパイアしよう。
+
+
+
+
+
+あと、tokyo の西のほう在住です。非コミュですいません。

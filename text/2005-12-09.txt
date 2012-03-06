@@ -1,0 +1,10 @@
+
+*p1*[xyzzy] sound 0.1
+
+暇なので xyzzy から wav ファイルを再生するためのライブラリを作りました。
+
+- アーカイブ: http://miyamuko.s56.xrea.com/xyzzy/archives/sound.zip
+- ドキュメント: http://miyamuko.s56.xrea.com/xyzzy/sound.html
+
+(sound-play "chimes.wav") のように使います。
+

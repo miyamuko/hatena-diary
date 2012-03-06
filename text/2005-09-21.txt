@@ -1,0 +1,77 @@
+
+*p1*[OLE] Excel の終了を待ち合わせる
+
+OLE で Excel (というか特定の workbook) の終了を待ち合わせる方法がよく分からなかったので調べたら以下のようになった。
+
+><pre class="source">
+<span class="keyword1">[]use[]</span>[] strict;[]
+<span class="keyword1">[]use[]</span>[] Win32::OLE []<span class="keyword3">[]qw[]</span>[]&#40;EVENTS&#41;;[]
+
+<span class="keyword1">[]my[]</span>[] $excel = Win32::OLE&#45;&gt;new&#40;[]<span class="string">[]'Excel&#46;Application'[]</span>[], []<span class="string">[]'Quit'[]</span>[]&#41; &#124;&#124; []<span class="keyword1">[]die[]</span>[] Win32::OLE&#45;&gt;LastError;[]
+[]$excel&#45;&gt;{Visible} = 1;[]
+
+<span class="keyword1">[]my[]</span>[] $workbook = $excel&#45;&gt;Workbooks&#45;&gt;Add &#124;&#124; []<span class="keyword1">[]die[]</span>[] Win32::OLE&#45;&gt;LastError;[]
+
+<span class="keyword1">[]my[]</span>[] $before_close = 0;[]
+[]Win32::OLE&#45;&gt;WithEvents&#40;$excel, []<span class="keyword1">[]sub[]</span>[] {[]
+[]    []<span class="keyword1">[]my[]</span>[] &#40;$obj, $event, @args&#41; = @_;[]
+[]    []<span class="keyword1">[]if[]</span>[] &#40;$event []<span class="keyword2">[]eq[]</span>[] []<span class="string">[]&quot;WorkbookBeforeClose&quot;[]</span>[]&#41; {[]
+[]        []<span class="keyword1">[]my[]</span>[] &#40;$cancel, $sheet&#41; = @args;[]
+[]        []<span class="keyword1">[]if[]</span>[] &#40;$sheet&#45;&gt;FullName []<span class="keyword2">[]eq[]</span>[] $workbook&#45;&gt;FullName&#41; {[]
+[]            $before_close = 1;[]
+[]        }[]
+[]    } []<span class="keyword1">[]elsif[]</span>[] &#40;$before_close []<span class="keyword2">[]and[]</span>[] $event []<span class="keyword2">[]eq[]</span>[] []<span class="string">[]&quot;WorkbookDeactivate&quot;[]</span>[]&#41; {[]
+[]        []<span class="keyword1">[]my[]</span>[] &#40;$sheet&#41; = @args;[]
+[]        []<span class="keyword1">[]if[]</span>[] &#40;$sheet&#45;&gt;FullName []<span class="keyword2">[]eq[]</span>[] $workbook&#45;&gt;FullName&#41; {[]
+[]            Win32::OLE&#45;&gt;QuitMessageLoop&#40;&#41;;[]
+[]        }[]
+[]    } []<span class="keyword1">[]elsif[]</span>[] &#40;$event []<span class="keyword2">[]eq[]</span>[] []<span class="string">[]&quot;WindowDeactivate&quot;[]</span>[]&#41; {[]
+[]        []<span class="comment">[]# WorkbookBeforeClose と WorkbookDeactivate の間の WindowDeactivate[]
+</span>[]        []<span class="comment">[]# は無視する。[]
+</span>[]    } []<span class="keyword1">[]else[]</span>[] {[]
+[]        []<span class="comment">[]# 閉じる &#45;&gt; Cancel &#45;&gt; 他のシートを追加 としたときに quit しないようにする。[]
+</span>[]        []<span class="comment">[]# 要は WorkbookBeforeClose &#45;&gt; WorkbookDeactivate が連続した場合 quit する。[]
+</span>[]        $before_close = 0;[]
+[]    }[]
+[]}, []<span class="string">[]&quot;AppEvents&quot;[]</span>[]&#41;;[]
+
+[]Win32::OLE&#45;&gt;MessageLoop&#40;&#41;;[]
+<span class="keyword3">[]print[]</span>[] []<span class="string">[]&quot;Quit\n&quot;[]</span>[];[]
+
+<span class="comment">[]# 一応[]
+</span>[]$workbook&#45;&gt;Close;[]
+<span class="keyword1">[]undef[]</span>[] $workbook;[]
+
+[]$excel&#45;&gt;Quit;[]
+<span class="keyword1">[]undef[]</span>[] $excel;[]
+</pre><
+
+
+最初は WorkbookDeactivate を契機に quit していたんだけど、これだと他の workbook を開いたときも quit されるんでだめでした。
+で、WorkbookBeforeClose っていうものが見つかったので (Before が気になりつつも都合の悪い部分は無視して) 使ってみたところ、やっぱり Before だからキャンセルされた場合や、保存しますかと聞いているときにさっさと quit をはじめてしまってコレもだめ。
+なんで AfterClose がないんじゃと切れながら WorkbookBeforeClose -> WorkbookDeactivate と発生したときに quit するようにしてみた。
+
+
+こんなんでいいのか？
+
+
+
+*p2*[xyzzy] xdoc2txtが使用したい
+
+http://xyzzy.s53.xrea.com/wiki/?%BC%C1%CC%E4%C8%A2%2F110
+
+すいません。分かりにくくて。
+
+
+自分が all in one なパッケージがあまり好きじゃないから分けていたんですけど、やっぱ xdoc2txt.exe も同梱したほうがよさそうですね。
+
+package は xdoc2txt と xdoc2txt-bundle に分けようかなぁ。どうしよっかな。
+exe の置き場所は site-lisp/xdoc2txt/bin/xdoc2txt.exe かなぁ。
+
+ついでに cygterm も package 作ろっかなぁ。
+というか他にも色々メンテしなきゃいけない package あるしなぁ。
+
+
+
+10 月まで時間は取れそうにないけど。
+

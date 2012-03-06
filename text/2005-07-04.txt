@@ -1,0 +1,94 @@
+
+*1120476397*[xyzzy] xyzzy で自然順ソート
+
+id:secondlife:20050624 を見て。
+
+>||
+(defun natural-compare (a b &key case-fold)
+  (labels ((split (str)
+             (let (r)
+               (while (and (< 0 (length str))
+                           (string-match "^\\([^0-9]*\\)\\([0-9]*\\)\\(.*\\)" str))
+                 (push (cons (match-string 1) (match-string 2)) r)
+                 (setf str (match-string 3)))
+               (reverse r)))
+           (strip (str)
+             (substitute-string str "[ \t]+" "")))
+    (when (string= a b)
+      (return-from natural-compare 0))
+    (setf a (strip a)
+          b (strip b))
+    (when case-fold
+      (setf a (string-downcase a)
+            b (string-downcase b)))
+    (when (string= a b)
+      (return-from natural-compare 0))
+    (natural-compare0 (split a) (split b))))
+
+(defun natural-compare0 (alist blist)
+  (when (and (null alist) (null blist))
+    (return-from natural-compare0 0))
+  (case (natural-compare-test (car alist) (car blist))
+    (0
+     (case (if (and (< 0 (length (cdar alist)))
+                    (< 0 (length (cdar blist)))
+                    (not (char= (char (cdar alist) 0) #\0))
+                    (not (char= (char (cdar blist) 0) #\0)))
+               (natural-compare-test (car alist) (car blist)
+                                     :test< #'< :test> #'>
+                                     :key #'(lambda (s)
+                                              (and s (parse-integer (cdr s) :junk-allowed t))))
+             (natural-compare-test (car alist) (car blist) :key #'cdr))
+       (0 (natural-compare0 (cdr alist) (cdr blist)))
+       (-1 -1)
+       (1 1)))
+    (-1 -1)
+    (1 1)))
+
+(defun natural-compare-test (apair bpair &key (key #'car) (test< #'string<) (test> #'string>))
+  (let ((a (funcall key apair))
+        (b (funcall key bpair)))
+    (cond ((and (null a) (null b))
+           0)
+          ((and (null a) (not (null b)))
+           -1)
+          ((and (not (null a)) (null b))
+           1)
+          ((funcall test< a b) -1)
+          ((funcall test> a b) 1)
+          (t 0))))
+
+(defun natural= (a b)
+  (= (natural-compare a b) 0))
+
+(defun natural< (a b)
+  (< (natural-compare a b) 0))
+
+(defun natural> (a b)
+  (> (natural-compare a b) 0))
+
+(defun natural-equal (a b)
+  (= (natural-compare a b :case-fold t) 0))
+
+(defun natural-lessp (a b)
+  (< (natural-compare a b :case-fold t) 0))
+
+(defun natural-greaterp (a b)
+  (> (natural-compare a b :case-fold t) 0))
+||<
+
+こんな感じ。
+
+>|
+(sort '("rfc822.txt" "rfc1.txt" "rfc2086.txt") #'natural<)
+("rfc1.txt" "rfc822.txt" "rfc2086.txt")
+
+(sort '("a" "a1" "a0" "a1a" "a1b" "a10" "a20" "a2") #'natural<)
+("a" "a0" "a1" "a1a" "a1b" "a2" "a10" "a20")
+
+(sort '("x2-g8" "x8-y8" "x2-y7" "x2-y08") #'natural<)
+("x2-g8" "x2-y08" "x2-y7" "x8-y8")
+
+(sort '("1.3" "1.1" "1.02" "1.010" "1.002" "1.001") #'natural<)
+("1.001" "1.002" "1.010" "1.02" "1.1" "1.3")
+|<

@@ -1,0 +1,71 @@
+
+*p1*[xyzzy][Perl] カーソル下のモジュールを開く 
+
+<blockquote cite="http://d.hatena.ne.jp/higepon/20060131/1138681298" title="こんなEmacs Lispないでしょうか？">
+<pre>
+use Data::Dumper;
+use Higepon::Text::Template
+</pre>
+<p>
+のようにPerlソースファイル中にモジュール(自作 or CPAN)が書かれているときに、その文字列にカーソルを合わせあるキーを押すと、モジュールのソースを開くやつ。
+</p>
+</blockquote>
+
+Emacs じゃないですけど xyzzy ならこんな感じ?
+
+><pre class="source">
+&#40;<span class="keyword1">[]defvar[]</span>[] &#42;perl5lib&#42; []<span class="string">[]&quot;&quot;[]</span>&#41;
+
+&#40;<span class="keyword1">[]defun[]</span>[] perl&#45;find&#45;module &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>&#41;
+[]  &#40;[]<span class="keyword1">[]let&#42;[]</span>[] &#40;&#40;end &#40;[]<span class="keyword1">[]save&#45;excursion[]</span>[] &#40;[]<span class="keyword1">[]skip&#45;chars&#45;forward[]</span>[] []<span class="string">[]&quot;a&#45;zA&#45;Z0&#45;9&#45;_:&quot;[]</span>[]&#41; &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;&#41;[]
+[]         &#40;beg &#40;[]<span class="keyword1">[]save&#45;excursion[]</span>[] &#40;[]<span class="keyword1">[]skip&#45;chars&#45;backward[]</span>[] []<span class="string">[]&quot;a&#45;zA&#45;Z0&#45;9&#45;_:&quot;[]</span>[]&#41; &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;&#41;[]
+[]         &#40;module &#40;[]<span class="keyword1">[]buffer&#45;substring[]</span>[] beg end&#41;&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]message[]</span>[] module&#41;[]
+[]    &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">&lt;</span>[] beg end&#41;[]
+[]      &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;r &#40;perl&#45;search&#45;module module&#41;&#41;&#41;[]
+[]        &#40;[]<span class="keyword1">[]if[]</span>[] &#40;[]<span class="keyword1">[]car[]</span>[] r&#41;[]
+[]            &#40;[]<span class="keyword1">[]find&#45;file[]</span>[] &#40;[]<span class="keyword1">[]cadr[]</span>[] r&#41;&#41;[]
+[]          &#40;[]<span class="keyword1">[]msgbox[]</span>[] &#40;[]<span class="keyword1">[]cadr[]</span>[] r&#41;&#41;&#41;&#41;&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] perl&#45;search&#45;module &#40;module&#41;[]
+[]  &#40;[]<span class="keyword1">[]save&#45;window&#45;excursion[]</span>
+[]    &#40;[]<span class="keyword1">[]save&#45;excursion[]</span>
+[]      &#40;[]<span class="keyword1">[]unwind&#45;protect[]</span>
+[]          &#40;[]<span class="keyword1">[]list[]</span>[] &#40;perl&#45;execute&#45;perl module &#42;perl5lib&#42; []<span class="string">[]&quot;&#42;perl&#42;&quot;[]</span>&#41;
+[]                &#40;[]<span class="keyword1">[]buffer&#45;substring[]</span>[] &#40;[]<span class="keyword1">[]point&#45;min[]</span>[]&#41; &#40;[]<span class="keyword1">[]progn[]</span>[] &#40;[]<span class="keyword1">[]goto&#45;eol[]</span>[]&#41; &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;&#41;&#41;[]
+[]        &#40;[]<span class="keyword1">[]delete&#45;buffer[]</span>[] &#40;[]<span class="keyword1">[]find&#45;buffer[]</span>[] []<span class="string">[]&quot;&#42;perl&#42;&quot;[]</span>[]&#41;&#41;&#41;&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] perl&#45;execute&#45;perl &#40;module lib output&#41;[]
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;perl5lib &#40;[]<span class="keyword1">[]si:getenv[]</span>[] []<span class="string">[]&quot;PERL5LIB&quot;[]</span>[]&#41;&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]when[]</span>[] lib[]
+[]      &#40;[]<span class="keyword1">[]setf[]</span>[] perl5lib &#40;[]<span class="keyword1">[]concat[]</span>[] perl5lib []<span class="string">[]&quot;;&quot;[]</span>[] lib&#41;&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]zerop[]</span>[] &#40;[]<span class="keyword1">[]execute&#45;shell&#45;command[]</span>[] &#40;perl&#45;print&#45;inc&#45;command module&#41;[]
+[]                                  []<span class="keyword3">[]nil[]</span>[] output[]
+[]                                  &#40;[]<span class="keyword1">[]list[]</span>[] &#40;[]<span class="keyword1">[]cons[]</span>[] []<span class="string">[]&quot;PERL5LIB&quot;[]</span>[] perl5lib&#41;&#41;&#41;&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] perl&#45;print&#45;inc&#45;command &#40;module&#41;[]
+[]  &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="string">[]&quot;perl &#45;M~A &#45;e \&quot;print $INC{q&#40;~A&#41;}\&quot;&quot;[]</span>
+[]          module &#40;perl&#45;module&#45;to&#45;file module&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] perl&#45;module&#45;to&#45;file &#40;module&#41;[]
+[]  &#40;[]<span class="keyword1">[]concat[]</span>[] &#40;[]<span class="keyword1">[]substitute&#45;string[]</span>[] module []<span class="string">[]&quot;::&quot;[]</span>[] []<span class="string">[]&quot;/&quot;[]</span>[]&#41; []<span class="string">[]&quot;&#46;pm&quot;[]</span>[]&#41;&#41;[]
+
+&#40;<span class="keyword1">[]add&#45;hook[]</span>[] '&#42;perl&#45;mode&#45;hook&#42;[]
+[]          &#40;[]<span class="keyword1">[]lambda[]</span>[] &#40;&#41;[]
+[]            &#40;[]<span class="fg12 bg0">[]local&#45;set&#45;key[]</span>[] '&#40;#\C&#45;c #\RET&#41; 'perl&#45;find&#45;module&#41;&#41;&#41;[]
+</pre><
+
+環境変数 PERL5LIB か *perl5lib* に自作モジュールのパスを通しておけば開けるはず。
+本当は use lib ... とかも解析したほうがいいんでしょうけどね。
+
+perl 5.8 だけでいいんなら perldoc -lm で。
+
+
+参考。
+http://blog.livedoor.jp/nipotan/archives/50146747.html
+
+
+**追記。
+
+これは毎回 perl を起動していますけど、最初に一回起動して @INC を出力させてあとは自分で検索したほうが早そうですね。

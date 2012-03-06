@@ -1,0 +1,111 @@
+
+*trac_edge_on_ubuntu*[Trac] Trac 0.11 の trunk を Ubuntu でインストールせずに動かす方法
+
+ふと、Trac 本体を改造したくなったので trac trunk を Ubuntu で動かしてみました。
+この手順は環境を汚さずに (/usr とかにインストールせずに) trac trunk を動かす手順です。
+
+
+**依存ライブラリのインストール
+
+まずは Genshi, SQLite, Subversion バインディングをインストール。
+
+>||
+% sudo apt-get install python-genshi
+% sudo apt-get install python-pysqlite2
+% sudo apt-get install python-subversion
+||<
+
+もちろん python とか subversion も必要です。
+
+
+**trac trunk をテスト環境にインストール
+
+trunk を checkout して test/trac ディレクトリに trac をインストールします。
+そのままでは、インストールした trac が見えないので PYTHONPATH でライブラリのパスを指定します。
+
+>||
+% svn co http://svn.edgewall.com/repos/trac/trunk trac
+% cd trac
+% mkdir test
+% python setup.py install --root test --prefix=trac
+% export PYTHONPATH=test/trac/lib/python2.5/site-packages/
+||<
+
+
+**テストプロジェクトの作成
+
+myproj という名前のプロジェクトを作成して tracd を起動。
+あとはブラウザで http://localhost:8000 にアクセスすれば ok です。
+
+>||
+% mkdir test/projects
+% mkdir test/repos
+% svnadmin create test/repos/myproj
+% test/trac/bin/trac-admin $PWD/test/projects/myproj initenv "My Project" sqlite:db/trac.db svn $PWD/test/repos/myproj
+% test/trac/bin/tracd --port 8000 $PWD/test/projects/myproj/
+||<
+
+
+**ハック
+
+あとは気が済むまで修正＆テスト。
+修正するたびに python setup.py install --root test --prefix=trac を実行しないといけないのがいけてないところです。
+
+
+
+
+
+*trac_edge_on_windows*[Trac] Trac 0.11 の trunk を Windows でインストールせずに動かす方法
+
+ふと、Trac 本体を改造したくなったので trac trunk を Windows で動かしてみました。
+この手順は環境を汚さずに (c:\Python25\Lib とかにインストールせずに) trac trunk を動かす手順です。
+
+
+**依存ライブラリのインストール
+
+まずは Genshi, SQLite バインディングを easy_install でインストール。
+
+>||
+> easy_install genshi
+> easy_install pysqlite
+||<
+
+次に Subversion バインディングをインストール。
+
+http://subversion.tigris.org/servlets/ProjectDocumentList?folderID=91 から svn-python-1.4.5.win32-py2.5.exe をダウンロードしてインストール。
+
+もちろん python とか subversion も必要です。
+
+
+**trac trunk をテスト環境にインストール
+
+trunk を checkout して test\trac ディレクトリに trac をインストールします。
+そのままでは、インストールした trac が見えないので PYTHONPATH でライブラリのパスを指定します。
+
+>||
+> svn co http://svn.edgewall.com/repos/trac/trunk trac
+> cd trac
+> mkdir test
+> python setup.py install --root test --prefix=trac
+> set PYTHONPATH=%CD%\test\trac\Lib\site-packages
+||<
+
+
+**テストプロジェクトの作成
+
+myproj という名前のプロジェクトを作成して tracd を起動。
+あとはブラウザで http://localhost:8000 にアクセスすれば ok です。
+
+>||
+> mkdir test\repos
+> mkdir test\projects
+> svnadmin create test\repos\myproj
+> test\trac\Scripts\trac-admin.exe %CD%\test\projects\myproj initenv "My Project" sqlite:db/trac.db svn %CD%\test\repos\myproj
+> test\trac\Scripts\tracd.exe --port 8000 %CD%\test\projects\myproj
+||<
+
+
+**ハック
+
+あとは気が済むまで修正＆テスト。
+修正するたびに python setup.py install --root test --prefix=trac を実行しないといけないのがいけてないところです。

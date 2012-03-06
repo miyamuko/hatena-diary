@@ -1,0 +1,117 @@
+
+*p1*[xyzzy] C の実引数と仮引数の対応をポップアップ表示する
+
+f:id:miyamuko:20060203162311p:image
+
+<blockquote cite="https://www.codeblog.org/blog/jet/?date=20060201#p04" title="仮引数と実引数の対応">
+<p>
+そんなわけで関数呼び出しをみつけたら、一時的に実引数と仮引数の対応を表示してくれるようなエディタのアドオンが欲しくなったので、作...らないよ。そんなもんすぐできん！
+</p>
+<pre>
+bar(area: p, file: p, read_only: TRUE, start: 9, end: 23);
+</pre>
+</blockquote>
+
+xyzzy でてきとーに作ってみました。macro はあんまし自信がありません。
+
+f:id:miyamuko:20060203161413p:image:w100 f:id:miyamuko:20060203161411p:image:w100 f:id:miyamuko:20060203161406p:image:w100
+
+
+><pre class="source">
+<span class="comment">[];;; &#45;&#42;&#45; Mode: Lisp; Package: EDITOR &#45;&#42;&#45;[]
+</span>
+&#40;<span class="keyword1">[]in&#45;package[]</span>[] []<span class="string">[]"editor"[]</span>&#41;
+
+&#40;<span class="keyword1">[]export[]</span>[] &#39;&#40;popup&#45;c&#45;formal&#45;args[]
+[]          popup&#45;tags[]
+[]          popup&#45;tags&#45;context&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] popup&#45;c&#45;formal&#45;args &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>&#41;
+[]  &#40;[]<span class="keyword1">[]flet[]</span>[] &#40;&#40;scan&#45;c&#45;args &#40;&#41;[]
+[]           &#40;[]<span class="keyword1">[]skip&#45;chars&#45;forward[]</span>[] []<span class="string">[]"a&#45;zA&#45;Z0&#45;9_ "[]</span>&#41;
+[]           &#40;[]<span class="keyword1">[]buffer&#45;substring[]</span>[] &#40;[]<span class="keyword1">[]1&#43;[]</span>[] &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;[]
+[]                             &#40;[]<span class="keyword1">[]progn[]</span>[] &#40;[]<span class="keyword1">[]goto&#45;matched&#45;parenthesis[]</span>[]&#41; &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;&#41;&#41;[]
+[]         &#40;strip &#40;str&#41;[]
+[]           &#40;[]<span class="keyword1">[]string&#45;trim[]</span>[] []<span class="string">[]" \t\r\f\n"[]</span>[] str&#41;&#41;[]
+[]         &#40;remove&#45;c&#45;type &#40;formal&#41;[]
+[]           &#40;[]<span class="keyword1">[]string&#45;left&#45;trim[]</span>[] []<span class="string">[]"&#42;&"[]</span>[] &#40;[]<span class="keyword1">[]car[]</span>[] &#40;[]<span class="keyword1">[]last[]</span>[] &#40;[]<span class="keyword1">[]split&#45;string[]</span>[] formal #\SPC&#41;&#41;&#41;&#41;&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]let[]</span>[] &#40;funname formal actual&#41;[]
+[]      &#40;with&#45;tags&#45;find&#45;file &#40;class name file []<span class="keyword1">[]point[]</span>&#41;
+[]        &#40;[]<span class="keyword1">[]setf[]</span>[] funname name&#41;[]
+[]        &#40;[]<span class="keyword1">[]setf[]</span>[] formal &#40;scan&#45;c&#45;args&#41;&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]unless[]</span>[] formal[]
+[]        &#40;[]<span class="keyword1">[]return&#45;from[]</span>[] popup&#45;c&#45;formal&#45;args &#40;[]<span class="keyword1">[]popup&#45;string[]</span>[] []<span class="string">[]"?"[]</span>[] &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]save&#45;excursion[]</span>
+[]        &#40;[]<span class="keyword1">[]setf[]</span>[] actual &#40;scan&#45;c&#45;args&#41;&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]popup&#45;string[]</span>[] &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="string">[]"~A&#40;~{~A~^, ~}&#41;"[]</span>
+[]                            funname[]
+[]                            &#40;[]<span class="keyword1">[]mapcar[]</span>[] &#40;[]<span class="keyword1">[]lambda[]</span>[] &#40;f a&#41;[]
+[]                                      &#40;[]<span class="keyword1">[]concat[]</span>[] &#40;strip &#40;remove&#45;c&#45;type f&#41;&#41; []<span class="string">[]": "[]</span>[] &#40;strip a&#41;&#41;&#41;[]
+[]                                    &#40;[]<span class="keyword1">[]split&#45;string[]</span>[] formal #\,&#41;[]
+[]                                    &#40;[]<span class="keyword1">[]split&#45;string[]</span>[] actual #\,&#41;&#41;&#41;[]
+[]                    &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] popup&#45;tags&#45;context &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>&#41;
+[]  &#40;popup&#45;tags :start&#45;line &#45;1 :end&#45;line 10 :context&#45;p []<span class="keyword3">[]t[]</span>[]&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] popup&#45;tags &#40;&key &#40;start&#45;line 0&#41; &#40;end&#45;line 1&#41; &#40;context&#45;p []<span class="keyword3">[]nil[]</span>[]&#41;&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>&#41;
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;entry &#40;substring&#45;tags start&#45;line end&#45;line context&#45;p&#41;&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]popup&#45;string[]</span>[] &#40;[]<span class="keyword1">[]or[]</span>[] entry []<span class="string">[]"?"[]</span>[]&#41; &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] substring&#45;tags &#40;s e context&#45;p&#41;[]
+[]  &#40;with&#45;tags&#45;find&#45;file &#40;class name file []<span class="keyword1">[]point[]</span>&#41;
+[]    &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;result&#41; &#40;end&#45;line &#40;[]<span class="keyword1">&#43;</span>[] &#40;[]<span class="keyword1">[]current&#45;line&#45;number[]</span>[]&#41; e&#41;&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]when[]</span>[] context&#45;p[]
+[]        &#40;[]<span class="keyword1">[]push[]</span>[] file result&#41;[]
+[]        &#40;[]<span class="keyword1">[]push[]</span>[] []<span class="string">[]"========================================"[]</span>[] result&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]next&#45;line[]</span>[] s&#41;[]
+[]      &#40;[]<span class="keyword1">[]while[]</span>[] &#40;[]<span class="keyword1"><</span>[] &#40;[]<span class="keyword1">[]current&#45;line&#45;number[]</span>[]&#41; end&#45;line&#41;[]
+[]        &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;line &#40;[]<span class="keyword1">[]buffer&#45;substring[]</span>[] &#40;[]<span class="keyword1">[]progn[]</span>[] &#40;[]<span class="keyword1">[]goto&#45;bol[]</span>[]&#41; &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;[]
+[]                                      &#40;[]<span class="keyword1">[]progn[]</span>[] &#40;[]<span class="keyword1">[]goto&#45;eol[]</span>[]&#41; &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;&#41;&#41;&#41;[]
+[]          &#40;[]<span class="keyword1">[]push[]</span>[] &#40;[]<span class="keyword1">[]if[]</span>[] context&#45;p[]
+[]                    &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="string">[]"~D: ~A"[]</span>[] &#40;[]<span class="keyword1">[]current&#45;line&#45;number[]</span>[]&#41; line&#41;[]
+[]                  line&#41;[]
+[]                result&#41;&#41;[]
+[]        &#40;[]<span class="keyword1">[]or[]</span>[] &#40;[]<span class="keyword1">[]next&#45;line[]</span>[]&#41; &#40;[]<span class="keyword1">[]return[]</span>[]&#41;&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="string">[]"~{~A~^~%~}"[]</span>[] &#40;[]<span class="keyword1">[]reverse[]</span>[] result&#41;&#41;&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defmacro[]</span>[] with&#45;tags&#45;find&#45;entry &#40;&#40;class name file []<span class="keyword1">[]point[]</span>[] []<span class="keyword1">[]functionp[]</span>[]&#41; &body body&#41;[]
+[]  `&#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]and[]</span>[] tags&#45;find&#45;target tags&#45;find&#45;point&#41;[]
+[]     &#40;[]<span class="keyword1">[]multiple&#45;value&#45;bind[]</span>[] &#40;,class ,name ,[]<span class="keyword1">[]functionp[]</span>&#41;
+[]         &#40;[]<span class="keyword1">[]funcall[]</span>[] tags&#45;find&#45;target&#41;[]
+[]       &#40;[]<span class="keyword1">[]multiple&#45;value&#45;bind[]</span>[] &#40;,file ,[]<span class="keyword1">[]point[]</span>[] ,[]<span class="keyword1">[]functionp[]</span>&#41;
+[]           &#40;tags&#45;find&#45;entry ,class ,name ,[]<span class="keyword1">[]functionp[]</span>&#41;
+[]         ,@body&#41;&#41;&#41;&#41;[]
+&#40;<span class="keyword1">[]setf[]</span>[] &#40;[]<span class="keyword1">[]get[]</span>[] &#39;with&#45;tags&#45;find&#45;entry &#39;lisp&#45;indent&#45;hook&#41; 1&#41;[]
+
+&#40;<span class="keyword1">[]defmacro[]</span>[] with&#45;tags&#45;find&#45;file &#40;&#40;class name file []<span class="keyword1">[]point[]</span>[]&#41; &body body&#41;[]
+[]  `&#40;with&#45;tags&#45;find&#45;entry &#40;,class ,name ,file ,[]<span class="keyword1">[]point[]</span>[] []<span class="keyword1">[]functionp[]</span>&#41;
+[]     &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]and[]</span>[] ,file &#40;[]<span class="keyword1">[]file&#45;exist&#45;p[]</span>[] ,file&#41;&#41;[]
+[]       &#40;[]<span class="keyword1">[]save&#45;window&#45;excursion[]</span>
+[]         &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;#1=#:opend&#45;p &#40;[]<span class="keyword1">[]get&#45;file&#45;buffer[]</span>[] ,file&#41;&#41;&#41;[]
+[]           &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]if[]</span>[] #1#[]
+[]                     &#40;[]<span class="keyword1">[]set&#45;buffer[]</span>[] &#40;[]<span class="keyword1">[]get&#45;file&#45;buffer[]</span>[] ,file&#41;&#41;[]
+[]                   &#40;[]<span class="keyword1">[]find&#45;file[]</span>[] ,file&#41;&#41;[]
+[]             &#40;[]<span class="keyword1">[]goto&#45;char[]</span>[] &#40;[]<span class="keyword1">[]or[]</span>[] &#40;[]<span class="keyword1">[]funcall[]</span>[] tags&#45;find&#45;point ,class ,name []<span class="keyword1">[]functionp[]</span>[] ,[]<span class="keyword1">[]point[]</span>&#41;
+[]                            ,[]<span class="keyword1">[]point[]</span>[]&#41;&#41;[]
+[]             &#40;[]<span class="keyword1">[]goto&#45;bol[]</span>&#41;
+[]             &#40;[]<span class="keyword1">[]unwind&#45;protect[]</span>
+[]                 &#40;[]<span class="keyword1">[]progn[]</span>[] ,@body&#41;[]
+[]               &#40;[]<span class="keyword1">[]unless[]</span>[] #1#[]
+[]                 &#40;[]<span class="keyword1">[]delete&#45;buffer[]</span>[] &#40;[]<span class="keyword1">[]get&#45;file&#45;buffer[]</span>[] ,file&#41;&#41;&#41;&#41;&#41;&#41;&#41;&#41;&#41;&#41;[]
+&#40;<span class="keyword1">[]setf[]</span>[] &#40;[]<span class="keyword1">[]get[]</span>[] &#39;with&#45;tags&#45;find&#45;file &#39;lisp&#45;indent&#45;hook&#41; 1&#41;[]
+
+
+&#40;<span class="keyword1">[]global&#45;set&#45;key[]</span>[] #\F2 &#39;popup&#45;tags&#41;[]
+&#40;<span class="keyword1">[]global&#45;set&#45;key[]</span>[] #\S&#45;F2 &#39;popup&#45;tags&#45;context&#41;[]
+&#40;<span class="keyword1">[]global&#45;set&#45;key[]</span>[] #\C&#45;F2 &#39;popup&#45;c&#45;formal&#45;args&#41;[]
+</pre><
+
+
+
+
+というか、codeblog はおもしろいなー。
+

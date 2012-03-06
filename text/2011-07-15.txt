@@ -1,0 +1,25 @@
+
+*p1*[xyzzy][grep-a-lot]grep-a-lot で複数の grep バッファを使う
+
+Emacs の grep-a-lot.el が便利そうなので、xyzzy に移植しました。
+
+[http://miyamuko.s56.xrea.com/xyzzy/grep-a-lot/intro.htm:title]
+
+
+インストールするだけで、grep 後に自動的にバッファ名を変更して grep バッファを複数保存できるようになります。
+
+[http://miyamuko.s56.xrea.com/xyzzy/images/grep-a-lot.png:image]
+
+
+
+grep バッファを全部閉じたい場合は M-x grep-a-lot-clear-stack を実行してください。
+
+
+移植と言っても grep-a-lot.el は使ったことがないので、以下を見ながら適当に実装しただけなのでオリジナルとは若干挙動が違うかもしれません。
+
+- http://d.hatena.ne.jp/kitokitoki/20110213/p1:title
+- http://www.rubyist.net/~rubikitch/archive/Emacs-162-163.pdf
+
+
+
+標準の grep や grep-dialog に加えて、[http://ohkubo.s53.xrea.com/xyzzy/#ggrep:title=ggrep] や [http://xyzzy.s53.xrea.com/wiki/index.php?tips%2F%A5%AB%A1%BC%A5%BD%A5%EB%B2%BC%A4%CE%C3%B1%B8%EC%A4%F2%20grep%20%A4%B9%A4%EB:title] や [http://xyzzy.s53.xrea.com/wiki/index.php?tips%2Fxgrep:title] にも対応しています。

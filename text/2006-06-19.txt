@@ -1,0 +1,65 @@
+
+*p1*[xyzzy]XMLHttpRequest から文字化けせずにデータを取得・・・
+
+><blockquote cite="http://d.hatena.ne.jp/miyamuko/20060616#p1">
+<p>
+xml-http-requestをちょこちょこいじっていて気づいたのですが、
+packages.lを取得しようとすると文字化けしてしまいます。
+一応xyzzy wikiにあがってるもの全て確認しましたが全部文字化けしてしまいます。
+一応map-internal-to-utf-8やmap-utf-8-to-internal等を間に入れたりしてみたのですが、一向に直せる気配が無くコメントする次第です。
+</p>
+</blockquote><
+
+
+Ruby なら responseBody で取得して pack すれば、文字化けせずに responseText と同じものが得られますね。
+
+><pre class="source">
+<span class="keyword1">[]require[]</span>[] []<span class="fg10">&quot;</span><span class="fg10">[]win32ole[]</span><span class="fg10">&quot;</span>
+
+[]xml = WIN32OLE&#46;[]<span class="keyword3">[]new[]</span>&#40;<span class="fg10">&quot;</span><span class="fg10">[]Msxml2&#46;XMLHTTP[]</span><span class="fg10">&quot;</span>&#41;
+[]xml&#46;Open&#40;[]<span class="fg10">&quot;</span><span class="fg10">[]get[]</span><span class="fg10">&quot;</span>[], []<span class="fg10">&quot;</span><span class="fg4 bg0"><span class="underline"><span class="fg10">[]http:[]</span></span></span><span class="fg4 bg0"><span class="underline"><span class="fg10">[]/[]</span></span></span><span class="fg4 bg0"><span class="underline"><span class="fg10">[]/[]</span></span></span><span class="fg4 bg0"><span class="underline"><span class="fg10">[]miyamuko&#46;s56&#46;xrea&#46;com[]</span></span></span><span class="fg4 bg0"><span class="underline"><span class="fg10">[]/[]</span></span></span><span class="fg4 bg0"><span class="underline"><span class="fg10">[]xyzzy[]</span></span></span><span class="fg4 bg0"><span class="underline"><span class="fg10">[]/[]</span></span></span><span class="fg4 bg0"><span class="underline"><span class="fg10">[]package&#46;l[]</span></span></span><span class="fg10">&quot;</span>[], []<span class="keyword2">[]false[]</span>&#41;
+[]xml&#46;Send&#40;[]<span class="keyword2">[]nil[]</span>&#41;
+
+<span class="fg9">[]#[]</span><span class="keyword3"><span class="fg9">[]puts[]</span></span><span class="fg9">[] xml&#46;responseText                   []</span><span class="fg9">[]#[]</span><span class="fg9">[] 化ける[]
+</span><span class="keyword3">[]puts[]</span>[] xml&#46;responseBody&#46;pack&#40;[]<span class="fg10">&quot;</span><span class="fg10">[]c&#42;[]</span><span class="fg10">&quot;</span>[]&#41;         []<span class="fg9">[]#[]</span><span class="fg9">[] 化けない[]
+</span></pre><
+
+
+
+
+というわけでこれを xyzzy で書けばいいはずです。
+
+><pre class="source">
+&#40;<span class="keyword1">[]setf[]</span>[] xml &#40;[]<span class="fg12 bg0">[]ole&#45;create&#45;object[]</span>[] []<span class="string">[]&quot;Msxml2&#46;XMLHTTP&quot;[]</span>[]&#41;&#41;[]
+[]#&lt;oledata 245109712&gt;[]
+
+&#40;<span class="fg12 bg0">[]ole&#45;method[]</span>[] xml 'Open []<span class="string">[]&quot;get&quot;[]</span>[] []<span class="string">[]&quot;http://miyamuko&#46;s56&#46;xrea&#46;com/xyzzy/package&#46;l&quot;[]</span>[] []<span class="keyword3">[]nil[]</span>&#41;
+&#40;<span class="fg12 bg0">[]ole&#45;method[]</span>[] xml 'Send []<span class="keyword3">[]nil[]</span>&#41;
+</pre><
+
+まず XMLHttpRequest オブジェクトを作って非同期で get と。
+そして・・・responseBody をしゅｔ
+
+
+><pre class="source">
+&#40;<span class="fg12 bg0">[]ole&#45;getprop[]</span>[] xml 'responseBody&#41;[]
+[]変数の種類が間違っています。 []
+</pre><
+
+
+Ω ΩΩ ナ、ナンダッテー!!
+
+落ち着け。われわれにはまだ responseStream が残されている。
+
+
+
+
+
+><pre class="source">
+&#40;<span class="fg12 bg0">[]ole&#45;getprop[]</span>[] xml 'responseStream&#41;[]
+[]インターフェイスがサポートされていません []
+</pre><
+
+(´･ω･｀)
+
+

@@ -1,0 +1,19 @@
+
+*tiny_segmenter*[xyzzy][tiny-segmenter]TinySegmenter を xyzzy lisp に移植しました
+
+[http://chasen.org/~taku/software/TinySegmenter:titleTinySegmenter: Javascriptだけで実装されたコンパクトな分かち書きソフトウェア] を xyzzy lisp に移植しました。
+
+http://miyamuko.s56.xrea.com/xyzzy/tiny-segmenter/intro.htm
+
+xyzzy のみで分かち書きを行えます。
+
+>|lisp|
+(require "tiny-segmenter")
+
+(ts:segment "私の名前はみやむこです。
+宮本ではありません。")
+
+;;=> ("私" "の" "名前" "は" "みやむこ" "です" "。
+;;   " "宮本" "で" "は" "あり" "ませ" "ん" "。")
+
+||<

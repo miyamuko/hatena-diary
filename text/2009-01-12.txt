@@ -1,0 +1,50 @@
+
+*p1*[Trac]TracReports でチケットのクロス集計
+
+ユーザごとに抱えているチケットの数をクロス集計したかったのですが、プラグインがなかなか見つからなかったので TracReports で作成してみました。
+
+**チケット集計 (マイルストーン別, オーナ x 状態)
+
+
+[http://farm4.static.flickr.com/3117/3184996569_5e7079f539_o.png:image:w658]
+
+名前の部分をクリックするとカスタムクエリ画面に飛びます。
+
+>|sql|
+SELECT milestone AS __group__
+     , '[query:"owner=' || owner || '&milestone=' || milestone || '" '
+         || owner || ']' as description
+     , SUM(CASE WHEN status = 'new' THEN 1 ELSE 0 END) as 'new'
+     , SUM(CASE WHEN status = 'accepted' THEN 1 ELSE 0 END) as 'accepted'
+     , SUM(CASE WHEN status = 'assigned' THEN 1 ELSE 0 END) as 'assigned'
+     , SUM(CASE WHEN status = 'reopened' THEN 1 ELSE 0 END) as 'reopened'
+     , SUM(CASE WHEN status = 'closed' THEN 1 ELSE 0 END) as 'closed'
+     , COUNT(*) as 'Total'
+FROM ticket t
+GROUP BY owner
+ORDER BY (milestone IS NULL), milestone, owner
+||<
+
+
+**未解決チケット集計 (マイルストーン別, コンポーネント x 分類)
+
+>|sql|
+SELECT milestone AS __group__
+     , '[query:"component=' || component|| '&milestone=' || milestone || '" '
+         || component || ']' as description
+     , SUM(CASE WHEN type = 'defect' THEN 1 ELSE 0 END) as 'defect'
+     , SUM(CASE WHEN type = 'enhancement' THEN 1 ELSE 0 END) as 'enhancement'
+     , SUM(CASE WHEN type = 'task' THEN 1 ELSE 0 END) as 'task'
+     , COUNT(*) as 'Total'
+FROM ticket t
+WHERE status <> 'closed'
+GROUP BY component
+ORDER BY (milestone IS NULL), milestone, component
+||<
+
+component を owner に書き換えれば オーナ x 分類の集計ができます。
+
+
+
+
+さまざまな切り口でクロス集計ができるプラグインとかあったら教えてください。

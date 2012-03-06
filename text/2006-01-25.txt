@@ -1,0 +1,15 @@
+
+*p1*[xyzzy] C の文字列を lisp の文字列へ
+
+<blockquote cite="http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=si%3Amake%2Dchunk" title="si:make-chunk">
+<p>
+SRC-CHUNK が nil で OFFSET が指定されていた場合には、 OFFSET をアドレス
+と見なすのが特殊です。
+</p>
+</blockquote>
+
+うぇｗｗ知らなかったｗｗｗｗｗ。
+qdbm.l のソースを眺めていて気づきました。
+
+昔、苦肉の策で strcpy からコピーして unpack-string していたオレ・・・orz (id:miyamuko:20051214)。
+

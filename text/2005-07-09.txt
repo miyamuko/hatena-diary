@@ -1,0 +1,267 @@
+
+*p1*[xyzzy] natural-compare 0.1
+
+xyzzy で自然順ソートライブラリ (id:miyamuko:20050704) をパッケージ化しました。
+NetInstaller からどうぞ。
+
+http://miyamuko.s56.xrea.com/xyzzy/natural-compare.html
+
+*p2*[xyzzy] xdoc2txt 0.6
+
+ *xdoc2txt-command* をオプション付きで指定するとエラーになるのを修正しました。
+オプションは *xdoc2txt-options* で指定してください。
+NetInstaller からどうぞ。
+
+encap は最新版 (2005-03-10) にする必要があるかもしれません。
+
+http://miyamuko.s56.xrea.com/xyzzy/xdoc2txt.html
+
+*p3*[xyzzy] cvs annotate
+
+f:id:miyamuko:20050710061638:image:small f:id:miyamuko:20050710061939:image:small
+
+id:miyamuko:20050701 の cvs annotate を更新しました。以下の機能が追加されています。
+
+- 現在行のリビジョンの commit log の表示 (l でトグル)
+- 現在行のリビジョンの取り出し (p)
+- リビジョンの新しさに応じて色を変える (*annotate-header-color* で指定)
+- 現在行の commit log をポップアップして表示 (ローカルで編集している場合はずれる)
+
+natural-compare が必要です。
+
+><pre class="source">
+[]&#40;[]<span class="keyword1">[]in&#45;package[]</span>[] []<span class="string">[]&quot;cvs&quot;[]</span>[]&#41;[]
+
+[]&#40;[]<span class="keyword1">[]require[]</span>[] []<span class="string">[]&quot;cvs&quot;[]</span>[]&#41;[]
+[]&#40;[]<span class="keyword1">[]require[]</span>[] []<span class="string">[]&quot;natural&#45;compare&quot;[]</span>[]&#41;[]
+
+<span class="comment">[];; annotate[]
+</span>[]&#40;[]<span class="keyword1">[]defvar[]</span>[] &#42;annotate&#45;header&#45;regexp&#42; []<span class="string">[]&quot;^\\&#40;&#91;^ &#93;&#43;\\&#41; &#43;&#40;\\&#40;&#91;^ &#93;&#43;\\&#41; &#43;\\&#40;&#91;^ &#93;&#43;\\&#41;&#41;: &quot;[]</span>[]&#41;[]
+[]&#40;[]<span class="keyword1">[]defvar[]</span>[] &#42;annotate&#45;revision&#45;regexp&#42; []<span class="string">[]&quot;^\\&#40;&#91;0&#45;9&#46;&#93;&#43;\\&#41;&quot;[]</span>[]&#41;[]
+[]&#40;[]<span class="keyword1">[]defvar[]</span>[] &#42;annotate&#45;header&#45;formater&#42; #'&#40;[]<span class="keyword1">[]lambda[]</span>[] &#40;rev auth date&#41;[]
+[]                                       &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="string">[]&quot;~5@A ~8@A: &quot;[]</span>[] rev auth&#41;&#41;&#41;[]
+[]&#40;[]<span class="keyword1">[]defvar[]</span>[] &#42;annotate&#45;header&#45;color&#42; '&#40;&#40;:foreground 7 :background 12&#41;[]
+[]                                  &#40;:foreground 8 :background 11&#41;[]
+[]                                  &#40;:foreground 4&#41;[]
+[]                                  &#40;:foreground 8&#41;[]
+[]                                  &#40;:foreground 15&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defvar[]</span>[] &#42;annotate&#45;mode&#45;map&#42; &#40;[]<span class="keyword1">[]make&#45;sparse&#45;keymap[]</span>[]&#41;&#41;[]
+[]&#40;[]<span class="keyword1">[]define&#45;key[]</span>[] &#42;annotate&#45;mode&#45;map&#42; #\l 'annotate&#45;toggle&#45;log&#45;window&#41;[]
+[]&#40;[]<span class="keyword1">[]define&#45;key[]</span>[] &#42;annotate&#45;mode&#45;map&#42; #\p 'annotate&#45;extract&#45;current&#45;revision&#41;[]
+[]&#40;[]<span class="keyword1">[]define&#45;key[]</span>[] &#42;annotate&#45;mode&#45;map&#42; #\q 'annotate&#45;quit&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defvar&#45;local[]</span>[] &#42;annotate&#45;show&#45;log&#45;window&#45;p&#42; []<span class="keyword3">[]nil[]</span>[]&#41;[]
+[]&#40;[]<span class="keyword1">[]defvar&#45;local[]</span>[] &#42;annotate&#45;log&#45;buffer&#42; []<span class="keyword3">[]nil[]</span>[]&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate&#45;quit &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>[]&#41;[]
+[]  &#40;annotate&#45;delete&#45;log&#45;window&#41;[]
+[]  &#40;[]<span class="keyword1">[]delete&#45;buffer[]</span>[] &#40;[]<span class="keyword1">[]selected&#45;buffer[]</span>[]&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate&#45;delete&#45;buffer&#45;hook &#40;buf&#41;[]
+[]  &#40;with&#45;buffer&#45;selected buf[]
+[]    &#40;annotate&#45;delete&#45;log&#45;window&#41;&#41;[]
+[]  []<span class="keyword3">[]t[]</span>[]&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate&#45;toggle&#45;log&#45;window &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>[]&#41;[]
+[]  &#40;[]<span class="keyword1">[]if[]</span>[] &#42;annotate&#45;show&#45;log&#45;window&#45;p&#42;[]
+[]      &#40;[]<span class="keyword1">[]progn[]</span>
+[]        &#40;[]<span class="fg12 bg0">[]delete&#45;hook[]</span>[] '&#42;post&#45;command&#45;hook&#42; 'annotate&#45;sync&#45;log&#45;window&#41;[]
+[]        &#40;annotate&#45;delete&#45;log&#45;window&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]progn[]</span>
+[]      &#40;[]<span class="keyword1">[]add&#45;hook[]</span>[] '&#42;post&#45;command&#45;hook&#42; 'annotate&#45;sync&#45;log&#45;window&#41;[]
+[]      &#40;annotate&#45;pop&#45;to&#45;log&#45;buffer []<span class="keyword3">[]nil[]</span>[]&#41;&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate&#45;sync&#45;log&#45;window &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]when[]</span>[] &#42;annotate&#45;show&#45;log&#45;window&#45;p&#42;[]
+[]    &#40;annotate&#45;pop&#45;to&#45;log&#45;buffer &#40;annotate&#45;current&#45;revision&#41;&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate&#45;pop&#45;to&#45;log&#45;buffer &#40;rev &amp;optional &#40;height &#45;10&#41;&#41;[]
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;buf &#40;annotate&#45;log&#45;buffer&#41;&#41;&#41;[]
+[]    &#40;[]<span class="fg12 bg0">[]with&#45;selected&#45;window[]</span>[] &#40;[]<span class="keyword1">[]selected&#45;window[]</span>[]&#41;[]
+[]      &#40;[]<span class="keyword1">[]pop&#45;to&#45;buffer[]</span>[] buf height&#41;[]
+[]      &#40;annotate&#45;recenter&#45;log rev&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]setf[]</span>[] &#42;annotate&#45;show&#45;log&#45;window&#45;p&#42; []<span class="keyword3">[]t[]</span>[]&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate&#45;recenter&#45;log &#40;&amp;optional rev&#41;[]
+[]  &#40;[]<span class="keyword1">[]widen[]</span>[]&#41;[]
+[]  &#40;[]<span class="keyword1">[]multiple&#45;value&#45;bind[]</span>[] &#40;beg end&#41;[]
+[]      &#40;log&#45;find&#45;point rev&#41;[]
+[]    &#40;[]<span class="keyword1">[]setf[]</span>[] []<span class="keyword3">[]hide&#45;restricted&#45;region[]</span>[] []<span class="keyword3">[]t[]</span>[]&#41;[]
+[]    &#40;[]<span class="keyword1">[]narrow&#45;to&#45;region[]</span>[] beg end&#41;[]
+[]    &#40;[]<span class="keyword1">[]goto&#45;char[]</span>[] beg&#41;[]
+[]    &#40;[]<span class="keyword1">[]recenter[]</span>[] 0&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate&#45;delete&#45;log&#45;window &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]when[]</span>[] &#40;annotate&#45;log&#45;buffer&#45;exist&#45;p&#41;[]
+[]    &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]get&#45;buffer&#45;window[]</span>[] &#42;annotate&#45;log&#45;buffer&#42;&#41;[]
+[]      &#40;[]<span class="fg12 bg0">[]with&#45;selected&#45;window[]</span>[] &#40;[]<span class="keyword1">[]selected&#45;window[]</span>[]&#41;[]
+[]        &#40;[]<span class="keyword1">[]set&#45;window[]</span>[] &#40;[]<span class="keyword1">[]get&#45;buffer&#45;window[]</span>[] &#42;annotate&#45;log&#45;buffer&#42;&#41;&#41;[]
+[]        &#40;[]<span class="keyword1">[]delete&#45;window[]</span>[]&#41;&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]delete&#45;buffer[]</span>[] &#42;annotate&#45;log&#45;buffer&#42;&#41;&#41;[]
+[]  &#40;[]<span class="keyword1">[]setf[]</span>[] &#42;annotate&#45;log&#45;buffer&#42; []<span class="keyword3">[]nil[]</span>[]&#41;[]
+[]  &#40;[]<span class="keyword1">[]setf[]</span>[] &#42;annotate&#45;show&#45;log&#45;window&#45;p&#42; []<span class="keyword3">[]nil[]</span>[]&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate&#45;log&#45;buffer&#45;exist&#45;p &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]and[]</span>[] &#42;annotate&#45;log&#45;buffer&#42;[]
+[]       &#40;[]<span class="keyword1">[]not[]</span>[] &#40;[]<span class="keyword1">[]deleted&#45;buffer&#45;p[]</span>[] &#42;annotate&#45;log&#45;buffer&#42;&#41;&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate&#45;log&#45;buffer &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]unless[]</span>[] &#40;annotate&#45;log&#45;buffer&#45;exist&#45;p&#41;[]
+[]    &#40;[]<span class="keyword1">[]setf[]</span>[] &#42;annotate&#45;log&#45;buffer&#42; &#40;fetch&#45;log &#40;[]<span class="keyword1">[]file&#45;namestring[]</span>[] &#42;repository&#45;name&#42;&#41; []<span class="keyword3">[]nil[]</span>[]&#41;&#41;&#41;[]
+[]  &#42;annotate&#45;log&#45;buffer&#42;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate&#45;current&#45;revision &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]save&#45;excursion[]</span>
+[]    &#40;[]<span class="keyword1">[]goto&#45;bol[]</span>[]&#41;[]
+[]    &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]looking&#45;at[]</span>[] &#42;annotate&#45;revision&#45;regexp&#42;&#41;[]
+[]      &#40;[]<span class="keyword1">[]match&#45;string[]</span>[] 1&#41;&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate&#45;parse &#40;buf top&#45;n&#41;[]
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;revision header hash&#41;[]
+[]    &#40;[]<span class="keyword1">[]make&#45;hash&#45;table[]</span>[]&#41;[]
+[]    &#40;[]<span class="keyword1">[]save&#45;excursion[]</span>
+[]      &#40;[]<span class="keyword1">[]while[]</span>[] &#40;[]<span class="keyword1">[]scan&#45;buffer[]</span>[] &#40;[]<span class="keyword1">[]compile&#45;regexp[]</span>[] &#42;annotate&#45;header&#45;regexp&#42;&#41; []<span class="keyword3">[]:tail[]</span>[] []<span class="keyword3">[]t[]</span>[]&#41;[]
+[]        &#40;[]<span class="keyword1">[]push[]</span>[] &#40;[]<span class="keyword1">[]cons[]</span>[] &#40;[]<span class="keyword1">[]mapcar[]</span>[] #'[]<span class="keyword1">[]match&#45;string[]</span>[] '&#40;1 2 3&#41;&#41;[]
+[]                    &#40;[]<span class="keyword1">[]cons[]</span>[] &#40;[]<span class="keyword1">[]match&#45;beginning[]</span>[] 0&#41; &#40;[]<span class="keyword1">[]match&#45;end[]</span>[] 0&#41;&#41;&#41; header&#41;[]
+[]        &#40;[]<span class="keyword1">[]pushnew[]</span>[] &#40;[]<span class="keyword1">[]match&#45;string[]</span>[] 1&#41; revision :test #'[]<span class="keyword1">[]string=[]</span>[]&#41;&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]values[]</span>[] &#40;[]<span class="keyword1">[]subseq[]</span>[] &#40;[]<span class="keyword1">[]sort[]</span>[] revision #'natural&gt;&#41; 0 &#40;[]<span class="keyword1">[]min[]</span>[] top&#45;n &#40;[]<span class="keyword1">[]length[]</span>[] revision&#41;&#41;&#41;[]
+[]            header&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate&#45;decorate &#40;buf mode&#41;[]
+[]  &#40;with&#45;temporary&#45;writable buf[]
+[]    &#40;[]<span class="keyword1">[]goto&#45;char[]</span>[] &#40;[]<span class="keyword1">[]point&#45;min[]</span>[]&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]save&#45;excursion[]</span>
+[]      &#40;[]<span class="keyword1">[]goto&#45;char[]</span>[] &#40;[]<span class="keyword1">[]point&#45;min[]</span>[]&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;nstyle &#40;[]<span class="keyword1">[]length[]</span>[] &#42;annotate&#45;header&#45;color&#42;&#41;&#41;&#41;[]
+[]        &#40;[]<span class="keyword1">[]multiple&#45;value&#45;bind[]</span>[] &#40;revision headers&#41;[]
+[]            &#40;annotate&#45;parse buf nstyle&#41;[]
+[]          &#40;[]<span class="keyword1">[]dolist[]</span>[] &#40;head headers&#41;[]
+[]            &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;rev &#40;[]<span class="keyword1">[]car[]</span>[] head&#41;&#41;[]
+[]                  &#40;beg &#40;[]<span class="keyword1">[]cadr[]</span>[] head&#41;&#41;[]
+[]                  &#40;end &#40;[]<span class="keyword1">[]cddr[]</span>[] head&#41;&#41;[]
+[]                  rank style&#41;[]
+[]              &#40;[]<span class="keyword1">[]goto&#45;char[]</span>[] beg&#41;[]
+[]              &#40;[]<span class="keyword1">[]delete&#45;region[]</span>[] beg end&#41;[]
+[]              &#40;[]<span class="keyword1">[]insert[]</span>[] &#40;[]<span class="keyword1">[]apply[]</span>[] &#42;annotate&#45;header&#45;formater&#42; rev&#41;&#41;[]
+[]              &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]&lt;[]</span>[] 1 nstyle&#41;[]
+[]                &#40;[]<span class="keyword1">[]setf[]</span>[] rank &#40;[]<span class="keyword1">[]position[]</span>[] &#40;[]<span class="keyword1">[]car[]</span>[] rev&#41; revision :test #'[]<span class="keyword1">[]string=[]</span>[]&#41;&#41;[]
+[]                &#40;[]<span class="keyword1">[]setf[]</span>[] style &#40;[]<span class="keyword1">[]or[]</span>[] &#40;[]<span class="keyword1">[]and[]</span>[] rank[]
+[]                                     &#40;[]<span class="keyword1">[]nth[]</span>[] rank &#42;annotate&#45;header&#45;color&#42;&#41;&#41;[]
+[]                                &#40;[]<span class="keyword1">[]car[]</span>[] &#40;[]<span class="keyword1">[]last[]</span>[] &#42;annotate&#45;header&#45;color&#42;&#41;&#41;&#41;&#41;[]
+[]                &#40;[]<span class="keyword1">[]apply[]</span>[] #'[]<span class="keyword1">[]set&#45;text&#45;attribute[]</span>[] beg &#40;[]<span class="keyword1">[]progn[]</span>
+[]                                                  &#40;[]<span class="keyword1">[]skip&#45;chars&#45;backward[]</span>[] []<span class="string">[]&quot; \t&quot;[]</span>[]&#41;[]
+[]                                                  &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;[]
+[]                       'cvs::annotate style&#41;&#41;&#41;&#41;&#41;&#41;&#41;&#41;[]
+[]  buf&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate&#45;init&#45;buffer &#40;buf rep rev mode&#41;[]
+[]  &#40;with&#45;buffer&#45;selected buf[]
+[]    &#40;[]<span class="keyword1">[]if[]</span>[] mode &#40;[]<span class="keyword1">[]funcall[]</span>[] mode&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]use&#45;keymap[]</span>[] &#42;annotate&#45;mode&#45;map&#42;&#41;[]
+[]    &#40;[]<span class="keyword1">[]make&#45;local&#45;variable[]</span>[] '&#42;repository&#45;name&#42;&#41;[]
+[]    &#40;[]<span class="keyword1">[]setf[]</span>[] &#42;repository&#45;name&#42; rep&#41;[]
+[]    &#40;[]<span class="keyword1">[]make&#45;local&#45;variable[]</span>[] '&#42;revision&#42;&#41;[]
+[]    &#40;[]<span class="keyword1">[]setf[]</span>[] &#42;revision&#42; rev&#41;[]
+[]    &#40;[]<span class="keyword1">[]make&#45;local&#45;variable[]</span>[] '&#42;delete&#45;buffer&#45;hook&#42;&#41;[]
+[]    &#40;[]<span class="keyword1">[]add&#45;hook[]</span>[] '&#42;delete&#45;buffer&#45;hook&#42; 'annotate&#45;delete&#45;buffer&#45;hook&#41;[]
+[]    &#40;[]<span class="keyword1">[]make&#45;local&#45;variable[]</span>[] '&#42;post&#45;command&#45;hook&#42;&#41;[]
+[]    []<span class="comment">[];; add&#45;hook は後で[]
+</span>[]  &#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate&#45;simple &#40;&amp;optional rev&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>
+[]      &#40;[]<span class="keyword1">[]if[]</span>[] []<span class="keyword3">[]&#42;prefix&#45;args&#42;[]</span>[] &#40;[]<span class="keyword1">[]list[]</span>[] &#40;read&#45;revision []<span class="string">[]&quot;Revision: &quot;[]</span>[]&#41;&#41;&#41;&#41;[]
+[]  &#40;annotate rev []<span class="keyword3">[]t[]</span>[]&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate &#40;&amp;optional rev simple&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>
+[]      &#40;[]<span class="keyword1">[]if[]</span>[] []<span class="keyword3">[]&#42;prefix&#45;args&#42;[]</span>[] &#40;[]<span class="keyword1">[]list[]</span>[] &#40;read&#45;revision []<span class="string">[]&quot;Revision: &quot;[]</span>[]&#41;&#41;&#41;&#41;[]
+[]  &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]get&#45;buffer&#45;file&#45;name[]</span>[]&#41;[]
+[]    &#40;[]<span class="keyword1">[]let&#42;[]</span>[] &#40;&#40;line &#40;[]<span class="keyword1">[]current&#45;line&#45;number[]</span>[]&#41;&#41;[]
+[]           &#40;col &#40;[]<span class="keyword1">[]current&#45;column[]</span>[]&#41;&#41;[]
+[]           &#40;scroll &#40;[]<span class="fg12 bg0">[]get&#45;window&#45;line[]</span>[]&#41;&#41;[]
+[]           &#40;rep &#40;repository&#45;name&#41;&#41;[]
+[]           &#40;name &#40;[]<span class="keyword1">[]file&#45;namestring[]</span>[] rep&#41;&#41;[]
+[]           &#40;buf &#40;&#42;execute&#42; &#40;[]<span class="keyword1">[]concat[]</span>[] []<span class="string">[]&quot;annotate &quot;[]</span>[] &#40;revision&#45;options rev&#41;&#41;[]
+[]                           name[]
+[]                           :output &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="string">[]&quot;ann:~A:~A&quot;[]</span>
+[]                                           &#40;[]<span class="keyword1">[]file&#45;namestring[]</span>[] name&#41; &#40;[]<span class="keyword1">[]or[]</span>[] rev []<span class="string">[]&quot;head&quot;[]</span>[]&#41;&#41;&#41;&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]when[]</span>[] buf[]
+[]        &#40;annotate&#45;init&#45;buffer buf rep rev []<span class="keyword3">[]buffer&#45;mode[]</span>[]&#41;[]
+[]        &#40;[]<span class="keyword1">[]unless[]</span>[] simple[]
+[]          &#40;annotate&#45;decorate buf []<span class="keyword3">[]buffer&#45;mode[]</span>[]&#41;&#41;[]
+[]        &#40;[]<span class="keyword1">[]set&#45;buffer[]</span>[] buf&#41;[]
+[]        &#40;[]<span class="keyword1">[]goto&#45;line[]</span>[] line&#41;[]
+[]        &#40;[]<span class="keyword1">[]scroll&#45;window[]</span>[] &#40;[]<span class="keyword1">[]&#45;[]</span>[] &#40;[]<span class="fg12 bg0">[]get&#45;window&#45;line[]</span>[]&#41; scroll&#41;&#41;[]
+[]        &#40;[]<span class="keyword1">[]goto&#45;line[]</span>[] line&#41;[]
+[]        &#40;[]<span class="keyword1">[]multiple&#45;value&#45;bind[]</span>[] &#40;from to tag&#41;[]
+[]            &#40;[]<span class="keyword1">[]find&#45;text&#45;attribute[]</span>[] 'cvs::annotate[]
+[]                                 :start &#40;[]<span class="keyword1">[]progn[]</span>[] &#40;[]<span class="keyword1">[]goto&#45;bol[]</span>[]&#41; &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;[]
+[]                                 :end &#40;[]<span class="keyword1">[]progn[]</span>[] &#40;[]<span class="keyword1">[]goto&#45;eol[]</span>[]&#41; &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;&#41;[]
+[]          &#40;[]<span class="keyword1">[]goto&#45;column[]</span>[] &#40;[]<span class="keyword1">[]&#43;[]</span>[] col &#40;[]<span class="keyword1">[]if[]</span>[] &#40;[]<span class="keyword1">[]and[]</span>[] to from&#41;[]
+[]                                  &#40;[]<span class="keyword1">[]&#45;[]</span>[] to from&#41;[]
+[]                                0&#41;&#41;&#41;&#41;&#41;[]
+[]      buf&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate&#45;extract&#45;current&#45;revision &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>[]&#41;[]
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;rev &#40;annotate&#45;current&#45;revision&#41;&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]when[]</span>[] rev[]
+[]      &#40;[]<span class="keyword1">[]set&#45;buffer[]</span>[] &#40;extract &#42;repository&#45;name&#42; rev&#41;&#41;&#41;&#41;&#41;[]
+
+<span class="comment">[];; local を更新していた場合の考慮が必要[]
+[];;   diff を取って解析?[]
+</span>[]&#40;[]<span class="keyword1">[]defun[]</span>[] annotate&#45;popup &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>[]&#41;[]
+[]  &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]get&#45;buffer&#45;file&#45;name[]</span>[]&#41;[]
+[]    &#40;[]<span class="keyword1">[]let&#42;[]</span>[] &#40;&#40;line &#40;[]<span class="keyword1">[]current&#45;line&#45;number[]</span>[]&#41;&#41;[]
+[]           &#40;file &#40;[]<span class="keyword1">[]file&#45;namestring[]</span>[] &#40;[]<span class="keyword1">[]get&#45;buffer&#45;file&#45;name[]</span>[]&#41;&#41;&#41;[]
+[]           &#40;buf &#40;&#42;execute&#42; []<span class="string">[]&quot;annotate &quot;[]</span>[] file :output []<span class="string">[]&quot; &#42;cvs::annotate&#42;&quot;[]</span>[]&#41;&#41;[]
+[]           revision popup&#41;[]
+[]    &#40;with&#45;buffer&#45;selected buf[]
+[]      &#40;[]<span class="keyword1">[]unwind&#45;protect[]</span>
+[]          &#40;[]<span class="keyword1">[]progn[]</span>
+[]            &#40;[]<span class="keyword1">[]goto&#45;line[]</span>[] line&#41;[]
+[]            &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]looking&#45;at[]</span>[] &#42;annotate&#45;header&#45;regexp&#42;&#41;[]
+[]              &#40;[]<span class="keyword1">[]setf[]</span>[] revision &#40;[]<span class="keyword1">[]match&#45;string[]</span>[] 1&#41;&#41;[]
+[]              &#40;[]<span class="keyword1">[]setf[]</span>[] popup &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="string">[]&quot;~{~A~^ ~}&quot;[]</span>[] &#40;[]<span class="keyword1">[]mapcar[]</span>[] #'[]<span class="keyword1">[]match&#45;string[]</span>[] '&#40;1 2 3&#41;&#41;&#41;&#41;&#41;&#41;[]
+[]        &#40;[]<span class="keyword1">[]delete&#45;buffer[]</span>[] buf&#41;&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]popup&#45;string[]</span>[] &#40;[]<span class="keyword1">[]concat[]</span>[] popup []<span class="string">[]&quot;\n&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;&#45;\n&quot;[]</span>
+[]                          &#40;fetch&#45;log&#45;string file revision&#41;&#41;[]
+[]                  &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] fetch&#45;log &#40;file rev&#41;[]
+[]  &#40;[]<span class="keyword1">[]let&#42;[]</span>[] &#40;&#40;cmd &#40;[]<span class="keyword1">[]concat[]</span>[] []<span class="string">[]&quot;log &quot;[]</span>[] &#40;[]<span class="keyword1">[]or[]</span>[] &#40;revision&#45;options rev&#41; []<span class="string">[]&quot;&quot;[]</span>[]&#41;&#41;&#41;[]
+[]         &#40;buf&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]message[]</span>[] []<span class="string">[]&quot;cvs ~A ~A&quot;[]</span>[] cmd file&#41;[]
+[]    &#40;[]<span class="keyword1">[]setf[]</span>[] buf &#40;&#42;execute&#42; &#40;[]<span class="keyword1">[]concat[]</span>[] []<span class="string">[]&quot;log &quot;[]</span>[] &#40;[]<span class="keyword1">[]or[]</span>[] &#40;revision&#45;options rev&#41; []<span class="string">[]&quot;&quot;[]</span>[]&#41;&#41;[]
+[]                         file :output &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="string">[]&quot; &#42;cvs:log:~A&#42;&quot;[]</span>[] file&#41;&#41;&#41;[]
+[]    buf&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] fetch&#45;log&#45;string &#40;file rev&#41;[]
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;buf &#40;fetch&#45;log file rev&#41;&#41;&#41;[]
+[]    &#40;with&#45;buffer&#45;selected buf[]
+[]      &#40;[]<span class="keyword1">[]unwind&#45;protect[]</span>
+[]          &#40;[]<span class="keyword1">[]multiple&#45;value&#45;bind[]</span>[] &#40;beg end&#41;[]
+[]              &#40;log&#45;find&#45;point rev&#41;[]
+[]            &#40;[]<span class="keyword1">[]buffer&#45;substring[]</span>[] beg end&#41;&#41;[]
+[]        &#40;[]<span class="keyword1">[]delete&#45;buffer[]</span>[] buf&#41;&#41;&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] log&#45;find&#45;point &#40;rev&#41;[]
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;revre &#40;[]<span class="keyword1">[]concat[]</span>[] []<span class="string">[]&quot;^revision &quot;[]</span>[] &#40;[]<span class="keyword1">[]regexp&#45;quote[]</span>[] &#40;[]<span class="keyword1">[]or[]</span>[] rev []<span class="string">[]&quot;&quot;[]</span>[]&#41;&#41; []<span class="string">[]&quot;\\b&quot;[]</span>[]&#41;&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]save&#45;excursion[]</span>
+[]      &#40;[]<span class="keyword1">[]goto&#45;char[]</span>[] &#40;[]<span class="keyword1">[]point&#45;min[]</span>[]&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]unless[]</span>[] &#40;[]<span class="keyword1">[]scan&#45;buffer[]</span>[] revre []<span class="keyword3">[]:regexp[]</span>[] []<span class="keyword3">[]t[]</span>[]&#41;[]
+[]        &#40;[]<span class="keyword1">[]return&#45;from[]</span>[] log&#45;find&#45;point &#40;[]<span class="keyword1">[]values[]</span>[] 0 0&#41;&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]values[]</span>[] &#40;[]<span class="keyword1">[]point[]</span>[]&#41;[]
+[]              &#40;[]<span class="keyword1">[]save&#45;excursion[]</span>
+[]                &#40;[]<span class="keyword1">[]if[]</span>[] &#40;[]<span class="keyword1">[]scan&#45;buffer[]</span>[] []<span class="string">[]&quot;\n&#91;=&#45;&#93;\\{10,\\}$&quot;[]</span>[] []<span class="keyword3">[]:regexp[]</span>[] []<span class="keyword3">[]t[]</span>[]&#41;[]
+[]                    &#40;[]<span class="keyword1">[]point[]</span>[]&#41;[]
+[]                  &#40;[]<span class="keyword1">[]point&#45;max[]</span>[]&#41;&#41;&#41;&#41;&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]define&#45;key[]</span>[] &#42;mode&#45;sub&#45;map&#42; #\a 'annotate&#41;[]
+[]&#40;[]<span class="keyword1">[]define&#45;key[]</span>[] &#42;mode&#45;sub&#45;map&#42; #\A 'annotate&#45;popup&#41;[]
+</pre><

@@ -1,0 +1,87 @@
+
+*p1*[XPathGraph]XPath を作成するときに便利な xpathsh.pl
+
+以下のスクリーンショットから分かるように [http://xpath.kayac.com/:title=XPathGraph] は HTML::TreeBuilder::XPath をバックエンドに使っているようです。
+
+[http://farm3.static.flickr.com/2275/2413818756_e942e3df75_o.png:image]
+
+
+というわけで H::T::XPath を使って xpath をテストするための簡単なシェルを作ってみました。
+Web::Scraper の scraper コマンドみたいなものです。
+これを使えば XPathGraph のデバッグに count() を挿入して要素にマッチしているかどうかを調べる count デバッグなどをしなくても済みます。
+
+
+**ソース
+
+ソースは CodeRepos に入れてあります。
+
+http://coderepos.org/share/browser/lang/perl/misc/xpathsh.pl
+
+
+**使い方
+
+以下のようにして使います。
+
+>||
+> perl xpathsh.pl http://coderepos.org/share/log/
+Getting http://coderepos.org/share/log/
+Parsing http://coderepos.org/share/log/
+xpath> ?
+  q               quit
+  d               dump HTML elements
+  s               dump HTML sources
+  h               xpath history
+  ?               this help message
+xpath> id("chglist")//tr[1]/td[@class="rev"]
+<td class="rev"> @0.1.2.1.3.1.1.0.2
+  <a href="/share/browser/?rev=9445" title="Browse at revision 9445"> @0.1.2.1.3
+.1.1.0.2.0
+    "@9445"
+  " "
+--> 9445
+xpath> h
+id("chglist")//tr[1]/td[@class="rev"]                             ... 1 hits
+xpath> q
+||<
+
+「--> 数値」の部分はマッチしたテキストの数値を抜き出したものです。XPathGraph と同じ値が出ると思います（たぶん）。
+
+
+*p2*[XPathGraph] XPathGraph のヒント・注意点
+
+**デバッグには xpathsh.pl を
+
+See http://d.hatena.ne.jp/miyamuko/20080415/p1
+
+
+**複雑な処理をしたければ Yahoo pipes と組み合わせればいいかも
+
+XPathGraph だと対象のページにグラフの値を作るのに必要な情報がすべてそろっている必要があります。複数ページの情報を集約してグラフの値にしたい場合など、複雑な処理をしたければ Yahoo pipes で前処理してあげればいいんじゃね。って思いました。
+
+
+**XML を指定しても HTML として解釈される
+
+XML に対しても HTML::TreeBuilder::XPath を使っているようで、以下のように RSS を食わしているのに //item では何もマッチしません。
+
+[http://farm3.static.flickr.com/2223/2413818900_b25031f76b_o.png:image]
+
+かわりに /html でひとつマッチしています。
+
+[http://farm4.static.flickr.com/3217/2412993773_3624effa6c_o.png:image]
+
+atom や rss フィードなど XML を指定する場合は注意が必要です (XML Path Language なのに！)
+
+
+**https はだめ?
+
+[http://xpath.kayac.com/graph/bPNv7HAI3RGA7Q Rubyforge Hosted Projects] のグラフには当初 https://rubyforge.org を URL に指定していました。
+テストではうまく値を取得できたのですが、2日ほど放置しても値は収集されていませんでした。http://rubyforge.org にしたところ収集されているようです。
+
+
+
+
+*p3*[XPathGraph]XPathGraph をいろいろ作った
+
+http://xpath.kayac.com/user/miyamuko
+
+とりあえず [http://xpath.kayac.com/graph/GO3huXcI3RGDqw:title=ruby-dev の投稿数] が [http://xpath.kayac.com/graph/PuRPcHcI3RGsFw:title=ruby-list の投稿数] をいつ抜くのかが気になります。

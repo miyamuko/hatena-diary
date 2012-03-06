@@ -1,0 +1,84 @@
+
+*p1*[xyzzy][xl-open-uri]xl-open-uri 1.0.0 リリース
+
+Ruby の [http://doc.ruby-lang.org/ja/1.9.3/library/open=2duri.html:title=open-uri] とほぼ同様の機能を持つ xl-open-uri 1.0.0 をリリースしました。
+xl-open-uri は HTTP や FTP に簡単にアクセスするための機能を提供します。
+
+- http://miyamuko.s56.xrea.com/xyzzy/xl-open-uri/intro.htm
+- https://github.com/miyamuko/xl-open-uri
+
+
+デフォルトでサポートしている URL スキームは http, https, ftp, data です。
+[https://github.com/miyamuko/xl-open-uri/blob/master/reference/xl-open-uri.protocols.md:title=URL スキームを追加するための API] も公開しています。
+
+
+>|lisp|
+user> (open-uri:with-open-uri (f "http://www.google.co.jp/search"
+                                 :query '(:q "xyzzy 読み方" :ie "UTF-8" :oe "UTF-8")
+                                 :encoding *encoding-utf8n*)
+        (values (multiple-value-list
+                 (open-uri:status f))
+                (open-uri:meta f)
+                (open-uri:meta f :content-length)
+                (open-uri:base-uri f)
+                (open-uri:content-type f)
+                (open-uri:charset f)
+                (length (open-uri:read-all f))))
+(200 "OK") ;
+(("Cache-Control" . "private, max-age=0")
+ ("Date" . "Sat, 11 Feb 2012 11:22:59 GMT")
+ ...) ;
+nil ;
+"http://www.google.co.jp/search?q=xyzzy%20%E8%AA%AD%E3%81%BF%E6%96%B9&ie=UTF-8&oe=UTF-8" ;
+"text/html" ;
+"utf-8" ;
+31132
+||<
+
+
+Ruby の open-uri では HTTP GET および FTP のダウンロードしか対応していませんが、xl-open-uri では任意の HTTP メソッドの送信が可能です。また FTP のアップロードにも対応しています。
+
+
+>|lisp|
+;; HEAD リクエストの送信
+user> (with-open-file (f "http://www.jsdlab.co.jp/~kamei/cgi-bin/download.cgi"
+                         :method "HEAD")
+        (decode-universal-time
+         (open-uri:last-modified f)))
+21 ;
+28 ;
+1 ;
+8 ;
+12 ;
+2005 ;
+3 ;
+nil ;
+-9
+
+;; FTP (アップロード)
+user> (open-uri:with-open-uri (os "ftp://example.com/public_html/hello.txt"
+                                  :direction :output
+                                  :if-exists :overwrite
+                                  :encoding :binary
+                                  :auth '("user" "pass"))
+        (with-open-file (is "hello.txt" :encoding :binary)
+          (alexandria:copy-stream is os)))
+13730
+||<
+
+
+
+**リファレンス
+
+めずらしくリファレンスを書きました。
+
+- https://github.com/miyamuko/xl-open-uri/blob/master/reference/xl-open-uri.md
+
+info-modoki-mode でリファレンスを引けるようにするには xl-open-uri と xy-reference をインストールしたあとに、*scratch* バッファで以下を評価してください。
+
+>|lisp|
+(require :xy-reference)
+(xy-reference:2txt)
+||<
+
+その後、xyzzy を再起動すれば見れるはずです。

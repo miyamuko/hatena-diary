@@ -1,0 +1,88 @@
+
+*rspec_sit*[Ruby][RSpec]RSpec で一時的にテストを実行しないようにするバッドノウハウ
+
+RSpec でテスト (テストっていうの？) を一時的に実行しないようにする方法 (JUnit の @Ignore みたいなもの) ってどうやるんでしょうか？
+
+
+Test::Unit を使ってたときは、test_xxx を tst_xxx とかにリネームしてたんですが、RSpec だとこの手は使えません。
+
+で、今はとりあえず以下のコードを spec_helper に追加してごまかしてます。
+
+>|ruby|
+module Spec::DSL::BehaviourEval::ModuleMethods
+  def sit(description=:__generate_description, opts={}, &block)
+    puts "skip: #{description}"
+  end
+end
+||<
+
+こんな感じで一時的に実行したくないテストは it を sit に変えてます。
+
+>|ruby|
+require "spec_helper"
+
+describe Foo do
+  sit "hogehoge" do
+    hoge.succ!
+  end
+
+  it "fugafuga" do
+    1.should == 1
+  end
+end
+||<
+
+sit == skip it の略のつもりです。
+
+
+＠アノテーションが欲しい。。。
+
+
+
+*proc_ensure*[Ruby][RSpec]Proc 本体に直接 ensure を書きたいです
+
+これは動くけど、
+
+>|ruby|
+class TestFoo < Test::Unit::TestCase
+  def test_fugafuga
+    t = FugaFuga.new
+    t.fugafuga
+  ensure
+    t.close
+  end
+end
+||<
+
+これは動かない。
+
+>|ruby|
+describe Foo do
+  it "fugafuga" do
+    t = FugaFuga.new
+    t.fugafuga
+  ensure
+    t.close
+  end
+end
+||<
+
+
+def に直接 ensure が書けるのなら Proc の中に書けてもいいんじゃね。
+
+
+*rspec_next*[Ruby][RSpec]RSpec でテストをスキップ
+
+最初 return にしたら unexpected return (LocalJumpError) って言われた。
+次に break にしてみたら今度は break from proc-closure (LocalJumpError)。
+
+next を使えばいいみたい。
+
+>|ruby|
+describe Foo do
+  it "fugafuga" do
+    next unless RUBY_PLATFORM =~ /win/
+    # Windows 依存のテスト
+  end
+end
+||<

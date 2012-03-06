@@ -1,0 +1,14 @@
+
+*fixdap_xyzzy*[xyzzy]fixdap に xyzzy のプロジェクトを作った
+
+>http://blog.livedoor.jp/nipotan/archives/50899453.html:title>
+BTS を使ったことがある人もない人も、あなたの会社のタスク管理、ごくごく個人的な予定管理、忘年会や新年会の取りまとめ、旅行、合コン、オフ会、もちろん OSS の進捗管理でも、色々用途はあると思いますので、よかったら fixdap を使って、色々なタスクの管理をしてみてください。
+<<
+
+
+おもしろそうだったので fixdap に xyzzy のプロジェクトを作ってみました。
+
+http://fixdap.com/p/xyzzy/
+
+
+ご自由にどうぞ。

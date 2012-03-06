@@ -1,0 +1,55 @@
+
+*p1*[xyzzy] sort-naturally
+
+暇なので自然順ソートライブラリ (id:miyamuko:20050709) と sort-line (http://ohkubo.s53.xrea.com/xyzzy/index.html#sort-line) を組み合わせてみました。
+
+><pre class="source">
+&#40;<span class="keyword1">[]require[]</span>[] []<span class="string">[]&quot;natural&#45;compare&quot;[]</span>&#41;
+&#40;<span class="keyword1">[]require[]</span>[] []<span class="string">[]&quot;sort&#45;line&quot;[]</span>&#41;
+
+&#40;<span class="keyword1">[]defun[]</span>[] sort&#45;naturally &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>[] []<span class="string">[]&quot;&#42;&quot;[]</span>&#41;
+[]  &#40;sort&#45;line::sort&#45;line &#40;[]<span class="keyword1">[]if[]</span>[] sort&#45;line::&#42;sort&#45;line&#45;case&#45;fold&#42;[]
+[]                            #'natural&#45;compare[]
+[]                          &#40;[]<span class="keyword1">[]lambda[]</span>[] &#40;a b&#41; &#40;natural&#45;compare a b []<span class="keyword3">[]:case&#45;fold[]</span>[] []<span class="keyword3">[]t[]</span>[]&#41;&#41;&#41;[]
+[]                        []<span class="keyword3">[]nil[]</span>[] []<span class="keyword3">[]nil[]</span>[]&#41;&#41;[]
+</pre><
+
+例えばバッファに以下のように書いてあった場合、
+
+>||
+rfc822.txt
+rfc1111.txt
+rfc234.txt
+||<
+
+普通に sort するとこうなります。
+
+>||
+rfc1111.txt
+rfc234.txt
+rfc822.txt
+||<
+
+sort-naturally を使えばこうなりますと。
+
+>||
+rfc234.txt
+rfc822.txt
+rfc1111.txt
+||<
+
+リージョン派はこちらで。
+
+><pre class="source">
+&#40;<span class="keyword1">[]defun[]</span>[] sort&#45;naturally&#45;region &#40;s e&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>[] []<span class="string">[]&quot;&#42;r&quot;[]</span>&#41;
+[]  &#40;[]<span class="keyword1">[]if[]</span>[] &#40;[]<span class="keyword1">&lt;</span>[] e s&#41; &#40;[]<span class="keyword1">[]rotatef[]</span>[] s e&#41;&#41;[]
+[]  &#40;[]<span class="keyword1">[]start&#45;selection[]</span>[] 2 []<span class="keyword3">[]t[]</span>[] s&#41;[]
+[]  &#40;[]<span class="keyword1">[]goto&#45;char[]</span>[] e&#41;[]
+[]  &#40;sort&#45;line::sort&#45;line &#40;[]<span class="keyword1">[]if[]</span>[] sort&#45;line::&#42;sort&#45;line&#45;case&#45;fold&#42;[]
+[]                            #'natural&#45;compare[]
+[]                          &#40;[]<span class="keyword1">[]lambda[]</span>[] &#40;a b&#41; &#40;natural&#45;compare a b []<span class="keyword3">[]:case&#45;fold[]</span>[] []<span class="keyword3">[]t[]</span>[]&#41;&#41;&#41;[]
+[]                        []<span class="keyword3">[]nil[]</span>[] []<span class="keyword3">[]nil[]</span>&#41;
+[]  &#40;[]<span class="keyword1">[]stop&#45;selection[]</span>[]&#41;&#41;[]
+</pre><

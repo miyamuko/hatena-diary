@@ -1,0 +1,166 @@
+
+*pci_top_matches*[xyzzy][PCI]xyzzy lisp で集合知プログラミング - 2.3.4 〜 2.5
+
+[http://www.amazon.co.jp/exec/obidos/ASIN/9780596529321/miyamuko-22/ref=nosim/:title=集合知プログラミング]を xyzzy lisp で写経します。
+
+
+ソースは CodeRepos に入れてあります。
+
+http://coderepos.org/share/browser/lang/xyzzy/pci-code/site-lisp/chapter2/recommendations.l
+
+なお、オリジナルのソースコード (Python) は以下からダウンロードできます。
+
+http://oreilly.com/catalog/9780596529321/
+
+
+まず、写経に入る前に今まで flet でローカルに定義していた関数などを普通に定義しておきます。
+
+>|lisp|
+(defun persons (prefs)
+  (mapcar #'car prefs))
+
+(defun items (prefs person)
+  (mapcar #'car ($ prefs person)))
+
+(defun all-items (prefs)
+  (remove-duplicates
+   (mapcan #'(lambda (person)
+               (items prefs person))
+           (persons prefs))
+   :test #'string=))
+
+(defun ratings (prefs person items)
+  (mapcar #'(lambda (item)
+              ($ prefs person item))
+          items))
+
+(defun rated (prefs person item)
+  (and ($ prefs person item)
+       (not (zerop ($ prefs person item)))))
+||<
+
+
+
+**2.3.4 評者のランキング
+
+- リストの先頭 n 件を取得するには [http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=subseq:title=subseq]
+- person は除いたランキングを作成するために person を事前に [http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=remove:title=remove]
+- [http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=sort:title=sort] には PREDICATE を指定できるので、オリジナルのコードのように sort して reverse しなくてもよい
+
+>|lisp|
+;; 連想リストの prefs から person に最もマッチするものたちを返す
+;; 結果の数と類似性関数はオプションのパラメータ
+(defun top-matches (prefs person &key (n 5) (similarity #'sim-pearson))
+  (let ((scores (mapcar #'(lambda (other)
+                            (cons (funcall similarity prefs person other)
+                                  other))
+                        (remove person (persons prefs)
+                                :test #'string=))))
+    (subseq (sort scores #'> :key #'car)
+            0 n)))
+||<
+
+**テスト
+
+>|lisp|
+(top-matches *critics* "Toby" :n 3)
+((0.9912409 . "Lisa Rose")
+ (0.9244735 . "Mick LaSalle")
+ (0.8934049 . "Claudia Puig"))
+(top-matches *critics* "Toby" :n 3 :similarity #'sim-distance)
+((0.3076923 . "Mick LaSalle")
+ (0.2857143 . "Michael Phillips")
+ (0.2352941 . "Claudia Puig"))
+||<
+
+
+**2.4 アイテムを推薦する
+
+最初は破壊的な関数を使わずに書こうとしていたのですが、難しかったです。
+あきらめて [http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=dolist:title=dolist] やら破壊的な関数を使いまくって書きました。
+
+alist は値の更新や新規追加などが面倒ですね。
+素直に hash-table を使うべきだったかも。。。
+
+>|lisp|
+;; person 以外の全ユーザの評点の重み付き平均を使い、person への推薦を算出する
+(defun get-recommendations (prefs person &key (similarity #'sim-pearson))
+  (macrolet ((aincf (value item alist)
+               `(if (assoc ,item ,alist :test #'string=)
+                    (incf (cdr (assoc ,item ,alist :test #'string=))
+                          ,value)
+                  (setf ,alist (acons ,item ,value ,alist)))))
+    (let (totals simsums)
+      ;; 自分自身とは比較しないので remove
+      (dolist (other (remove person (mapcar #'car prefs)
+                             :test #'string=))
+        (let ((sim (funcall similarity prefs person other)))
+          ;; 0 以下のスコアは無視する
+          (when (>= sim 0)
+            (dolist (item (items prefs other))
+              ;; まだ見ていない映画の得点のみを算出
+              (unless (rated prefs person item)
+                (aincf (* ($ prefs other item) sim) item totals)
+                (aincf sim item simsums))))))
+      ;; 正規化したリストを作る
+      (let ((rankings (mapcar #'(lambda (item/total)
+                                  (let ((item (car item/total))
+                                        (total (cdr item/total)))
+                                    (cons (/ total ($ simsums item)) item)))
+                              totals)))
+        (sort rankings #'> :key #'car)))))
+||<
+
+**テスト
+
+>|lisp|
+(get-recommendations *critics* "Toby")
+((3.34779 . "The Night Listener")
+ (2.83255 . "Lady in the Water")
+ (2.530981 . "Just My Luck"))
+(get-recommendations *critics* "Toby" :similarity #'sim-distance)
+((3.500248 . "The Night Listener")
+ (2.756124 . "Lady in the Water")
+ (2.461989 . "Just My Luck"))
+||<
+
+
+
+**2.5 似ている製品
+
+transform-prefs は以下のような変換を行う関数です。
+
+>||
+'(("人1" ("映画1" . 3) ("映画2" . 3.5))         '(("映画1" ("人1" . 3) ("人2" . 1))
+  ("人2" ("映画1" . 1) ("映画3" . 4.5)))   =>     ("映画2" ("人1" . 3.5))
+                                                  ("映画3" ("人2" . 4.5)))
+||<
+
+データをこのように入れ替えることによって、特定の映画が好きな人を見つけることができます。
+その人が他に好きな映画＝似ている映画という判断という解釈でいいのかな。
+
+>|lisp|
+(defun transform-prefs (prefs)
+    (mapcar #'(lambda (item)
+                (cons item (remove-if-not
+                            #'cdr
+                            (mapcar #'(lambda (person)
+                                        (cons person ($ prefs person item)))
+                                    (persons prefs)))))
+            (all-items prefs)))
+||<
+
+**テスト
+
+>|lisp|
+(let ((movies (transform-prefs *critics*)))
+  (top-matches movies "Superman Returns"))
+((0.6579514 . "You, Me and Dupree")
+ (0.4879507 . "Lady in the Water")
+ (0.1118033 . "Snakes on a Plane")
+ (-0.1798471 . "The Night Listener")
+ (-0.42289 . "Just My Luck"))
+||<
+
+マイナスの相関スコアは好まない傾向を表すらしい。
+上記の例だと Superman Returns を好きな人は Just My Luck はあまり好きではない傾向があることがわかる。

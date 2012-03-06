@@ -1,0 +1,189 @@
+
+*google_ajax_language_api_meets_xyzzy*[xyzzy]xyzzy で Google AJAX Language API
+
+- [http://code.google.com/apis/ajaxlanguage/:title]
+- [http://googleblog.blogspot.com/2008/03/new-google-ajax-language-api-tools-for.html:title]
+- [http://journal.mycom.co.jp/articles/2008/03/21/ajaxlang/index.html:title]
+
+
+
+日本語と英語の翻訳ぐらいには使えるかな。
+
+
+**言語の判定
+
+>|lisp|
+(require "xml-http-request")
+(require "json")
+(use-package :xml-http-request)
+(use-package :json)
+
+(json-decode
+ (xhr-get "http://www.google.com/uds/GlangDetect"
+          :query '(:q "こんにちは"
+                   :v 1.0)
+          :encoding *encoding-utf8n*
+          :key 'xhr-response-text))
+;=> (("responseData"
+;     ("language" . "ja")
+;     ("isReliable" . t)
+;     ("confidence" . 1.0))
+;    ("responseDetails")
+;    ("responseStatus" . 200))
+||<
+
+
+**翻訳
+
+>|lisp|
+(json-decode
+ (xhr-get "http://www.google.com/uds/Gtranslate"
+          :query '(:q "こんにちわ"
+                   :langpair "ja|en"
+                   :v 1.0)
+          :encoding *encoding-utf8n*
+          :key 'xhr-response-text))
+;=> (("responseData"
+;     ("translatedText" . "Hello"))
+;    ("responseDetails")
+;    ("responseStatus" . 200))
+||<
+
+
+query パラメータで callback と context を省略すると JSON 形式で返してくれます。
+
+>||
+{"responseData": {"translatedText":"Hello"}, "responseDetails": null, "responseStatus": 200}
+||<
+
+callback と context を指定すると JSONP な形式になるみたいです。
+
+>||
+callback_fugafuga('context_hogehoge',{"translatedText":"Hello"}, 200, null, 200)
+||<
+
+
+***xml-http-request を使うと Shift_JIS で表現できない文字は文字化けする
+
+xml-http-request を使うと xyzzy 内部で Shift_JIS に変換してしまっているので日本語と英語以外は化けます。
+文字化けすると困る場合は junk/http とかを使えばいいと思うよ。
+
+>|lisp|
+(json-decode
+ (xhr-get "http://www.google.com/uds/Gtranslate"
+          :query '(:q "hello"
+                   :langpair "en|zh"
+                   :v 1.0)
+          :key 'xhr-response-text))
+;=> (("responseData"
+;     ("translatedText" . "?好"))
+;    ("responseDetails")
+;    ("responseStatus" . 200))
+||<
+
+
+***翻訳できない言語の組み合わせ
+
+>|lisp|
+(json-decode
+ (xhr-get "http://www.google.com/uds/Gtranslate"
+          :query '(:q "こんにちわ"
+                   :langpair "ja|zh"
+                   :v 1.0)
+          :encoding *encoding-utf8n*
+          :key 'xhr-response-text))
+;=> (("responseData")
+;    ("responseDetails" . "invalid translation language pair")
+;    ("responseStatus" . 400))
+||<
+
+
+
+*google_visualization_api_meets_xyzzy*[xyzzy]xyzzy で Google Visualization API
+
+- [http://code.google.com/apis/visualization/:title]
+
+
+Language API とは違い必ず JSONP で返ってくるみたいなので json-decode するときに :strict nil を指定してパースします。
+
+>|lisp|
+(json-decode
+ (xhr-get "http://spreadsheets.google.com/tq"
+          :query '(:key "pCQbetd-CptFT842vhfEADg"
+                   )
+          :key 'xhr-response-text)
+ :strict nil)
+;=> (("requestId" . "0")
+;    ("status" . "ok")
+;    ("signature" . "7939398364133692080")
+;    ("table"
+;     ("cols"
+;      (("id" . "A")
+;       ("label" . "Latitude")
+;       ("type" . "n")
+;       ("pattern" . "#0.###############"))
+;      (("id" . "B")
+;       ("label" . "Longitude")
+;       ("type" . "n")
+;       ("pattern" . "#0.###############"))
+;      (("id" . "C")
+;       ("label" . "Tooltip")
+;       ("type" . "t")
+;       ("pattern" . "")))
+;     ("rows"
+;      ((("v" . 22.21) ("f" . "22.21"))
+;       (("v" . 91.5) ("f" . "91.5"))
+;       (("v" . "Chittagong, Bangladesh")))
+;      ((("v" . 18.0) ("f" . "18"))
+;       (("v" . -76.5) ("f" . "-76.5"))
+;       (("v" . "Kingston, Jamaica")))
+;      ((("v" . -33.52) ("f" . "-33.52"))
+;       (("v" . 151.12) ("f" . "151.12"))
+;       (("v" . "Sydney, Australia"))))))
+||<
+
+
+データは Visualization API のサンプルです。
+
+- [http://spreadsheets.google.com/pub?key=pCQbetd-CptFT842vhfEADg:title]
+
+
+** query の指定
+
+query でカラムを指定するときに label じゃなくて id を指定しなければいけない点で少しはまりました。
+label 指定できないのかな。
+
+>|lisp|
+(require "xml-http-request")
+(require "json")
+(use-package :xml-http-request)
+(use-package :json)
+
+(json-decode
+ (xhr-get "http://spreadsheets.google.com/tq"
+          :query '(:key "pCQbetd-CptFT842vhfEADg"
+                   :tq "select C from `Sheet 1` where A > 0"
+                   )
+          :key 'xhr-response-text)
+ :strict nil)
+;=> (("requestId" . "0")
+;    ("status" . "ok")
+;    ("signature" . "4080048158423432748")
+;    ("table"
+;     ("cols"
+;      (("id" . "C")
+;       ("label" . "Tooltip")
+;       ("type" . "t")
+;       ("pattern" . "")))
+;     ("rows"
+;      ((("v" . "Chittagong, Bangladesh")))
+;      ((("v" . "Kingston, Jamaica"))))))
+||<
+
+
+
+この API の本質は「Google Visualization API 形式でデータを返す Data Source を作ればガジェットとかで簡単に視覚化できますよ」という点にあると思うんですけど（たぶん）、Google Spreadsheet からデータを取得するシンプルな API としても使えますね。
+[http://code.google.com/apis/gdata/:title=GData API] より簡単でクエリも指定できますし。
+
+
+はてなグラフが Data Source にならないかなー。

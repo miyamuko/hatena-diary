@@ -1,0 +1,31 @@
+
+*hatena_haiku_mode*[xyzzy][hatena-haiku-mode]hatena-haiku-mode 0.0.1 リリース!
+
+今日1月14日は成人の日らしいので hatena-haiku-mode をリリースしました。
+
+hatena-haiku-mode は xyzzy 上ではてなハイクを閲覧・投稿するための専用ブラウザです。
+
+http://miyamuko.s56.xrea.com/xyzzy/hatena-haiku-mode/intro.htm
+
+
+エントリやキーワードの取得は API がなかったのでゴリゴリと scrape しています。
+はてなハイク API 欲しい！
+
+
+
+
+**メモ
+
+
+- 構想 3 分
+- [http://graph.hatena.ne.jp/miyamuko/%E3%83%8F%E3%83%83%E3%82%AF%E6%99%82%E9%96%93%28%E7%B4%AF%E8%A8%88%29/?startdate=2007-12-22&enddate=2008-01-14:title=開発 70 時間]
+- 規模 3KL
+
+
+xyzzy のバッファや Window を駆使して UI を構築するのは初めてだったのでいろいろ苦戦しました。
+ホントは去年のうちにリリースしたかったんだけど、見積もりが甘かったのか（←いつものこと）手が遅いのか、一月の中ごろまでかかってしまいました。
+3KL/70H は遅いよなぁ。
+
+
+
+それじゃあ、今年もよろしくお願いします。

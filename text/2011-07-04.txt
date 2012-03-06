@@ -1,0 +1,21 @@
+
+*p1*[xyzzy][power-usage]東北電力と関西電力の電力使用状況を xyzzy のモードラインに表示
+
+xyzzy のモードラインに電力使用状況を表示する [http://miyamuko.s56.xrea.com/xyzzy/power-usage/intro.htm:title=power-usage] で、東京電力以外にも東北電力と関西電力に対応しました。
+
+
+東京電力の場合は [http://tepco-usage-api.appspot.com/:title=東京電力電力供給状況API] のほうが情報量が多いので引き続きこちらから取得し、
+東北電力と関西電力の場合は [http://developer.yahoo.co.jp/webapi/shinsai/setsuden/v1/latestpowerusage.html:title=Yahoo 電力使用状況API] から取得します。
+
+
+
+デフォルトでは東京電力のデータを取得するので、東北電力と関西電力管内の人は以下のように設定してください。
+
+>|lisp|
+(require "power-usage")
+;; 関西電力
+; (setf power-usage:*power-usage-area* :kansai)
+;; 東北電力
+; (setf power-usage:*power-usage-area* :tohoku)
+(power-usage:power-usage-mode t)
+||<

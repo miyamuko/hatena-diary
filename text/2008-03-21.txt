@@ -1,0 +1,20 @@
+
+*kuroda_hisao_fullfeed*[Lisp][pipes]黒田氏の記事を Yahoo! pipes で RSS 全文配信化
+
+黒板で有名な Common Lisper [http://cl-www.msi.co.jp/solutions/knowledge/lisp-world/:title=数理システム黒田氏の記事]を Yahoo! pipes を使って勝手に全文配信 RSS 化してみました。
+購読は以下のページからできます。
+
+http://pipes.yahoo.com/miyamuko/kuroda_hisao_fullfeed
+
+
+LDR で見るとこんな感じです。
+
+[http://farm3.static.flickr.com/2156/2348261047_5329438a72_o.png:image]
+
+
+
+
+
+RSS への直リンも一応張っておきます。
+
+http://pipes.yahoo.com/pipes/pipe.run?_id=aLEK4r_x3BGeiV5SxQnzeQ&_render=rss

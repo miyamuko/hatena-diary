@@ -1,0 +1,39 @@
+
+*p1*[xyzzy]DOM ツリーをトラバース
+
+><blockquote cite="http://d.hatena.ne.jp/miyamuko/20050909#p2" title="ほかの言語での COM - xyzzy の場合">
+<p>ie.Document.all の IEnum を取得できなかったり。
+</p>
+</blockquote><
+
+とか書いたけど、DOM ツリーに関しては普通に length と item でループすればよかったということにいまさら気づいたとか。
+
+
+
+まず length までループしながら item で取得するようにして・・・ (というか do によるループはいつまでたっても慣れないなぁ)
+
+><pre class="source">
+&#40;<span class="keyword1">[]defun[]</span>[] ole&#45;getlist &#40;oledata&#41;[]
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;len &#40;[]<span class="fg12 bg0">[]ole&#45;getprop[]</span>[] oledata '[]<span class="keyword1">[]length[]</span>[]&#41;&#41;[]
+[]        &#40;result&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]do[]</span>[] &#40;&#40;i 0 &#40;[]<span class="keyword1">[]1&#43;[]</span>[] i&#41;&#41;&#41;[]
+[]        &#40;&#40;[]<span class="keyword1">[]not[]</span>[] &#40;[]<span class="keyword1">&lt;</span>[] i len&#41;&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]push[]</span>[] &#40;[]<span class="fg12 bg0">[]ole&#45;method[]</span>[] oledata 'item i&#41; result&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]reverse[]</span>[] result&#41;&#41;&#41;[]
+</pre><
+
+こうする。
+
+><pre class="source">
+&#40;<span class="keyword1">[]setf[]</span>[] ie &#40;[]<span class="fg12 bg0">[]ole&#45;create&#45;object[]</span>[] []<span class="string">[]&quot;InternetExplorer&#46;Application&quot;[]</span>[]&#41;&#41;[]
+[]#&lt;oledata 189276148&gt;[]
+[]#{ie&#46;GoHome}[]
+&#40;<span class="keyword1">[]mapcar[]</span>[] #'&#40;[]<span class="keyword1">[]lambda[]</span>[] &#40;e&#41;[]
+[]            #{e&#46;nodeName}&#41;[]
+[]        &#40;ole&#45;getlist #{ie&#46;Document&#46;all}&#41;&#41;[]
+&#40;<span class="string">[]&quot;HTML&quot;[]</span>[] []<span class="string">[]&quot;HEAD&quot;[]</span>[] []<span class="string">[]&quot;TITLE&quot;[]</span>[] []<span class="string">[]&quot;META&quot;[]</span>[] []<span class="string">[]&quot;#comment&quot;[]</span>[] &#46;&#46;&#46;&#41;[]
+</pre><
+
+
+
+response-xml 作れるじゃん (作った)。

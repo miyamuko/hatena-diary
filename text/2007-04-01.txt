@@ -1,0 +1,601 @@
+
+*p1*[YAML][Ruby][Perl][Python][xyzzy]YAML パーサのベンチマーク
+
+ちょっとまえに [http://miyamuko.s56.xrea.com/xyzzy/yaml-syck/:title=xyzzy 用の YAML パーサ] を書きました。
+で、「yaml-syck - syck を使った高速な YAML パーサ」と謳ってしまった手前、本当に「高速」なのか気になって気になって夜も眠れない毎日を過ごしていました。
+
+ということで、各種 YAML パーサのベンチマークを採ってみました。
+
+**ベンチマーク結果
+
+後述するテストデータを 200 回パースするのにかかった時間です (rake N=200 で実行)。
+
+|*処理系|*YAMLパーサ|*実行時間(秒)|
+|perl 5.8.8|YAML::Syck 0.82 / syck 0.61|1.72|
+|ruby 1.8.6|Syck (bundle) / syck 0.60|2.70|
+|python 2.5.0|PySyck 0.61.2 / syck 0.61+svn231+patches|4.71|
+|python 2.5.0|PyYAML 3.04 / libyaml 0.0.1|7.65|
+|jruby 0.9.8 / Java 1.5.0_11|JvYAMLb (bundle)|8.92|
+|xyzzy 0.2.2.235|yaml-syck 0.0.1 / syck 0.61+svn231+patches|39.73|
+|perl 5.8.8|YAML 0.62|68.62|
+|ruby 1.8.6|RbYAML 0.2.0|161.75|
+|python 2.5.0|PyYAML 3.04|232.76|
+
+
+
+***まとめ
+
+- syck は「Syck = YAML + fast.」というだけあって、さすがに速い
+- xyzzy/yaml-syck が遅いのは [あとでしらべる]
+- PyYAML を使うなら libyaml (yaml.CLoader) で
+- JvYAMLb は jruby 用に Java で書かれた YAML パーサ
+-- jruby に標準でバンドルされている
+-- 結構速い、C で書かれた libyaml とほぼ互角！
+- [http://digit.que.ne.jp/work/index.cgi?Perl%e3%83%a1%e3%83%a2%2fYAML%2fPyYAML%e3%81%aePerl%e7%a7%bb%e6%a4%8d%e3%83%97%e3%83%ad%e3%82%b8%e3%82%a7%e3%82%af%e3%83%88%ef%bc%882006%2e08%ef%bc%89:title=PyYAML を Perl に移植する話] は [http://trac.yaml.com/trac/wiki/PlYaml:title=途中で止まってる?]
+
+
+**ベンチマーク対象
+
+
+***データ
+
+対象のデータは以下の YtsSpecificationExamples.yml です。
+- http://code.whytheluckystiff.net/syck/browser/trunk/ext/ruby/yts/YtsSpecificationExamples.yml?format=raw
+
+Perl の YAML.pm 0.62 がそのままじゃ読めなかったので、一回 load -> dump して YAML.pm でも読めるようにしています。
+
+***ライブラリ
+
+- Ruby/Syck
+- [http://rbyaml.rubyforge.org/:title=Ruby/RbYAML]
+- JRuby/JvYAMLb
+- [http://pyyaml.org/wiki/PySyck:title=Python/PySyck]
+- [http://pyyaml.org/wiki/PyYAML:title=Python/PyYAML]
+- [http://pyyaml.org/wiki/LibYAML:title=Python/PyYAML (libyaml)]
+- [http://search.cpan.org/~audreyt/YAML-Syck/:title=Perl/YAML::Syck]
+- [http://search.cpan.org/~ingy/YAML/:title=Perl/YAML]
+- [http://miyamuko.s56.xrea.com/xyzzy/yaml-syck/:title=xyzzy/yaml-syck]
+
+
+**ベンチマーク スクリプト
+
+ベンチマーク スクリプトは以下に置いてあります。
+http://code.google.com/p/yaml-benchmark/
+
+ソースを checkout して rake を実行することでベンチマークが走ります。
+
+
+**環境
+
+|*CPU|Intel Core Duo L2400(1.66GHz・LV)|
+|*メモリ|1G|
+|*OS|Windows XP SP2|
+
+
+**感想
+
+
+***syck
+
+syck 速いですね。_why++。
+YAML 1.0 で問題ない場合は syck を使った YAML パーサを選んでおけばよさそうです。
+
+なんですが、xyzzy の yaml-syck は遅すぎですね。
+syck と xyzzy 間を行ったりきたりしているので、そこのオーバーヘッドが大きいのか、それとも単に実装がタコなのか。
+原因はあとで調べます。
+
+＃「syck を使った高速な YAML パーサ」っていうのはうそだな。
+＃次のバージョンでは「syck を使っている割には遅い YAML パーサ」にしようかな。。。
+
+
+***PyYAML
+
+YAML 1.1 を実装している [http://pyyaml.org/wiki/PyYAML:title=PyYAML] には pure python な実装と、C で書いた実装 ([http://pyyaml.org/wiki/LibYAML:title=libyaml]) があるみたいです。
+PyYAML をインストールすれば両方入ってくるので、普通は C で書かれた yaml.CLoader を使ったほうがいいかも。
+
+＃Python な人じゃないのでよくわかりません。
+
+
+***JvYAML(b)
+
+[https://jvyaml.dev.java.net/:title=JvYAML] が JRuby 用に Java で書かれた YAML パーサで作者は RbYAML の人。
+文字列ベースで処理をしている JvYAML を Byte 配列ベースで書き直したのが、[http://ola-bini.blogspot.com/2007/02/announcing-jvyamlb-fork.html:title=JvYAMLb] ということらしいです。
+で、JvYAMLb は JRuby に標準で含まれてます。
+
+YAML 1.1 をちゃんと扱いたい && RbYAML が遅くて我慢できないという人は JRuby を試してみる価値はあるんじゃないかと思います。
+
+ちなみに、CRuby と JRuby どちらが速いか試そうと思ったのですが、JRuby 0.98 上で RbYAML 0.2.0 を動すとエラーになったのであきらめました。
+
+
+***Perl
+
+YAML.pm も YAML::Syck も YAML 1.0。
+速度面から、現時点では YAML::Syck が一択か。
+
+[http://digit.que.ne.jp/work/index.cgi?Perl%e3%83%a1%e3%83%a2%2fYAML%2fPyYAML%e3%81%aePerl%e7%a7%bb%e6%a4%8d%e3%83%97%e3%83%ad%e3%82%b8%e3%82%a7%e3%82%af%e3%83%88%ef%bc%882006%2e08%ef%bc%89:title=PyYAML を Perl に移植] する [http://trac.yaml.com/trac/wiki/PlYaml:title=プロジェクト] って放置プレイ中？
+
+
+**TODO
+
+- JvYAML vs JvYAMLb
+- YARV (ruby 1.9 vs 1.8)
+- dump のベンチマーク
+
+**更新履歴
+
+- 2007-04-01: PyYAML のスクリプトを更新。
+
+
+**ベンチマークスクリプト
+
+====
+
+(in C:/home/miyamuko/workspace/my/yaml-benchmark/trunk)
+
+**ベンチマークスクリプト
+
+*** xyzzy/syck
+
+>|lisp|
+(require "yaml-syck")
+(use-package :yaml-syck)
+
+(defun dump-report (target count dt)
+  (let ((fmt "
+xyzzy/syck:
+  result:
+    ~A:
+      wallclock: ~D
+      base: 1000
+      loaded: ~D
+  benchmark_script: xyzzy-syck.l
+  language: lisp
+  interpreter:
+    name: xyzzy
+    version: ~A
+  library:
+    name: yaml-syck
+    native_library:
+      name: syck
+      version: 0.61+svn231+patches
+    language: [xyzzy lisp, C]
+    version: ~A
+"))
+    (format t fmt
+            target
+            dt
+            count
+            (software-version)
+            (syck-xyzzy-binding-version))))
+
+(defun yaml-bench (n target outfile)
+  (with-output-to-temp-buffer ("*tmp*")
+    (let ((s (get-internal-real-time))
+          (count 0))
+      (handler-case
+          (progn
+            (dotimes (i n)
+              (syck-load-documents
+               target
+               :from :filename
+               :callback #'(lambda (y) (incf count))))
+            (let ((e (get-internal-real-time)))
+              (dump-report target count (- e s))))
+        (error (c)
+          (format t "~S" c)))
+      (write-file outfile))))
+||<
+
+*** perl/yaml
+
+>|perl|
+use strict;
+use warnings;
+
+use Benchmark ':hireswallclock';
+use YAML;
+
+sub yaml_bench {
+    my $filename = shift;
+    my @y = YAML::LoadFile($filename);
+    return scalar @y;
+}
+
+my ($filename, $n) = ($ARGV[0], int($ARGV[1]));
+my $count = 0;
+my $t = timeit($n, sub {
+    $count += yaml_bench($filename);
+});
+
+print YAML::Dump({
+    "perl/yaml" => {
+        "benchmark_script" => __FILE__,
+        "language" => "perl",
+        "interpreter" => {
+            "name" => "perl",
+            "version" => sprintf("%vd", $^V),
+            "banner" => [split(/\n/, `perl -v`)]->[1],
+        },
+        "library" => {
+            "name" => "YAML",
+            "version" => $YAML::VERSION,
+            "language" => ["perl"],
+        },
+        "result" => {
+            $filename => {
+                "loaded" => $count,
+                "wallclock" => $t->real,
+            }
+        }
+    }
+});
+||<
+
+*** perl/syck
+
+>|perl|
+use strict;
+use warnings;
+
+use Benchmark ':hireswallclock';
+use YAML::Syck;
+
+sub yaml_bench {
+    my $filename = shift;
+    my @y = YAML::Syck::LoadFile($filename);
+    return scalar @y;
+}
+
+my ($filename, $n) = ($ARGV[0], int($ARGV[1]));
+my $count = 0;
+my $t = timeit($n, sub {
+    $count += yaml_bench($filename);
+});
+
+print YAML::Syck::Dump({
+    "perl/syck" => {
+        "benchmark_script" => __FILE__,
+        "language" => "perl",
+        "interpreter" => {
+            "name" => "perl",
+            "version" => sprintf("%vd", $^V),
+            "banner" => [split(/\n/, `perl -v`)]->[1],
+        },
+        "library" => {
+            "name" => "YAML::Syck",
+            "version" => $YAML::Syck::VERSION,
+            "language" => ["C"],
+            "native_library" => {
+                "name" => "syck",
+                "version" => "0.61",  # from syck.h
+            },
+        },
+        "result" => {
+            $filename => {
+                "loaded" => $count,
+                "wallclock" => $t->real,
+            }
+        }
+    }
+});
+||<
+
+*** python/syck
+
+>|python|
+#--*- encoding: shift-jis -*--
+
+from __future__ import with_statement
+
+import syck
+import sys
+import time
+
+def yaml_bench(filename):
+    with open(filename, "r") as f:
+        gen = syck.load_documents(f)
+        i = 0
+        for y in gen:
+            i += 1
+        return i
+
+filename, n = sys.argv[1], int(sys.argv[2])
+count = 0
+
+s = time.clock()
+for i in range(n):
+    count += yaml_bench(filename)
+e = time.clock()
+
+
+import platform
+from subprocess import *
+
+print syck.dump({
+    "python/syck": {
+        "benchmark_script": __file__,
+        "language": "python",
+        "interpreter": {
+            "name": "python",
+            "version": platform.python_version(),
+            "banner": Popen("python --version", stderr=PIPE).communicate()[1].strip(),
+        },
+        "library": {
+            "name": "PySyck",
+            "version": "0.61.2",
+            "language": ["C"],
+            "native_library": {
+                "name": "syck",
+                "version": "0.61+svn231+patches",
+            },
+        },
+        "result": {
+            filename: {
+                "loaded": count,
+                "wallclock": e - s,
+            }
+        }
+    }
+})
+||<
+
+*** python/pyyaml
+
+>|python|
+#--*- encoding: shift-jis -*--
+
+from __future__ import with_statement
+
+import yaml
+import sys
+import time
+
+def yaml_bench(filename):
+    with open(filename, "r") as f:
+        return len(list(yaml.load_all(f)))
+
+filename, n = sys.argv[1], int(sys.argv[2])
+count = 0
+
+s = time.clock()
+for i in range(n):
+    count += yaml_bench(filename)
+e = time.clock()
+
+
+import platform
+from subprocess import *
+
+print yaml.dump({
+    "python/pyyaml": {
+        "benchmark_script": __file__,
+        "language": "python",
+        "interpreter": {
+            "name": "python",
+            "version": platform.python_version(),
+            "banner": Popen("python --version", stderr=PIPE).communicate()[1].strip(),
+        },
+        "library": {
+            "name": "PyYAML",
+            "version": "3.04",
+            "language": ["python"],
+        },
+        "result": {
+            filename: {
+                "loaded": count,
+                "wallclock": e - s,
+            }
+        }
+    }
+})
+||<
+
+*** python/cyaml
+
+>|python|
+#--*- encoding: shift-jis -*--
+
+from __future__ import with_statement
+
+import yaml, _yaml
+import sys
+import time
+
+def yaml_bench(filename):
+    with open(filename, "r") as f:
+        return len(list(yaml.load_all(f, Loader = yaml.CLoader)))
+
+filename, n = sys.argv[1], int(sys.argv[2])
+count = 0
+
+s = time.clock()
+for i in range(n):
+    count += yaml_bench(filename)
+e = time.clock()
+
+
+import platform
+from subprocess import *
+
+print yaml.dump({
+    "python/cyaml": {
+        "benchmark_script": __file__,
+        "language": "python",
+        "interpreter": {
+            "name": "python",
+            "version": platform.python_version(),
+            "banner": Popen("python --version", stderr=PIPE).communicate()[1].strip(),
+        },
+        "library": {
+            "name": "PyYAML",
+            "version": "3.04",
+            "language": ["C"],
+            "native_library": {
+                "name": "libyaml",
+                "version": _yaml.get_version_string(),
+            }
+        },
+        "result": {
+            filename: {
+                "loaded": count,
+                "wallclock": e - s,
+            }
+        }
+    }
+})
+||<
+
+*** jruby/jvyamlb
+
+>|ruby|
+require "yaml"
+require "benchmark"
+
+def yaml_bench(filename)
+  i = 0
+  open(filename) do |f|
+    YAML.load_documents(f) { i += 1 }
+  end
+  i
+end
+
+filename, n = ARGV[0], ARGV[1].to_i
+count = 0
+t = Benchmark.measure {
+  n.times {
+    count += yaml_bench(filename)
+  }
+}
+
+
+require "java"
+module JRuby
+  include_class "org.jruby.runtime.Constants"
+end
+
+puts YAML.dump({
+  "jruby/jvyamlb" => {
+    "benchmark_script" => __FILE__,
+    "language" => "ruby",
+    "interpreter" => {
+      "name" => "jruby",
+      "version" => JRuby::Constants::VERSION,
+      "banner" => `jruby -v`.chomp,
+      "runtime" => {
+        "name" => "Java",
+        "version" => ENV_JAVA["java.version"],
+      }
+    },
+    "library" => {
+      "name" => "JvYAMLb",
+      "version" => "(bundle)",
+      "language" => ["Java"],
+    },
+    "result" => {
+      filename => {
+        "loaded" => count,
+        "wallclock" => t.real,
+      }
+    }
+  }
+})
+||<
+
+*** ruby/rbyaml
+
+>|ruby|
+require "benchmark"
+
+require "rubygems"
+require "rbyaml"
+
+def yaml_bench(filename)
+  i = 0
+  open(filename) do |f|
+    RbYAML.load_documents(f){ i += 1 }
+  end
+  i
+end
+
+filename, n = ARGV[0], ARGV[1].to_i
+count = 0
+t = Benchmark.measure {
+  n.times {
+    count += yaml_bench(filename)
+  }
+}
+
+spec = Gem.source_index.search("RbYAML").sort_by{|e| e.version}.last
+puts RbYAML.dump({
+  "ruby/rbyaml" => {
+    "benchmark_script" => __FILE__,
+    "language" => "ruby",
+    "interpreter" => {
+      "name" => "ruby",
+      "version" => RUBY_VERSION,
+      "banner" => `ruby -v`.chomp,
+    },
+    "library" => {
+      "name" => spec.name,
+      "version" => spec.version.to_s,
+      "language" => ["ruby"],
+   },
+    "result" => {
+      filename => {
+        "loaded" => count,
+        "wallclock" => t.real,
+      }
+    }
+  }
+})
+||<
+
+*** ruby/syck
+
+>|ruby|
+require "yaml"
+require "benchmark"
+
+def yaml_bench(filename)
+  i = 0
+  open(filename) do |f|
+    YAML.load_documents(f) { i += 1 }
+  end
+  i
+end
+
+filename, n = ARGV[0], ARGV[1].to_i
+count = 0
+t = Benchmark.measure {
+  n.times {
+    count += yaml_bench(filename)
+  }
+}
+
+puts YAML.dump({
+  "ruby/syck" => {
+    "benchmark_script" => __FILE__,
+    "language" => "ruby",
+    "interpreter" => {
+      "name" => "ruby",
+      "version" => RUBY_VERSION,
+      "banner" => `ruby -v`.chomp,
+    },
+    "library" => {
+      "name" => "Syck",
+      "version" => "(bundle)",
+      "language" => ["C"],
+      "native_library" => {
+        "name" => "syck",
+        "version" => "0.60",  # from ruby_1_8_6/ext/syck/syck.h
+      },
+    },
+    "result" => {
+      filename => {
+        "loaded" => count,
+        "wallclock" => t.real,
+      }
+    }
+  }
+})
+||<

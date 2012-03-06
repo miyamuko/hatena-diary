@@ -1,0 +1,25 @@
+
+*p1*[xyzzy] クマー
+
+><pre class="source">
+&#40;<span class="keyword1">[]defun[]</span>[] kuma&#45; &#40;msg&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>[] []<span class="string">[]&quot;sクマーー: &quot;[]</span>&#41;
+[]  &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="string">&quot;
+[]　　 ∩＿＿＿∩[]
+[]　　 &#124; ノ　　　　　 ヽ[]
+[]　　/　　●　　　● &#124;　~Aクマ──！！[]
+[]　 &#124;　　　　&#40; _●_&#41;　 ミ[]
+[]　彡､　　　&#124;∪&#124;　　､｀＼[]
+[]/　＿＿　 ヽノ　/´&gt;　 &#41;[]
+[]&#40;＿＿＿）　　　/　&#40;_／[]
+[]　&#124;　　　　　　 /[]
+[]　&#124;　　／＼　＼[]
+[]　&#124;　/　　　 &#41;　 &#41;[]
+[]　∪　　　 （　 ＼[]
+[]　　　　　　 ＼＿&#41;[]
+&quot;</span>[] msg&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] popup&#45;kuma&#45; &#40;msg &amp;key &#40;[]<span class="keyword1">[]point[]</span>[] &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41; timeout&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>[] []<span class="string">[]&quot;sクマーー: &quot;[]</span>&#41;
+[]  &#40;[]<span class="keyword1">[]popup&#45;string[]</span>[] &#40;kuma&#45; msg&#41; []<span class="keyword1">[]point[]</span>[] timeout&#41;&#41;[]
+</pre><

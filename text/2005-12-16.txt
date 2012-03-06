@@ -1,0 +1,31 @@
+
+*p1*[xyzzy] vim の設定を xyzzy に反映
+
+ファイル中に書かれている #vim:ts=2 sw=2 noexpandtab: とかを解析して xyzzy に反映してみるテスト。
+
+><pre class="source">
+&#40;<span class="keyword1">[]defun[]</span>[] parse&#45;vim&#45;setting &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]save&#45;excursion[]</span>
+[]    &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]scan&#45;buffer[]</span>[] []<span class="string">[]&quot;vim:\\&#40;&#91;^\n:&#93;&#43;\\&#41;\\&#40;:\\&#124;$\\&#41;&quot;[]</span>[] []<span class="keyword3">[]:regexp[]</span>[] []<span class="keyword3">[]t[]</span>&#41;
+[]      &#40;[]<span class="keyword1">[]mapcar[]</span>[] &#40;[]<span class="keyword1">[]lambda[]</span>[] &#40;setting&#41;[]
+[]                &#40;[]<span class="keyword1">[]split&#45;string[]</span>[] setting #\=&#41;&#41;[]
+[]              &#40;[]<span class="keyword1">[]split&#45;string[]</span>[] &#40;[]<span class="keyword1">[]match&#45;string[]</span>[] 1&#41; #\SPC&#41;&#41;&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] set&#45;vim&#45;setting &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>&#41;
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;setting &#40;parse&#45;vim&#45;setting&#41;&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]assoc[]</span>[] []<span class="string">[]&quot;expandtab&quot;[]</span>[] setting :test '[]<span class="keyword1">[]string=[]</span>&#41;
+[]      &#40;[]<span class="fg12 bg0">[]ed::set&#45;buffer&#45;local[]</span>[] 'indent&#45;tabs&#45;mode []<span class="keyword3">[]nil[]</span>[]&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]assoc[]</span>[] []<span class="string">[]&quot;noexpandtab&quot;[]</span>[] setting :test '[]<span class="keyword1">[]string=[]</span>&#41;
+[]      &#40;[]<span class="fg12 bg0">[]ed::set&#45;buffer&#45;local[]</span>[] 'indent&#45;tabs&#45;mode []<span class="keyword3">[]t[]</span>[]&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]let&#42;[]</span>[] &#40;&#40;ts &#40;[]<span class="keyword1">[]assoc[]</span>[] []<span class="string">[]&quot;ts&quot;[]</span>[] setting :test '[]<span class="keyword1">[]string=[]</span>[]&#41;&#41;[]
+[]           &#40;col &#40;[]<span class="keyword1">[]and[]</span>[] ts &#40;[]<span class="keyword1">[]parse&#45;integer[]</span>[] &#40;[]<span class="keyword1">[]cadr[]</span>[] ts&#41; :junk&#45;allowed []<span class="keyword3">[]t[]</span>[]&#41;&#41;&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]when[]</span>[] col[]
+[]        &#40;[]<span class="keyword1">[]set&#45;tab&#45;columns[]</span>[] col &#40;[]<span class="keyword1">[]selected&#45;buffer[]</span>[]&#41;&#41;&#41;&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]add&#45;hook[]</span>[] '[]<span class="keyword3">[]&#42;find&#45;file&#45;hooks&#42;[]</span>[] 'set&#45;vim&#45;setting&#41;[]
+</pre><
+
+
+とりあえず必要最低限なところで。というか vim 使ったことないし。
+

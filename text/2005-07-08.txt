@@ -1,0 +1,25 @@
+
+*p1*[xyzzy] 今開いているバッファのディレクトリで cygterm
+
+cygterm.cfg の TERM に /bin/zsh --login などと書いている場合の話。
+
+id:miyamuko:20050706:p1 のままだと cygwin を起動したときは常にホームディレクトリになります。
+これを今開いているバッファのディレクトリで cygwin を起動するようにしてみました。
+
+C-u M-x cygterm とすれば $HOME に cd します。
+
+><pre class="source">
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] cygterm &#40;&amp;optional &#40;chere&#45;invoking &#40;[]<span class="keyword1">[]not[]</span>[] []<span class="keyword3">[]&#42;prefix&#45;args&#42;[]</span>[]&#41;&#41;&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>[]&#41;[]
+[]  &#40;[]<span class="keyword1">[]call&#45;process[]</span>[] &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="string">[]&quot;\&quot;~A\&quot; &#45;t '~A &#45;f cygterm&#45;run&#45;tterm %s %d' ~{~A ~}&quot;[]</span>
+[]                        &#42;cygterm&#45;exe&#42;[]
+[]                        &#42;cygterm&#45;xyzzy&#45;exe&#42;[]
+[]                        &#40;[]<span class="keyword1">[]if[]</span>[] chere&#45;invoking[]
+[]                            &#40;[]<span class="keyword1">[]append[]</span>[] &#42;cygterm&#45;options&#42; '&#40;[]<span class="string">[]&quot;&#45;v CHERE_INVOKING=yes&quot;[]</span>[]&#41;&#41;[]
+[]                          &#42;cygterm&#45;options&#42;&#41;&#41;[]
+[]                :no&#45;std&#45;handles []<span class="keyword3">[]t[]</span>[] :show :minimize&#41;&#41;[]
+</pre><
+
+参考。
+
+http://www.namikilab.tuat.ac.jp/~sasada/diary/200507.html#d6

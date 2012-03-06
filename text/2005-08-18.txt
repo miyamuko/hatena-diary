@@ -1,0 +1,30 @@
+
+*p1*[xyzzy] find-http
+
+find-file で http:// で始まるものは elxa を使って get してみた。
+
+><pre class="source">
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] find&#45;http &#40;uri&#41;[]
+[]  &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]string&#45;matchp[]</span>[] []<span class="string">[]&quot;^[]</span><span class="fg4 bg0"><span class="underline">[]http://[]</span></span><span class="string">[]&quot;[]</span>[] uri&#41;[]
+[]    &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;tmpfile &#40;[]<span class="keyword1">[]make&#45;temp&#45;file&#45;name[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="string">[]&quot;html&quot;[]</span>[]&#41;&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]multiple&#45;value&#45;bind[]</span>[] &#40;res header&#41;[]
+[]          &#40;elxa::http&#45;get&#45;response&#45;buffer uri []<span class="keyword3">[]nil[]</span>[] []<span class="keyword3">[]t[]</span>[]&#41;[]
+[]        &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]bufferp[]</span>[] res&#41;[]
+[]          &#40;[]<span class="keyword1">[]unwind&#45;protect[]</span>
+[]              &#40;[]<span class="keyword1">[]progn[]</span>
+[]                &#40;[]<span class="keyword1">[]set&#45;buffer[]</span>[] res&#41;[]
+[]                &#40;[]<span class="keyword1">[]goto&#45;char[]</span>[] &#40;[]<span class="keyword1">[]point&#45;min[]</span>[]&#41;&#41;[]
+[]                &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]scan&#45;buffer[]</span>[] []<span class="string">[]&quot;\n\n&quot;[]</span>[] []<span class="keyword3">[]:tail[]</span>[] []<span class="keyword3">[]t[]</span>[]&#41;[]
+[]                  &#40;[]<span class="keyword1">[]delete&#45;region[]</span>[] &#40;[]<span class="keyword1">[]point&#45;min[]</span>[]&#41; &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;&#41;[]
+[]                &#40;[]<span class="fg12 bg0">[]write&#45;file[]</span>[] tmpfile&#41;&#41;[]
+[]            &#40;[]<span class="keyword1">[]delete&#45;buffer[]</span>[] res&#41;&#41;[]
+[]          &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;buf &#40;[]<span class="keyword1">[]ed::find&#45;file&#45;internal[]</span>[] tmpfile&#41;&#41;&#41;[]
+[]            &#40;[]<span class="keyword1">[]set&#45;buffer[]</span>[] buf&#41;[]
+[]            &#40;[]<span class="keyword1">[]rename&#45;buffer[]</span>[] uri&#41;[]
+[]            buf&#41;&#41;&#41;&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]add&#45;hook[]</span>[] '[]<span class="keyword3">[]&#42;before&#45;find&#45;file&#45;hook&#42;[]</span>[] 'find&#45;http&#41;[]
+</pre><
+
+さて、何に使おうか。
+

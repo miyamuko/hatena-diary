@@ -1,0 +1,33 @@
+
+*p1*[COM][xyzzy] アクティブな InternetExplorer.Application を取得
+
+すでに起動している InternetExplorer.Application を取得する方法を今まで知らなかったんですけど、Shell.Application#Windows で列挙して探せばよかったんですね。
+ROBO-IE のソースを眺めていて知りました。
+
+><pre class="source">
+&#40;<span class="keyword1">[]defun[]</span>[] get&#45;or&#45;create&#45;ie &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]or[]</span>[] &#40;get&#45;active&#45;ie&#41;[]
+[]      &#40;[]<span class="fg12 bg0">[]ole&#45;create&#45;object[]</span>[] []<span class="string">[]"InternetExplorer&#46;Application"[]</span>[]&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] get&#45;active&#45;ie &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;[]<span class="fg12 bg0">[]shell[]</span>[] &#40;[]<span class="fg12 bg0">[]ole&#45;create&#45;object[]</span>[] []<span class="string">[]"Shell&#46;Application"[]</span>[]&#41;&#41;&#41;[]
+[]    &#40;[]<span class="fg12 bg0">[]ole&#45;for&#45;each[]</span>[] &#40;win &#40;[]<span class="fg12 bg0">[]ole&#45;method[]</span>[] []<span class="fg12 bg0">[]shell[]</span>[] &#39;Windows&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]string&#45;matchp[]</span>[] []<span class="string">[]"iexplore\\&#46;exe$"[]</span>[] &#40;[]<span class="fg12 bg0">[]ole&#45;getprop[]</span>[] win &#39;FullName&#41;&#41;[]
+[]        &#40;[]<span class="keyword1">[]return[]</span>[] win&#41;&#41;&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] test &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;ie &#40;get&#45;or&#45;create&#45;ie&#41;&#41;&#41;[]
+[]    &#40;[]<span class="fg12 bg0">[]ole&#45;putprop[]</span>[] ie &#39;Visible []<span class="keyword3">[]t[]</span>&#41;
+[]    &#40;[]<span class="fg12 bg0">[]ole&#45;method[]</span>[] ie &#39;Navigate []<span class="string">[]"http://www&#46;google&#46;co&#46;jp/"[]</span>&#41;
+[]    &#40;[]<span class="keyword1">[]while[]</span>[] &#40;[]<span class="keyword1">[]/=[]</span>[] &#40;[]<span class="fg12 bg0">[]ole&#45;getprop[]</span>[] ie &#39;ReadyState&#41; 4&#41;[]
+[]      &#40;[]<span class="keyword1">[]sleep&#45;for[]</span>[] 1&#41;&#41;&#41;&#41;[]
+</pre><
+
+
+知った後にググると結構みつかるなー。
+
+- http://vsug.jp/tabid/63/forumid/72/postid/1115/view/topic/Default.aspx
+- http://www.whitire.com/vbs/tips0153.html
+
+検索力ﾖﾜｽ。
+

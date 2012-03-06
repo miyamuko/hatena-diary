@@ -1,0 +1,115 @@
+
+*p1*[xyzzy][xl-ppcre]xl-ppcre - xyzzy で Perl 互換の正規表現
+
+xyzzy の正規表現周りは結構弱くて、
+
+- [http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=substitute-string:title=substitute-string] は置換文字列に関数を指定できない
+- [http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=split-string:title=split-string] は区切り文字として正規表現を指定できない
+- [http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=string-match:title=string-match] は Perl のシングルラインモード (. が改行にマッチする) 相当がない
+- 正規表現がエスケープ文字だらけで書きにくい
+
+という問題があります。
+
+
+というわけで、Perl っぽい正規表現が使えて、[http://weitz.de/cl-ppcre/:title] 互換 API を備えた xl-ppcre をリリースしました。
+
+
+xl-ppcre を使えば置換時に関数を指定できたり、
+
+>|lisp|
+(require "xl-ppcre")
+
+(let ((html-escape '(("<" . "&lt;")
+                     (">" . "&gt;")
+                     ("&" . "&amp;")
+                     ("\"" . "&quot;"))))
+  (ppcre:regex-replace-all "[<>&\"]" "<a href=\"http://...\">U&I</a>"
+                           #'(lambda (m)
+                               (cdr (assoc m html-escape :test #'string=)))
+                           :simple-calls t))
+;=> "&lt;a href=&quot;http://...&quot;&gt;U&amp;I&lt;/a&gt;"
+;   t
+||<
+
+
+正規表現で文字列を分割できたり、
+
+>|lisp|
+(ppcre:split "\\s*[,;]\\s*" "foo,bar; baz")
+;=> ("foo" "bar" "baz")
+||<
+
+
+シングルラインモードが使えたりします。
+
+>|lisp|
+(ppcre:register-groups-bind (div)
+  ("(?is)<div>(.*?)</div>"
+   "<DIV>ごはんは
+おかず
+</DIV>")
+  (ppcre:split "\\s" div))
+;=> ("ごはんは" "おかず")
+||<
+
+
+
+つづきは以下で。
+
+- http://miyamuko.s56.xrea.com/xyzzy/xl-ppcre/intro.htm
+- https://github.com/miyamuko/xl-ppcre
+
+
+
+** Yahoo Japan! で検索して結果を表示するサンプル
+
+>|lisp|
+(defparameter *yahoo-search-result-scanner*
+  (ppcre:create-scanner
+   "
+<div\\ class=\"hd\">
+  .*?
+  <a .*? href=\"(.*?)\" .*? >   # $1 = link
+    (.*?)                       # $2 = title
+  </a>
+  .*?
+  <div\\ class=\"bd\">
+    <p>
+      (.*?)                     # $3 = snippet
+    </p>
+"
+   :case-insensitive-mode t ; タグの大文字小文字の違いは無視
+   :single-line-mode t      ; ドットが改行にもマッチするようにする
+   :extended-mode t         ; 拡張正規表現を有効にする
+   ))
+
+(defun cleanup-text (html)
+  (string-trim " \n" (substitute-string html "<[^<>]+>" "")))
+
+(defun scan-yahoo-search-result (res)
+  (let (result)
+    (ppcre:do-register-groups (url
+                               (#'cleanup-text title)
+                               (#'cleanup-text snippet))
+      (*yahoo-search-result-scanner*
+       (xhr:xhr-response-text res)
+       (nreverse result))
+      (push (list url title snippet) result))))
+
+(defun yahoo-search (query)
+  (xhr:xhr-get "http://search.yahoo.co.jp/search"
+               :query `(:ei "UTF-8" :p ,query)
+               :encoding *encoding-utf8n*
+               :since :epoch
+               :key #'scan-yahoo-search-result
+               ))
+
+(yahoo-search "cl-ppcre")
+;=> (("http://weitz.de/cl-ppcre/"
+;     "CL-PPCRE - Portable Perl-compatible regular expressions for ..."
+;     "28 Oct 2009 ... A portable Perl-compatible regular expressions for Common Lisp. ...")
+;    ("http://faroffsea.blogspot.com/2009/01/lisprubypython6-common-lisp.html"
+;     "遠い海: lispとrubyとpythonと その6 正規表現(common lisp)"
+;     "2009年1月1日 ... lispとrubyとpythonと その6 正規表現(common lisp). Common Lispでの正規表現。...")
+;    ...)
+||<

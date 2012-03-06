@@ -1,0 +1,101 @@
+
+*pci_item_based_filtering*[xyzzy][PCI]xyzzy lisp で集合知プログラミング - 2.7 アイテムベースのフィルタリング
+
+[http://www.amazon.co.jp/exec/obidos/ASIN/9780596529321/miyamuko-22/ref=nosim/:title=集合知プログラミング]を xyzzy lisp で写経します。
+
+
+ソースは CodeRepos に入れてあります。
+
+http://coderepos.org/share/browser/lang/xyzzy/pci-code/site-lisp/chapter2/hateburec.l
+
+なお、オリジナルのソースコード (Python) は以下からダウンロードできます。
+
+http://oreilly.com/catalog/9780596529321/
+
+
+**2.7 アイテムベースのフィルタリング
+
+メモ。
+
+-ユーザベースの協調フィルタリング
+--今までの章で実装してきたもの
+--データセットを作るにはすべてのユーザからのランキングが必要
+--数千件程度ならうまくいく
+-アイテムベースの協調フィルタリング
+--巨大なデータセットの場合、ユーザベースよりよい結果を生み出す
+--計算の大部分は事前に実行しておくことが可能
+
+**2.7.1 アイテム間の類似度のデータセットを作る
+
+メモ。
+
+-calculate-similar-items の更新頻度
+--最初の頃はアイテムの類似度が最新の状態に保たれる程度の頻度で実行
+--ユーザ数が増えればアイテム同士の類似性が安定するので、あまり更新しなくてよい
+
+>|lisp|
+(defun calculate-similar-items (prefs &optional (n 10))
+  ;; アイテムをキーとして持ち、それぞれのアイテムに似ている
+  ;; アイテムのリストを値として持つ alist を作る。
+  (let ((item-prefs (transform-prefs prefs))
+        (c 0))
+    (mapcar #'(lambda (item)
+                (cons item (top-matches item-prefs item :n n :similarity #'sim-distance)))
+            (keys item-prefs))))
+||<
+
+***テスト
+
+>|lisp|
+(calculate-similar-items *critics*)
+((#1="Just My Luck"
+  (0.2222222 . #2="Lady in the Water")
+  (0.1818182 . #3="You, Me and Dupree")
+  (0.1538462 . #4="The Night Listener")
+  (0.1052632 . #5="Snakes on a Plane")
+  (0.06451613 . #6="Superman Returns"))
+    :
+   (ry
+||<
+
+
+**2.7.2 推薦を行う
+
+>|lisp|
+(defun get-recommended-items (prefs item-match user)
+  (let ((user-ratings ($ prefs user))
+        (scores)
+        (total-sim))
+    (dolist (item/rating user-ratings)
+      (dolist (similarity/item ($ item-match (car item/rating)))
+        (unless (rated prefs user (cdr similarity/item))
+          (aincf (* (cdr item/rating)
+                    (car similarity/item))
+                 (cdr similarity/item) scores)
+          (aincf (car similarity/item) (cdr similarity/item) total-sim))))
+    (let ((rankings (mapcar #'(lambda (item/score)
+                                (cons (/ (cdr item/score)
+                                         ($ total-sim (car item/score)))
+                                      (car item/score)))
+                            scores)))
+      (sort rankings #'> :key #'car))))
+||<
+
+***テスト
+
+>|lisp|
+(setf itemsim (calculate-similar-items *critics*))
+((#1="Just My Luck"
+  (0.2222222 . #2="Lady in the Water")
+  (0.1818182 . #3="You, Me and Dupree")
+  (0.1538462 . #4="The Night Listener")
+  (0.1052632 . #5="Snakes on a Plane")
+  (0.06451613 . #6="Superman Returns"))
+    :
+   (ry
+
+(get-recommended-items *critics* itemsim "Toby")
+((3.182635 . "The Night Listener")
+ (2.598332 . "Just My Luck")
+ (2.473088 . "Lady in the Water"))
+||<

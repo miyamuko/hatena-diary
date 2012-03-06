@@ -1,0 +1,32 @@
+
+*p1*[Rake]タスク名と同じ名前のディレクトリを作ろうとするとエラーになる件について。
+
+はまったのでメモ。
+
+><pre class="source">
+[]DIST_DIR = []<span class="fg10">&quot;</span><span class="fg10">[]dist[]</span><span class="fg10">&quot;</span>
+
+[]directory DIST_DIR[]
+[]task :dist =&gt; &#91;DIST_DIR&#93; []<span class="keyword1">[]do[]</span>
+[]  []<span class="keyword3">[]puts[]</span>[] []<span class="fg10">&quot;</span><span class="fg10">[]dist!![]</span><span class="fg10">&quot;</span>
+<span class="keyword1">[]end[]</span>
+
+[]task :default =&gt; &#91;:dist&#93;[]
+</pre><
+
+こういう Rakefile を rake すると thread が abort する。
+
+>||
+>rake
+(in D:/tmp)
+rake aborted!
+stopping only thread
+        note: use sleep to stop forever
+
+(See full trace by running task with --trace)
+>
+||<
+
+タスク名はシンボル or 文字列だから :dest == "dest" ということで定義が再帰してて、Mutex の synchronize を 2 重にとりにいって abort したらしい。
+
+DIST_DIR = "./dist" して回避。

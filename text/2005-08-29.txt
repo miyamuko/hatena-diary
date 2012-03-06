@@ -1,0 +1,25 @@
+
+*p1*[OCaml] 一時間でわかるML超入門
+
+http://min-caml.sourceforge.net/index2.html
+
+超入門してみた。
+
+>||
+> ocamlopt test.ml test.mli -o test
+'ml' は、内部コマンドまたは外部コマンド、
+操作可能なプログラムまたはバッチ ファイルとして認識されていません。
+Assembler error, input left in file d:\home\tmp\camlasme343aa.asm
+||<
+
+(´・ω・｀)
+
+>||
+> ocamlc test.ml test.mli -o test.exe
+> test.exe
+579
+||<
+
+いいのかなぁ。これで。
+
+コンパイルして exe にできるというのがいいね。

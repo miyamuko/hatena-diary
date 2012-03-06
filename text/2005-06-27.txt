@@ -1,0 +1,39 @@
+
+*1119849831*[xyzzy] xdocdiff
+
+[http://freemind.s57.xrea.com/xdocdiff/:title=xdocdiff  -TortoiseSVNでWord, Excel, PowerPoint, pdfのdiffを見れるようにするツール-]を xyzzy に移植してみました。
+
+[http://www31.ocn.ne.jp/~h_ishida/xdoc2txt.html:title=xdoc2txt]と[http://miyamuko.s56.xrea.com/:title=xdoc2txt を xyzzy から使うもの]が必要です。
+
+>||
+(defun xdocdiff-find-file-and-save (file &optional (output (make-temp-file-name "xdocdiff" "del.me")))
+  (let ((buf (ed::find-file-internal file)))
+    (set-buffer buf)
+    (write-file output)
+    (delete-buffer buf)
+    output))
+
+(defun xdocdiff (new-file old-file)
+  (interactive "fdiff(new file): \nfdiff(old file): ")
+  (diff (xdocdiff-find-file-and-save (namestring new-file))
+        (xdocdiff-find-file-and-save (namestring old-file))))
+
+(defun xdocdiff-commandline ()
+  (interactive)
+  (xdocdiff (pop si:*command-line-args*)
+            (pop si:*command-line-args*)))
+
+||<
+
+これを .xyzzy や siteinit.l などに書いておきます。
+実行方法は以下のような感じです。
+
+>|
+xyzzycli -f xdocdiff-commandline "旧ファイル" "新ファイル"
+|<
+
+TortoiseCVS での設定方法は以下のようにします。
+
+f:id:miyamuko:20050627142239:image
+
+TortoiseSVN でも同様にできるでしょう。たぶん。

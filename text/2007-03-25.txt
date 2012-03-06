@@ -1,0 +1,17 @@
+
+*p1*[xyzzy][yaml-syck]yaml-syck - syck を使った高速な YAML パーサ
+
+yaml-syck 0.0.1 をリリースしました。
+
+http://miyamuko.s56.xrea.com/xyzzy/yaml-syck/
+
+_why の syck を使った高速でちょっと危険な YAML パーサです。
+パース中の絶妙なタイミングで Ctrl-g を押すと xyzzy が落ちますので試してみてください。
+かなりタイミングが難しいと思います（たぶん）。
+
+
+いまどき syck かよ！ という気がしないでもないですがまぁ気にしないでください。
+気が向いたら <a href="http://pyyaml.org/wiki/LibYAML">libyaml</a> バインディングも作るかもしれません。
+
+
+あと、まだ dump はサポートしてません。

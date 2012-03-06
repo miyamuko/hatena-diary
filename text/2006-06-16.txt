@@ -1,0 +1,51 @@
+
+*p1*[xyzzy] try-these
+
+指定された関数を順番に実行していって最初に成功した関数の値を返す try-these ってあるといいよねっ ていうか prototype.js の Try.these のインスパイヤなんだけど、要は以下のようなことをしたいわけです。
+
+><pre class="source">
+&#40;<span class="keyword1">[]defun[]</span>[] get&#45;transport &#40;&#41;[]
+[]  &#40;try&#45;these[]
+[]   &#40;[]<span class="fg12 bg0">[]ole&#45;create&#45;object[]</span>[] []<span class="string">[]&quot;Msxml2&#46;XMLHTTP&quot;[]</span>&#41;
+[]   &#40;[]<span class="fg12 bg0">[]ole&#45;create&#45;object[]</span>[] []<span class="string">[]&quot;Microsoft&#46;XMLHTTP&quot;[]</span>[]&#41;&#41;&#41;[]
+</pre><
+
+で、Lisp ならやっぱりマクロだよねってことで最初に書いたのがこれ。
+
+><pre class="source">
+&#40;<span class="keyword1">[]defmacro[]</span>[] try&#45;these &#40;&amp;body body&#41;[]
+[]  `&#40;[]<span class="keyword1">[]handler&#45;case[]</span>
+[]       ,&#40;[]<span class="keyword1">[]car[]</span>[] body&#41;[]
+[]     &#40;[]<span class="keyword1">[]error[]</span>[] &#40;c&#41;[]
+[]       &#40;try&#45;these ,@&#40;[]<span class="keyword1">[]cdr[]</span>[] body&#41;&#41;&#41;&#41;&#41;[]
+</pre><
+
+scratch で実験すると動くから俺ってすげーと思ってバイトコンパイルすると xyzzy が固まるのはそういうもの？
+で、以下のように再帰しないようにして逃げた。
+
+><pre class="source">
+&#40;<span class="keyword1">[]defmacro[]</span>[] try&#45;these &#40;&amp;body body&#41;[]
+[]  `&#40;[]<span class="keyword1">[]or[]</span>[] ,@&#40;[]<span class="keyword1">[]mapcar[]</span>[] #'&#40;[]<span class="keyword1">[]lambda[]</span>[] &#40;f&#41;[]
+[]                     &#40;[]<span class="keyword1">[]list[]</span>[] '[]<span class="keyword1">[]ignore&#45;errors[]</span>[] f&#41;&#41;[]
+[]                 body&#41;[]
+[]       []<span class="keyword3">[]nil[]</span>[]&#41;&#41;[]
+</pre><
+
+
+マクロはいまだによくわからない。
+というか On Lisp まだー？ 待ちくたびれた。
+
+
+
+追記。
+
+最初のバージョンを clipse 2.38 で compile-file すると clise ごと SEGV で落ちたｗ。
+
+
+追記追記。
+
+On Lisp の「マクロのその他の落とし穴」に書いてあった。
+再帰したら展開が終わらないからだめなんですね (だからといって SEGV する clisp はどうかと思う)。
+
+
+マクロは一回まじめに勉強したほうがよさそうだなぁ。

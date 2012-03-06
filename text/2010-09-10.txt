@@ -1,0 +1,245 @@
+
+*xyzzy_putenv*[xyzzy]xyzzy から msvcrt の _putenv を実行しても si:getenv に反映されない理由
+
+
+xyzzy プロセスの環境変数を変更したいときってよくありますよね。
+
+
+でも xyzzy には [http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=si:getenv:title=si:getenv] はあるのに si:putenv のようなものはないので、しょうがないから [http://msdn.microsoft.com/ja-jp/library/83zh4e6k(VS.80).aspx:title=_putenv] や [http://msdn.microsoft.com/ja-jp/library/cc429326.aspx:title=SetEnvironmentVariable] で何とかならないかとみんな試すわけなんですが・・・
+
+
+>http://www.bookshelf.jp/2ch/win/1103400818.html#539:title>
+542 名無し~3.EXE sage 2005/04/21(木) 21:25:17 ID:jxBy7xpn
+>>539
+char *e = getenv (v);
+return e ? make_string (e) : Qnil;
+
+なんで、キャッシュとかはしていないみたい。
+getenvなんでSetEnvironmentVariableした値が取れないのは分かるけど、
+なんで_putenvしてもだめなんだろう。
+<<
+
+>http://www.bookshelf.jp/2ch/win/1148990686.html#936:title>
+936 名無し~3.EXE sage 2007/03/12(月) 23:49:34 ID:RT1HPV/j
+>>935
+返事ありがとうございます。
+コード眺めていたら si:getenv で getenv をラップしていたので、
+対応する putenv を使用しなくてはいけないと考えていました。
+で、実際にそれは試してみたのですけれど、 execute-subprocess がうまく
+うごかなくて、上記の方法を試そうと考えました。
+
+とりあえず、シンボルは解決できたっぽいのですけれど、
+putenv が -1 を返す。。。msvcrt.dll 使用
+本体はいじりたくたいのですけれど、ちょっと考えます。。。
+ご存知の方いたら助言お願いします。
+<<
+
+>http://www.bookshelf.jp/2ch/win/1148990686.html#938:title>
+938 名無し~3.EXE sage 2007/03/13(火) 07:24:27 ID:HHAIV3Ut
+>>937
+たしか起動時にgetenvして解析してxyzzy内部で保持している値を
+使いまわすので後からputenvしても駄目だった気がする。
+
+昔ソース呼んでたときの記憶なんで間違ってるかも試練が。
+＃いや、激しく記憶違いかも。
+<<
+
+
+という感じでうまくいきません。私もついさっきはまりました。
+
+例えば http://gist.github.com/573584 のように _putenv や SetEnvironmentVariable を define-dll-entry で定義して実行するとこうなります。
+
+>|lisp|
+(si:getenv "HOMEDRIVE")            ;=> "C:"
+(msvcrt-getenv "HOMEDRIVE")        ;=> "C:"
+(kernel32-getenv "HOMEDRIVE")      ;=> "C:"
+
+(msvcrt-putenv "HOMEDRIVE" "D:")   ;=> t
+(kernel32-putenv "HOMEDRIVE" "E:") ;=> t
+
+(si:getenv "HOMEDRIVE")            ;=> "C:"
+(msvcrt-getenv "HOMEDRIVE")        ;=> "D:"
+(kernel32-getenv "HOMEDRIVE")      ;=> "E:"
+||<
+
+
+**SetEnvironmentVariable が反映されない理由
+
+
+xyzzy 0.2.2.235 の si:getenv の実装は以下のようになっています。getenv してそれを lisp オブジェクトにしているだけですね。
+getenv を使っているので SetEnvironmentVariable で設定したのが反映されないのはしょうがないですね。
+
+>|cpp|
+lisp
+Fsi_getenv (lisp var)
+{
+  check_string (var);
+  char *v = (char *)alloca (xstring_length (var) * 2 + 1);
+  w2s (v, var);
+  char *e = getenv (v);
+  return e ? make_string (e) : Qnil;
+}
+||<
+
+from http://github.com/southly/xyzzy.src/blob/0.2.2.235/src/environ.cc#L849
+
+
+**_putenv が反映されない理由
+
+
+SetEnvironmentVariable が駄目な理由は分かりやすいのですが、_putenv したものが getenv で取れないというのはちょっと不思議ですね。その答えは xyzzy の Makefile にあります。
+
+>|makefile|
+CXXFLAGS=-Ob1 -Og -Oi -Ot -Oy -G5 -Gs -Gy -Gz $(CXXOPT) -W3 -MT -vmb $(INC) $(DEFS) -Fo$(OUTDIR)/
+||<
+
+from http://github.com/southly/xyzzy.src/blob/0.2.2.235/src/Makefile#L177
+
+
+[http://msdn.microsoft.com/ja-jp/library/abx4dbyh(VS.80).aspx:title=オプションに -MT を指定しているので xyzzy.exe は C ランタイム ライブラリと静的にリンク]されています。
+
+よって、si:getenv の呼び出しは libcmt.lib の getenv が呼び出されます。
+一方 define-dll-entry で _putenv を呼び出した場合は msvcrt.dll の _putenv が呼ばれます。
+
+getenv と _putenv で C ランタイムライブラリ異なるのが反映されない理由です。
+
+
+**call-process / make-process の環境変数
+
+
+_putenv が [http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=call%2Dprocess:title=call-process] や [http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=make%2Dprocess:title=make-process] で実行した子プロセスにも反映されない理由も一応見てみます。
+
+call-process のソースを見ると、まず EnvStrings を作成して setup を呼んでいます。引数には call-process の :environ キーワード引数を指定していますね。
+
+>|cpp|
+lisp
+Fcall_process (lisp cmd, lisp keys)
+{
+  check_string (cmd);
+
+  EnvStrings env;
+  env.setup (find_keyword (Kenviron, keys));
+          (略)
+  int result = CreateProcess (0, cmdline, 0, 0, !no_std_handles,
+                              (CREATE_DEFAULT_ERROR_MODE
+                               /*| CREATE_NEW_PROCESS_GROUP*/
+                               | NORMAL_PRIORITY_CLASS),
+                              (void *)env.str (), dir, &si, &pi);
+||<
+
+from http://github.com/southly/xyzzy.src/blob/0.2.2.235/src/process.cc#L256
+
+
+EnvStrings::setup を抜粋すると以下のようになっています。
+最初の for ループで environ から現在の xyzzy プロセスの環境変数のポインタをコピーして、次の for ループで call-process の引数に指定した :environ を設定しています。
+
+というわけで起動時にキャッシュしているわけではなさそうです。
+
+>|cpp|
+void
+EnvStrings::setup (lisp lenv)
+{
+          (略)
+  l = (l + sizeof (char **) - 1) / sizeof (char **) * sizeof (char **);
+  e_buf = (char *)xmalloc (l + sizeof (char **) * n);
+  char **nb = (char **)(e_buf + l);
+  char **ne = nb;
+  for (e = environ; *e; e++, ne++)
+    *ne = *e;
+
+  char *b = e_buf;
+  for (le = lenv; consp (le); le = xcdr (le))
+    {
+      lisp x = xcar (le);
+      b = set (nb, ne, b, xcar (x), xcdr (x));
+    }
+||<
+
+from http://github.com/southly/xyzzy.src/blob/0.2.2.235/src/process.cc#L97
+
+
+で、反映されない理由ですが _putenv が反映されないのと同じ理由です。
+_putenv は msvcrt の environ を書き換えますが call-process 実行時には xyzzy と静的にリンクした libcmt の environ を見ているからです。
+
+
+**まとめ
+
+
+libcmt.lib と msvcrt.dll と kernel32.dll による三つ巴の争いが原因。
+
+[http://farm5.static.flickr.com/4126/4976409269_3a48746fa7_b_d.jpg:image]
+
+
+**回避策
+
+
+ありません。call-process や make-process の environ 引数を地道に設定しましょう。
+
+
+またはパッチが当たった xyzzy を使いましょう。
+
+>http://blog.2310.net/archives/618:title>
+putenv関数を追加
+
+;; .xyzzyとかで(si:putenv VARIABLE) を使用してみる
+;; $xyzzy/binを環境変数PATHに追加(有効なのはxyzzy.exeからのプロセスだけです)
+(in-package "editor")
+(setq *bin-path* (merge-pathnames "bin" (si:system-root)))
+(in-package "user")
+(setq *bin-path* (merge-pathnames "bin" (si:system-root)))
+(si:putenv  (concat "PATH=" (map-slash-to-backslash *bin-path*) ";" (si:getenv "PATH")));
+<<
+
+
+こんな感じで普通に環境変数を設定でき、子プロセスにも反映されます。
+
+
+[http://farm5.static.flickr.com/4124/4976409303_2b56c250b9_z_d.jpg:image]
+
+
+
+ちなみにリンク先のパッチはいろいろな修正が混じっていて分かりにくいのですが、適当な si:putenv を追加するだけならこの程度の修正で済みます。
+
+
+>|cpp|
+diff --git a/src/environ.cc b/src/environ.cc
+index 753f7d1..573b1a2 100644
+--- a/src/environ.cc
++++ b/src/environ.cc
+@@ -851,6 +851,16 @@ Fsi_getenv (lisp var)
+ }
+
+ lisp
++Fsi_putenv (lisp var)
++{
++  check_string (var);
++  char *v = (char *)alloca (xstring_length (var) * 2 + 1);
++  w2s (v, var);
++  int r = _putenv (v);
++  return r == 0 ? Qt : Qnil;
++}
++
++lisp
+ Fsi_system_root ()
+ {
+   return xsymbol_value (Qmodule_dir);
+diff --git a/src/gen-syms.cc b/src/gen-syms.cc
+index 2952098..13bc7d7 100644
+--- a/src/gen-syms.cc
++++ b/src/gen-syms.cc
+@@ -900,6 +900,7 @@ static symbols sys[] =
+   /* environ.cc */
+   SI_DEFUN3 (system-root, 0, 0, 0),
+   SI_DEFUN3 (getenv, 1, 0, 0),
++  SI_DEFUN3 (putenv, 1, 0, 0),
+   SI_DEFUN3 (delete-registry-tree, 0, 0, 0),
+   SI_DEFUN3 (performance-counter, 0, 0, 0),
+   SI_DEFUN3 (dump-image-path, 0, 0, 0),
+||<
+
+
+＃いっそのこと[http://www.gnu.org/s/emacs/manual/html_node/elisp/System-Environment.html#index-setenv-3738:title=Emacs に宗旨替えする]という手も・・・
+
+
+
+以上、混ぜるなキケンです。

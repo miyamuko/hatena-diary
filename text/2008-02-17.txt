@@ -1,0 +1,80 @@
+
+*json*[xyzzy][json]json 0.1.0 リリース!
+
+json-syck (id:miyamuko:20080121:json_syck) が遅く、危険なので xyzzy Lisp のみで JSON パーサを実装しました。
+
+http://miyamuko.s56.xrea.com/xyzzy/json/intro.htm
+
+json-syck より 20 倍ほど早く安全です。というわけで json-syck は破棄します。
+xyzzy に特化したため cl-json よりも速いです (ストリームからちまちま読むよりバッファに読み込んで解析したほうが速い)。
+
+**ベンチマーク
+
+以下の JSON をパースするのにかかった時間を測定。
+http://b.hatena.ne.jp/entry/json/?url=http://www.yahoo.co.jp/
+
+測定は下記ベンチマークスクリプトで実施。
+
+
+***結果
+
+|*ライブラリ|*時間(秒)|
+|json       |0.359    |
+|cl-json    |1.407    |
+|json-syck  |9.156    |
+
+※すべてバイトコンパイル済み
+
+
+***環境
+
+|*CPU|Intel Core Duo L2400(1.66GHz・LV)|
+|*メモリ|1G|
+|*OS|Windows XP SP2|
+
+
+***ベンチマークスクリプト
+
+>|lisp|
+(require "json")
+(require "json-syck")
+(require "xml-http-request")
+
+(defmacro benchmark (msg &body body)
+  `(progn
+     (message "~S" ,msg)
+     (gc t)
+     (let ((start (get-internal-real-time))
+           (r (progn ,@body))
+           (end (get-internal-real-time)))
+       (list (format nil "~10A ~,3F" ,msg (/ (- end start) 1000)) r))))
+(setf (get 'benchmark 'ed::lisp-indent-hook) 'progn)
+
+
+(let* ((json (xhr:xhr-get "http://b.hatena.ne.jp/entry/json/?url=http://www.yahoo.co.jp/"
+                          :key 'xhr:xhr-response-text))
+       (json (substring json 1 (1- (length json)))))
+  (values
+   (benchmark :json
+     (json:json-load json))
+   (benchmark :cl-json
+     (cl-json:decode-json-from-string json))
+   (benchmark :json-syck
+     (json-syck:json-load json))
+   ))
+||<
+
+
+*hatena_star*[xyzzy][hatena-star]hatena-star 1.0.0 リリース!
+
+xyzzy からはてなスター API をたたく hatena-star を更新しました。
+
+http://miyamuko.s56.xrea.com/xyzzy/hatena-star/intro.htm
+
+json-syck を捨てたので実用可能です。
+
+＃これでやっと、hatena-haiku-mode のはてなスター対応ができる。。。
+
+**過去のリリース
+
+- id:miyamuko:20080211:hatena_star

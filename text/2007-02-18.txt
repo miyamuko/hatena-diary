@@ -1,0 +1,30 @@
+
+*p1*[xyzzy][hatena][rimo]xyzzy で hack しながら Rimo を見る
+
+Rimo といえばだらだら垂れ流し。
+だらだら垂れ流しといえばながら作業。
+ながら作業といえばながら hack。
+
+
+ということで、xyzzy 上に Remo を表示するソフトウェアを作ってみました。
+
+http://miyamuko.s56.xrea.com/xyzzy/rimo-tv-xyzzy/
+
+
+M-x rimo.tv.on で xyzzy の画面の右下の方に Remo が出てきます。
+位置が気に入らない場合は *rimo-width*、*rimo-height*、*rimo-position* あたりをいじってみてください。
+
+うざくなったら M-x rimo.tv.off で消せます。
+また、M-x rimo.tv.hide で画面だけ消せます。画面が消えるだけで再生は続いているので BGM として使うことができます。
+
+
+チャンネルの変更とかボリュームの変更は Rimo の GUI で操作してください。
+たぶん Flash Player の API が JavaScript で叩けるようになれば、xyzzy から制御できるかもしれません。
+
+
+
+
+あと、たまに xyzzy ごと落ちますが気にしないでくださいｗ。
+auto-save-buffers 推奨アプリですので。
+
+以上です。

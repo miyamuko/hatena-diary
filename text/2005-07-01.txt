@@ -1,0 +1,68 @@
+
+*1120199888*[xyzzy] cvs annotate
+
+cvs annotate が欲しかったので非常に簡単なものですが作ってみました。
+[http://www.rubyist.net/~nobu/t/20050213.html:title=cvs-mode.l] が必要です (0.1.9 でしか確認していません)。
+
+f:id:miyamuko:20050701154150:image:small
+
+本当は行番号を表示している部分にリビジョンとか出したかったのですが、やりかたがよく分かりません（できない?)。
+
+
+>||
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (require "cvs"))
+
+(in-package "cvs")
+
+;; annotate
+(defvar *annotate-header-regexp* "^\\([^ ]+\\) +(\\([^ ]+\\) +\\([^ ]+\\)): ")
+(defvar *annotate-header-format* #'(lambda (rev auth date)
+                                     (format nil "~5@A ~8@A: " rev auth)))
+(defvar *annotate-header-color* 15)
+
+(defun annotate-setup (buf mode)
+  (with-temporary-writable buf
+    (goto-char (point-min))
+    (save-excursion
+      (kill-rectangle (point-min)
+                      (save-excursion
+                        (goto-char (point-max))
+                        (scan-buffer *annotate-header-regexp* :reverse t :regexp t :tail t)
+                        (point)))
+      (if mode (funcall mode))
+      (yank-rectangle))
+    (save-excursion
+      (let (head beg end)
+        (while (scan-buffer *annotate-header-regexp* :regexp t :tail t)
+          (setf beg (match-beginning 0) end (match-end 0))
+          (setf head (apply *annotate-header-format* (mapcar #'match-string '(1 2 3))))
+          (delete-region beg end)
+          (insert head)
+          (set-text-attribute beg (point) 'cvs::annotate
+                              :foreground *annotate-header-color*))))
+    buf))
+
+(defun annotate (&optional rev)
+  (interactive
+      (if *prefix-args* (list (read-revision "Revision: "))))
+  (when (get-buffer-file-name)
+    (let* ((name (file-namestring (get-buffer-file-name)))
+           (buf (*execute* (concat "annotate " (revision-options rev))
+                           name
+                           :output (format nil *versioned-filename*
+                                           (file-namestring name) (or rev "head")))))
+      (when buf
+        (annotate-setup buf buffer-mode)
+        (set-buffer buf))
+      buf)))
+
+(define-key *mode-sub-map* #\a 'annotate)
+||<
+
+このあたりも欲しいですね。
+
+- 現在行のリビジョンの commit log の表示
+- 現在行のリビジョンの取り出し
+- 現在行のリビジョンとあるリビジョンとの diff
+- リビジョンの新しさに応じて色を変える

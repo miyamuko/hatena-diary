@@ -1,0 +1,150 @@
+
+*hw_pl_plugin_patch*[Hatena]はてなダイアリーライターにプラグインを追加
+
+blosxom のプラグイン周りのコード拝借して、[http://www.hyuki.com/techinfo/hatena_diary_writer.html:title]にプラグイン機能を追加してみた。
+
+日記のアップロード時にフィルタを適用したい場合なんかに使えます。
+
+**例
+
+>||
+[http://lispdoc.com/?q=car:title=car] とすると lispdoc へのリンクになり、
+[http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=cdr:title=cdr] だと xyzzy のリファレンスへのリンクになります。
+||<
+
+↑のように書くと↓のようになります。
+
+[http://lispdoc.com/?q=car:title=car] とすると lispdoc へのリンクになり、
+[http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=cdr:title=cdr] だと xyzzy のリファレンスへのリンクになります。
+
+
+**hw.pl 1.4.1 に対するパッチ
+
+>|perl|
+Index: hw.pl
+===================================================================
+--- hw.pl	(revision 388)
++++ hw.pl	(revision 394)
+@@ -42,6 +42,7 @@
+ sub read_title_body($);
+ sub find_image_file($);
+ sub replace_timestamp($);
++sub load_plugins($);
+ sub error_exit(@);
+ sub load_config();
+
+@@ -57,6 +58,7 @@
+ my $cookie_file = 'cookie.txt';
+ my $config_file = 'config.txt';
+ my $target_file = '';
++my $plugin_dir = './plugins';
+
+ # Filter command.
+ # e.g. 'iconv -f euc-jp -t utf-8 %s'
+@@ -154,6 +156,8 @@
+     my $count = 0;
+     my @files;
+
++    my @plugins = load_plugins($plugin_dir);
++
+     # Setup file list.
+     if ($cmd_opt{f}) {
+         # Do not check timestamp.
+@@ -179,18 +183,23 @@
+         # Check if it is a file.
+         next unless (-f $_);
+
+-        # Login if necessary.
+-        login() unless ($user_agent);
+-
+         # Replace "*t*" unless suppressed.
+         replace_timestamp($_) unless ($cmd_opt{M});
+
+         # Read title and body.
+         my ($title, $body) = read_title_body($_);
+
++        # Apply plugins.
++        foreach my $plugin (@plugins) {
++            $plugin->apply(\$title, \$body);
++        }
++
+         # Find image files.
+         my $imgfile = find_image_file($_);
+
++        # Login if necessary.
++        login() unless ($user_agent);
++
+         if ($title eq $delete_title) {
+             # Delete entry.
+             print_message("Delete $year-$month-$day.");
+@@ -645,6 +654,27 @@
+     }
+ }
+
++sub load_plugins($) {
++    my ($plugin_dir) = shift;
++
++    my @plugins;
++    # from blosxom.cgi
++    if ( $plugin_dir and opendir PLUGINS, $plugin_dir ) {
++        foreach my $plugin ( grep { /^\w+\.pl$/ && -f "$plugin_dir/$_"  } sort readdir(PLUGINS) ) {
++            my($plugin_name, $off) = $plugin =~ /^\d*(\w+?)(_?)\.pl$/;
++            next if $off;
++            require "$plugin_dir/$plugin";
++            if ($plugin_name->start()) {
++                push @plugins, $plugin_name;
++            }
++        }
++        closedir PLUGINS;
++    }
++
++    return wantarray ? @plugins : \@plugins;
++}
++
++
+ # Show help message. This is called by getopts.
+ sub HELP_MESSAGE {
+     print <<"EOD";
+||<
+
+
+
+**プラグイン例
+
+>|perl|
+package interwiki;
+
+use strict;
+use warnings;
+
+use Encode;
+use URI::Escape;
+
+my $interwiki = {
+    refwiki => sub {
+        my $v = shift;
+        sprintf("[http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=%s:title=%s]",
+                URI::Escape::uri_escape($v), $v);
+    },
+    lispdoc => sub {
+        my $v = shift;
+        sprintf("[http://lispdoc.com/?q=%s:title=%s]",
+                URI::Escape::uri_escape($v), $v);
+    },
+};
+
+sub start {
+    1;
+}
+
+sub apply {
+    my ($plugin, $title_ref, $body_ref) = @_;
+    foreach my $name (keys %{$interwiki}) {
+        $$body_ref =~ s{\[$name:(.+?)\]}{
+            $interwiki->{$name}->($1);
+        }eg;
+    }
+}
+
+1;
+||<

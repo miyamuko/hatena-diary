@@ -1,0 +1,13 @@
+
+*p1*[xyzzy][xdoc2txt] xdoc2txt 0.8 released
+
+xdoc2txt 0.8 をリリースしました。
+
+- ダウンロード: http://miyamuko.s56.xrea.com/xyzzy/archives/xdoc2txt.zip
+- ドキュメント: http://miyamuko.s56.xrea.com/xyzzy/xdoc2txt.html
+
+変更点。
+
+- xdoc2txt 実行時に作成する一時ファイルを削除するようにした。(Thanks xyzzy wiki / patch11 の OMA さん)
+- *xdoc2txt-hook* で view-mode にした場合など、read-only でエラーになる問題を修正。
+- *grep* バッファの場合でも、*xdoc2txt-hook* は実行するようにした。

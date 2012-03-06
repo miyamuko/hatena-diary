@@ -1,0 +1,148 @@
+
+*p1*[Hibernate] hbm2ddl の外部キー制約
+
+one-to-many なんかで関連を設定している場合、hbm2ddl の schemaexport で生成すると外部キー制約が必ず生成されるのは何とかならんものか。
+ドキュメントを眺めてみたけどそれっぽいオプションはないなぁ。
+
+http://www.hibernate.org/hib_docs/tools/ant/
+
+一応ソースも眺めてみたけど必ず生成されるみたい。
+(org.hibernate.cfg.Configuration の generateSchemaCreationScript)
+
+
+一部のテーブルしか必要ないようなテストを JUnit でするときに制約があると面倒なんだよなぁ。
+
+とりあえず今は生成後に replaceregexp で消している。
+
+
+
+*p2*[Hibernate] 外部キー制約の削除
+
+これでプログラム中から外部キー制約を消すことができた。
+
+><pre class="source">
+[]    []<span class="keyword1">[]private[]</span>[] []<span class="keyword1">[]void[]</span>[] deleteForeignKeyConstraints&#40;Class referencedClass&#41; []<span class="keyword1">[]throws[]</span>[] SQLException {[]
+[]        Configuration conf = HibernateUtil&#46;getConfiguration&#40;&#41;;[]
+[]        Properties properties = conf&#46;getProperties&#40;&#41;;[]
+[]        String defaultCatalog = properties&#46;getProperty&#40;Environment&#46;DEFAULT_CATALOG&#41;;[]
+[]        String defaultSchema = properties&#46;getProperty&#40;Environment&#46;DEFAULT_SCHEMA&#41;;[]
+[]        Dialect dialect = Dialect&#46;getDialect&#40;properties&#41;;[]
+
+[]        Session s = HibernateUtil&#46;getSession&#40;&#41;;[]
+[]        Iterator it = conf&#46;getTableMappings&#40;&#41;;[]
+[]        []<span class="keyword1">[]while[]</span>[] &#40;it&#46;hasNext&#40;&#41;&#41; {[]
+[]            Table table = &#40;Table&#41; it&#46;next&#40;&#41;;[]
+[]            []<span class="keyword1">[]if[]</span>[] &#40;table&#46;isPhysicalTable&#40;&#41;&#41; {[]
+[]                Iterator subIter = table&#46;getForeignKeyIterator&#40;&#41;;[]
+[]                []<span class="keyword1">[]while[]</span>[] &#40;subIter&#46;hasNext&#40;&#41;&#41; {[]
+[]                    ForeignKey fk = &#40;ForeignKey&#41; subIter&#46;next&#40;&#41;;[]
+[]                    []<span class="keyword1">[]if[]</span>[] &#40;fk&#46;isPhysicalConstraint&#40;&#41; &&[]
+[]                        &#40;referencedClass == []<span class="keyword1">[]null[]</span>[] &#124;&#124; referencedClass&#46;getName&#40;&#41;&#46;equals&#40;fk&#46;getReferencedEntityName&#40;&#41;&#41;&#41;&#41; {[]
+[]                        String sql = fk&#46;sqlDropString&#40;dialect, defaultCatalog, defaultSchema&#41;;[]
+[]                        Statement st = []<span class="keyword1">[]null[]</span>[];[]
+[]                        []<span class="keyword1">[]try[]</span>[] {[]
+[]                            st = s&#46;connection&#40;&#41;&#46;createStatement&#40;&#41;;[]
+[]                            st&#46;execute&#40;sql&#41;;[]
+[]                        } []<span class="keyword1">[]finally[]</span>[] {[]
+[]                            []<span class="keyword1">[]if[]</span>[] &#40;st != []<span class="keyword1">[]null[]</span>[]&#41; {[]
+[]                                st&#46;close&#40;&#41;;[]
+[]                            }[]
+[]                        }[]
+[]                    }[]
+[]                }[]
+[]            }[]
+[]        }[]
+[]    }[]
+</pre><
+
+
+
+*p3*[OCaml] OCaml 処理系を止める
+
+そういえば私が始めて vi を使ったときに、終了のさせ方が分からずに困って隣の端末から vi を kill したことがあった。
+次の日メールを確認すると怪しいメールが届いていてびっくりしたものだ。
+
+
+cygwin から ocaml を起動してみたときに、ふとそんなことを思い出した。
+
+
+#quit;;
+
+http://hwb.ecc.u-tokyo.ac.jp/current/4857422FBEF0CAF3A4CEBDE8CDFD2FA5D7A5EDA5B0A5E9A5DFA5F3A5B0A4CEB4F0CBDC202D204F63616D6CCAD42F4F63616D6CBDE8CDFDB7CFA4F2BBDFA4E1A4EB.html
+
+
+
+*p4*[OCaml] 実行の追跡
+
+#trace 関数;; でプログラムの実行過程を自動的に表示できると。
+http://hwb.ecc.u-tokyo.ac.jp/current/4857422FBEF0CAF3A4CEBDE8CDFD2FA5D7A5EDA5B0A5E9A5DFA5F3A5B0A4CEB4F0CBDC202D204F63616D6CCAD42FBCC2B9D4A4CEC4C9C0D7.html
+
+これは便利だなぁ。
+
+>||
+Objective Caml version 3.08.3
+
+# let rec factorial n =
+    if n = 1 then 1
+    else n * factorial(n - 1);;
+val factorial : int -> int = <fun>
+# factorial 10;;
+- : int = 3628800
+# #trace factorial;;
+factorial is now traced.
+# factorial 10;;
+factorial <-- 10
+factorial <-- 9
+factorial <-- 8
+factorial <-- 7
+factorial <-- 6
+factorial <-- 5
+factorial <-- 4
+factorial <-- 3
+factorial <-- 2
+factorial <-- 1
+factorial --> 1
+factorial --> 2
+factorial --> 6
+factorial --> 24
+factorial --> 120
+factorial --> 720
+factorial --> 5040
+factorial --> 40320
+factorial --> 362880
+factorial --> 3628800
+- : int = 3628800
+# #untrace factorial;;
+factorial is no longer traced.
+||<
+
+これで factorial 100 が 0 になる理由も分かった。
+
+><blockquote cite="http://hwb.ecc.u-tokyo.ac.jp/current/4857422FBEF0CAF3A4CEBDE8CDFD2FA5D7A5EDA5B0A5E9A5DFA5F3A5B0A4CEB4F0CBDC202D204F63616D6CCAD42FBDBDC7AFA1A6C9B4C7AFA1A6C0E9C7AFA4CEC9C3BFF4A4C8C0B0BFF4A4CEC8CFB0CF.html" title="17.4.2 十年・百年・千年の秒数と整数の範囲">
+<p>
+Ocaml処理系は整数を 30 ビットで表わしているため, 整数としては 1,073,741,823 から -1,073,741,824 までの数しか扱えません.
+</p>
+</blockquote><
+
+*p5*[OCaml] Big_int
+
+factorial 100 ができるように Big_int の勉強。
+
+>||
+# #load "nums.cma";;
+# let rec fact_big_int n =
+    if Big_int.eq_big_int n Big_int.unit_big_int then Big_int.unit_big_int
+    else Big_int.mult_big_int n (fact_big_int (Big_int.pred_big_int n));;
+val fact_big_int : Big_int.big_int -> Big_int.big_int = <fun>
+# Big_int.string_of_big_int(fact_big_int (Big_int.big_int_of_int 100));;
+- : string =
+"9332621544394415268169923885626670049071596826438162146859296389521759999322991
+5608941463976156518286253697920827223758251185210916864000000000000000000000000"
+||<
+
+なんか汚いけどこれが今の限界。
+
+#use でぐぐっていたので Big_int を使う方法に気づくのに 1 時間かかったり・・・orz
+
+
+とりあえず int と Big_int を引数に受け付ける factorial を作ってみよう（いつか）

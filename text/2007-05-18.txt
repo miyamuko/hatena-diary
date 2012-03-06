@@ -1,0 +1,85 @@
+
+*p1*[cairo]Rubyist Magazine - cairo: 2 次元画像描画ライブラリ
+
+[http://jp.rubyist.net/magazine/?0019-cairo:title=Rubyist Magazine - cairo: 2 次元画像描画ライブラリ]
+
+おぉすげーーーー。
+超力作ｋｔｋｒ。
+
+rcairo のドキュメントだけど cairo API の使い方を理解するには十分すぎるほどのドキュメントっすね。
+これ読んで cairo_translate の使い方をはじめて理解したよ。
+
+これで xycairo のドキュメントを書かなくて済むな。いやマジで。
+
+とりあえずすごい。kou += 1
+
+
+
+で、このあたりが気になった。
+
+>http://jp.rubyist.net/magazine/?0019-cairo>
+rcairo は単なる cairo のラッパーではなく、cairo の API 上に Ruby で書かれた便利な機能を追加しています。
+開発版の rcairo で実験的に「ぼかし」風の画像効果を実装しています。
+<<
+
+>>
+cairo では提供していませんが、 rcairo では角が丸まった四角形のパスを作る rounded_rectangle を用意しています。
+<<
+
+>>
+この完全な円を描くための便利なメソッド circle は cairo の API にはない、rcairo が拡張した API です。
+<<
+
+結構 [http://webcvs.cairographics.org/rcairo/src/lib/cairo/:title=rcairo 独自の拡張]ってしてるんすね。参考になるなぁ。
+
+
+あと、最初のサンプル画像の右下のパスに沿ってフォントが配置されている画像はどうやっているのか気になったので調べてみたら・・・
+
+<del datetime="2007-05-23T00:18:06+09:00">
+>http://webcvs.cairographics.org/rcairo/samples/text-on-path.rb?view=markup>
+layout = make_layout(cr, text)
+cr.pango_layout_line_path(layout.get_line(0))
+<<
+
+うーん Pango かぁ。
+
+Pango・・・Pango・・・xypango ???
+
+うーん。
+
+Pango かぁ。。。
+
+
+Pango って指定された領域 (三角や円や星型とか) の内部にテキストを流しこむような API ってあるのかなぁ。
+めちゃ便利ならバインディング作ろうかな・・・
+
+Pango かぁ。。。
+</del>
+
+<strong>追記</strong>
+
+コメント欄で須藤さんに教えてもらったんですが、これは私の勘違いでした。
+
+rcairo の [http://webcvs.cairographics.org/rcairo/samples/text-on-path.rb?view=markup:title=samples/text-on-path.rb] で Pango がやっているのは
+- Serif 36pt で
+- 指定されたテキストのパスを書く
+だけで、くねくねしたパス上にテキストを配置しているのは rcairo の [http://webcvs.cairographics.org/rcairo/src/lib/cairo/context/path.rb?revision=1.4&view=markup:title=Cairo::Context::Path#map_path_onto] でした。
+
+私は Pango がレイアウトしてくれていると勘違いしてたみたいです。
+で、以下のように書き換えれば Pango を使わなくてもいいみたいです。
+
+>|ruby|
+-  layout = make_layout(cr, text)
+-  cr.pango_layout_line_path(layout.get_line(0))
++  cr.select_font_face("Serif")
++  cr.font_size = 36
++  cr.text_path(text)
+||<
+
+で、rcairo の map_path_onto 自体は [http://svn.gnome.org/viewcvs/pango/trunk/examples/cairotwisted.c?view=markup:title=Pango の examples/cairotwisted.c] からの移植らしいです。
+
+とりあえずテキストをくねくねしたいので xycairo にも map_path_onto は実装しようと思ってます（まだ、map_path_onto の実装を完全には理解できてませんが＾＾）。
+
+
+
+とりあえず私はパンよりご飯が好きです。

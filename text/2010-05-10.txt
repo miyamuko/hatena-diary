@@ -1,0 +1,43 @@
+
+*p1*[xyzzy]b と m をよくタイプミスする人用の設定
+
+最近スイーツ（笑）作りにはまっている @miyamuko です。
+まだクッキーやパウンドケーキぐらいしか焼けませんが、この本を読んで日々お菓子作りの研究をしています。
+
+<div class="amazlet-box" style="margin-bottom:0px;"><div class="amazlet-image" style="float:left;"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/438825116X/miyamuko-22/ref=nosim/" name="amazletlink" target="_blank"><img src="http://ecx.images-amazon.com/images/I/51PZ8B4lJQL._SL160_.jpg" alt="科学でわかるお菓子の「なぜ?」―基本の生地と材料のQ&A231" style="border: none;" /></a></div><div class="amazlet-info" style="float:left;margin-left:15px;line-height:120%"><div class="amazlet-name" style="margin-bottom:10px;line-height:120%"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/438825116X/miyamuko-22/ref=nosim/" name="amazletlink" target="_blank">科学でわかるお菓子の「なぜ?」―基本の生地と材料のQ&A231</a><div class="amazlet-powered-date" style="font-size:7pt;margin-top:5px;font-family:verdana;line-height:120%">posted with <a href="http://www.amazlet.com/browse/ASIN/438825116X/miyamuko-22/ref=nosim/" title="科学でわかるお菓子の「なぜ?」―基本の生地と材料のQ&A231" target="_blank">amazlet</a> at 10.05.10</div></div><div class="amazlet-detail">中山 弘典 木村 万紀子 <br />柴田書店 <br />売り上げランキング: 31935<br /></div><div class="amazlet-review" style="margin-top:10px; margin-bottom:10px"><div class="amazlet-review-average" style="margin-bottom:5px">おすすめ度の平均: <img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5.0" /></div><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5" /> 失敗していた原因に気づかされました<br /><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5" /> 値段に見合う価値のある本<br /><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5" /> この前は上手くいったのに・・・目の前が開ける一冊！<br /><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5" /> 見極めのポイントでスッキリ！！<br /><img src="http://images-jp.amazon.com/images/G/09/x-locale/common/customer-reviews/stars-5-0.gif" alt="5" /> おもしろくてためになります<br /></div><div class="amazlet-link" style="margin-top: 5px"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/438825116X/miyamuko-22/ref=nosim/" name="amazletlink" target="_blank">Amazon.co.jp で詳細を見る</a></div></div><div class="amazlet-footer" style="clear: left"></div></div>
+
+あ、将来の夢はパン屋さんです。
+
+
+
+閑話休題。
+
+ところで b と m をよくタイプミスすることってありますよね？
+そういうおっちょこちょいな人は以下の設定を .xyzzy に書いておくといいと思います。
+
+>|lisp|
+(defun black-swan-guard ()
+  (let ((invisible-hand '((#\b . #\m)
+                          (#\B . #\M)
+                          (#\C-b . #\C-m)
+                          (#\M-b . #\M-m))))
+    (let ((cmd (or (cdr (assoc *last-command-char* invisible-hand))
+                   (car (rassoc *last-command-char* invisible-hand)))))
+      (when cmd
+        (setf *last-command-char* cmd)
+        (setf *this-command* (lookup-key-command cmd))))))
+
+(add-hook '*pre-command-hook* 'black-swan-guard)
+||<
+
+これで b と打っても m が入力されるので安心です。
+
+#\C-M-b と #\C-M-m の入れ替え方がわかりません!
+
+
+
+
+あわせて読みたい。
+
+- [http://www.itmedia.co.jp/news/articles/1005/07/news022.html:title=せかにゅ：米国の株価急落、「m」と「b」のタイプミスによる誤発注が原因？ - ITmedia News]
+- [http://www.nikkei.com/news/headline/related-article/g=96958A9C9381959CE2EAE2E29F8DE2EAE2E7E0E2E3E2E2E2E2E2E2E2;bm=96958A9C9381959CE2EAE2E2808DE2EAE2E7E0E2E3E2E2E2E2E2E2E2:title=シティ「誤発注のうわさは事実無根」　米株式相場の急落で　：日本経済新聞]

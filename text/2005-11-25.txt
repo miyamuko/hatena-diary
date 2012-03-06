@@ -1,0 +1,72 @@
+
+*p1*[xyzzy] Re: find-file でのパス展開
+
+<blockquote cite="http://www.dsl.gr.jp/~honami/diary/20051124.html#p01" title="find-file でのパス展開">
+同じだ。さらに“~”フォルダはファイラにも表示されない模様。ほほぅ。
+</blockquote>
+
+~ から始まる場合のみ展開するようにしてみた。たぶんこれでいい・・・と思う。
+
+>||
+Index: src/pathname.cc
+===================================================================
+--- src/pathname.cc	(revision 15)
++++ src/pathname.cc	(working copy)
+@@ -180,6 +180,7 @@
+   path.traile = pe;
+   pe--;
+   const Char *pe2 = pe - 1;
++  const Char *ps = p;
+   while (p < pe)
+     {
+       while (p < pe && dir_separator_p (*p))
+@@ -187,7 +188,7 @@
+           p++;
+           if (dir_separator_p (*p))  //  `//' or `\\'
+             path.trail = p;
+-          else if (*p == '~' && (p == pe || dir_separator_p (p[1])))
++          else if (*p == '~' && (p == pe || dir_separator_p (p[1])) && (p == ps))
+             {
+               path.trail = p;
+               p++;
+||<
+
+で、ビルドするときに CXXFLAGS に -DPATHNAME_ESCAPE_TILDE をつければファイラとかでも見えるようになるっぽい。
+
+
+*p2*[xyzzy] layered-window 0.2.1
+
+layered-window 0.2.1 をリリースしました。
+
+- http://miyamuko.s56.xrea.com/xyzzy/layered-window.html
+
+＃↑は XREA が Google 八分されててやる気のないサイトですいません。
+＃引っ越し先はあるんですがやる気が・・・
+
+** 変更点
+
+- Window の透過設定を変更したあとに RedrawWindow するようにしました。
+
+・・・よくよく考えるとホイールスクロールでずれるんなら RedrawWindow は関係ないか orz
+
+- 文字列で透過色を設定できるようにした。
+
+(layered-window-set-transparency-color-bgr "FF0000") という具合に指定します。
+xyzzy.ini の backColor の値や commdlg で選択した値をそのまま指定できるはずです。
+
+- 透過率を取得する API を追加
+
+なんとなく現在の設定値を取得できるようにした見ました。
+
+- 透過色を取得する API を追加
+
+同上。RGB のリストで返します。
+
+- 設定変更ごとに呼ばれるフックを追加
+
+これもなんとなく追加したフック。
+
+- 全体的にリファクタリング
+
+winapi:: をいっぱい書くのがいやになったので winapi を直接使う低レベルな層は lwapi パッケージにいれて、editor には lwapi パッケージを使う高レベルなコマンドとかを入れました。
+これで、けっこうすっきりしました。

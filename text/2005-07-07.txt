@@ -1,0 +1,88 @@
+
+*p1*[xyzzy] buf2hatena
+
+><blockquote cite="http://d.hatena.ne.jp/help#footnote" title="脚注をつける - はてなダイアリーのヘルプ">
+<p>
+二重丸がっこ、「)((」と「))(」で囲まれた文字は、自動的に脚注となります。
+</p>
+</blockquote><
+
+lisper に挑戦的なはてなの記法に対抗するためのスクリプトです (2006/01/30: ちょこっと修正)。
+
+こんなことをします。
+
+- はてなの特殊記号を数値参照に置き換え
+- [] を挿入してキーワードリンクの抑止
+
+[http://ohkubo.s53.xrea.com/xyzzy/#buf2html:title=buf2html]が必要なんで入れてください。
+
+><pre class="source">
+[]&#40;[]<span class="keyword1">[]defvar[]</span>[] &#42;buf2hatena&#45;hatena&#45;special&#45;character&#42;[]
+[]  '&#40;[]<span class="string">[]&quot;&#91;&quot;[]</span>[] []<span class="string">[]&quot;&#93;&quot;[]</span>[] []<span class="string">[]&quot;&#40;&quot;[]</span>[] []<span class="string">[]&quot;&#41;&quot;[]</span>[] []<span class="string">[]&quot;&#42;&quot;[]</span>[] []<span class="string">[]&quot;&#43;&quot;[]</span>[] []<span class="string">[]&quot;&#45;&quot;[]</span>[] []<span class="string">[]&quot;&#46;&quot;[]</span>[] []<span class="string">[]&quot;&#124;&quot;[]</span>[]&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] buf2hatena&#45;hatena&#45;encode&#45;alist &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]append[]</span>[] &#42;buf2html&#45;string&#45;encode&#45;alist&#42;[]
+[]          &#40;[]<span class="keyword1">[]mapcar[]</span>[] #'&#40;[]<span class="keyword1">[]lambda[]</span>[] &#40;s&#41;[]
+[]                      &#40;[]<span class="keyword1">[]cons[]</span>[] &#40;[]<span class="keyword1">[]regexp&#45;quote[]</span>[] s&#41;[]
+[]                            &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="string">[]&quot;&amp;#~D;&quot;[]</span>[] &#40;[]<span class="keyword1">[]char&#45;code[]</span>[] &#40;[]<span class="keyword1">[]character[]</span>[] s&#41;&#41;&#41;&#41;&#41;[]
+[]                  &#42;buf2hatena&#45;hatena&#45;special&#45;character&#42;&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] buf2hatena&#45;escape&#45;keyword&#45;link &#40;html&#41;[]
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;start 0&#41; &#40;r&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]while[]</span>[] &#40;[]<span class="keyword1">[]string&#45;match[]</span>[] []<span class="string">[]&quot;\\&#40;&lt;&#91;^&gt;&#93;&#42;&gt;\\&#124;\n&#43;\\&#41;\\&#124;\\&#40;&amp;&#91;^;&#93;&#43;?;\\&#41;\\&#124;\\&#40;&#91;^&lt;&gt;\n&#93;&#43;\\&#41;&quot;[]</span>[] html start&#41;[]
+[]      &#40;[]<span class="keyword1">[]setf[]</span>[] start &#40;[]<span class="keyword1">[]match&#45;end[]</span>[] 0&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]or[]</span>[] &#40;[]<span class="keyword1">[]match&#45;string[]</span>[] 1&#41; &#40;[]<span class="keyword1">[]match&#45;string[]</span>[] 2&#41;&#41;[]
+[]        &#40;[]<span class="keyword1">[]push[]</span>[] &#40;[]<span class="keyword1">[]or[]</span>[] &#40;[]<span class="keyword1">[]match&#45;string[]</span>[] 1&#41; &#40;[]<span class="keyword1">[]match&#45;string[]</span>[] 2&#41;&#41; r&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]match&#45;string[]</span>[] 3&#41;[]
+[]        &#40;[]<span class="keyword1">[]push[]</span>[] &#40;[]<span class="keyword1">[]concat[]</span>[] []<span class="string">[]&quot;&#91;&#93;&quot;[]</span>[] &#40;[]<span class="keyword1">[]match&#45;string[]</span>[] 3&#41; []<span class="string">[]&quot;&#91;&#93;&quot;[]</span>[]&#41; r&#41;&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]apply[]</span>[] #'[]<span class="keyword1">[]concat[]</span>[] &#40;[]<span class="keyword1">[]reverse[]</span>[] r&#41;&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] buf2hatena&#45;get&#45;region&#45;string &#40;from to &amp;key escape&#45;keyword&#45;link&#41;[]
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;&#42;buf2html&#45;string&#45;encode&#45;alist&#42; &#40;buf2hatena&#45;hatena&#45;encode&#45;alist&#41;&#41;[]
+[]        &#40;&#42;buf2html&#45;anchor&#45;url&#42; []<span class="keyword3">[]nil[]</span>[]&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;html &#40;buf2html&#45;get&#45;region&#45;string from to&#41;&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]concat[]</span>[] []<span class="string">[]&quot;&gt;&quot;[]</span>
+[]              &#40;[]<span class="keyword1">[]if[]</span>[] escape&#45;keyword&#45;link[]
+[]                  &#40;buf2hatena&#45;escape&#45;keyword&#45;link html&#41;[]
+[]                html&#41;[]
+[]              []<span class="string">[]&quot;&lt;&quot;[]</span>[]&#41;&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] buf2hatena&#45;copy&#45;region&#45;as&#45;kill &#40;from to&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>[] []<span class="string">[]&quot;r&quot;[]</span>[]&#41;[]
+[]  &#40;[]<span class="fg12 bg0">[]ed::kill&#45;new[]</span>
+[]   &#40;buf2hatena&#45;get&#45;region&#45;string from to[]
+[]                                 :escape&#45;keyword&#45;link &#40;[]<span class="keyword1">[]not[]</span>[] []<span class="keyword3">[]&#42;prefix&#45;args&#42;[]</span>[]&#41;&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] buf2hatena&#45;copy&#45;region&#45;to&#45;clipboard &#40;from to&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>[] []<span class="string">[]&quot;r&quot;[]</span>[]&#41;[]
+[]  &#40;[]<span class="keyword1">[]copy&#45;to&#45;clipboard[]</span>
+[]   &#40;buf2hatena&#45;get&#45;region&#45;string from to[]
+[]                                 :escape&#45;keyword&#45;link &#40;[]<span class="keyword1">[]not[]</span>[] []<span class="keyword3">[]&#42;prefix&#45;args&#42;[]</span>[]&#41;&#41;&#41;&#41;[]
+
+[]&#40;[]<span class="keyword1">[]defun[]</span>[] buf2hatena&#45;copy&#45;selection&#45;to&#45;clipboard &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>[] []<span class="string">[]&quot;P&quot;[]</span>[]&#41;[]
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;type &#40;[]<span class="keyword1">[]get&#45;selection&#45;type[]</span>[]&#41;&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]member[]</span>[] type '&#40;1 2&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]selection&#45;start&#45;end[]</span>[] &#40;start end&#41;[]
+[]        &#40;[]<span class="keyword1">[]copy&#45;to&#45;clipboard[]</span>
+[]         &#40;buf2hatena&#45;get&#45;region&#45;string start end[]
+[]                                       :escape&#45;keyword&#45;link &#40;[]<span class="keyword1">[]not[]</span>[] []<span class="keyword3">[]&#42;prefix&#45;args&#42;[]</span>[]&#41;&#41;&#41;&#41;&#41;&#41;&#41;[]
+</pre><
+
+使い方。
+
+buf2html の ini2css-buffer で css を生成してはてなの「詳細デザイン設定」に追加。
+
+で、
+
+- M-x buf2hatena-copy-region-as-kill
+- M-x buf2hatena-copy-region-to-clipboard
+- M-x buf2hatena-copy-selection-to-clipboard
+
+キーワードリンクは許す (エスケープしない) 場合。
+
+- C-u M-x buf2hatena-copy-region-as-kill
+- C-u M-x buf2hatena-copy-region-to-clipboard
+- C-u M-x buf2hatena-copy-selection-to-clipboard
+
+[http://sagiri.s7.xrea.com/hatena/cppe_kai.html:title=コピペ支援Script ちょこっと改 for はてなダイアリー]を参考にさせてもらいました。

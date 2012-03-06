@@ -1,0 +1,12 @@
+
+*mofuji*[Font]モフ字 フォント
+
+>http://www.forest.impress.co.jp/article/2007/06/14/okiniiri.html:title>
+モフモフとした暖かみのある印象の日本語TrueTypeフォント。
+角がなく曲線のみで構成され、線の太さと細さを強調した文字が特徴。
+<<
+
+
+うーん。モフ字フォントはモフモフしすぎてあまりコーディングには向かないなぁ。
+
+<a href="http://www.flickr.com/photos/8878415@N08/564531322/" title="Photo Sharing"><img src="http://farm2.static.flickr.com/1129/564531322_a9ec1286e7_o.png" width="543" height="573" alt="mofuji" /></a>

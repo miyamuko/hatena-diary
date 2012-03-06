@@ -1,0 +1,28 @@
+
+*p1*[xyzzy][livedoor-reader-notifier] livedoor-reader-notifier 0.2 リリース
+
+livedoor-reader-notifier 0.2 をリリースしました。
+
+f:id:miyamuko:20060615010453p:image
+
+- [http://miyamuko.s56.xrea.com/xyzzy/archives/livedoor-reader-notifier.zip:title=ダウンロード]
+- [http://miyamuko.s56.xrea.com/xyzzy/livedoor-reader-notifier.html:title=ドキュメント]
+
+
+xyzzy のメニューに livedoor Reader の未読数を表示します。メニューをクリックするとブラウザで livedoor Reader が開きます。
+xml-http-request を使って非同期に処理をしているので通信中も xyzzy 上での作業を邪魔しません。
+
+** 変更点
+
+- メニューの文字列が <span style="font-weight:bold;">livedoore</span> になっていたのを修正。これはひどい。
+
+- ed::livedoor-reader-notifier-set-interval を追加。
+
+- xyzzy 起動中に *livedoor-reader-notifier-update-interval* を変更した場合でも変更が反映されるようにした。
+
+- 最後に更新した時間を If-Modified-Since で送信するようにした。たぶん意味は無い。
+
+** 履歴
+
+:2006-06-14:livedoor-reader-notifier 0.2 リリース (id:miyamuko:20060614)
+:2006-06-13:livedoor-reader-notifier 0.1 リリース (id:miyamuko:20060613)

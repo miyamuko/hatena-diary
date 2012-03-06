@@ -1,0 +1,33 @@
+
+*json_syck*[xyzzy][json-syck]json-syck 0.0.1 released!
+
+json-syck 0.0.1 をリリースしました。
+
+http://miyamuko.s56.xrea.com/xyzzy/json-syck/intro.htm
+
+_why の syck を使ったそこそこ早くてちょっと危険な JSON パーサです。
+
+巨大な json を読ませると xyzzy ごと落ちることがあります。
+dump はサポートしてません。
+
+
+あと、はてなの JSON でしかテストしてないので読めない JSON があったら教えてください。
+これは hatena-haiku-mode のはてなスター対応の布石です。
+
+
+*hatena_haiku_mode*[xyzzy][hatena-haiku-mode]hatena-haiku-mode 0.0.2 リリース!
+
+hatena-haiku-mode を更新しました。
+
+http://miyamuko.s56.xrea.com/xyzzy/hatena-haiku-mode/intro.htm
+
+主にバグ修正です。
+
+
+*xycairo*[xyzzy][cairo][xycairo]xycairo 0.0.8 リリース
+
+xyzzy から Cairo を使う xycairo 0.0.8 をリリースしました。
+
+http://miyamuko.s56.xrea.com/xyzzy/cairo/intro.htm
+
+添付している dll を [http://cairographics.org/news/cairo-1.4.14/:title=1/14 にリリースされた cairo 1.4.14] に更新しただけです。

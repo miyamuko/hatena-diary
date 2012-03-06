@@ -1,0 +1,29 @@
+
+*ime_feedback*[xyzzy][fixdap]前後フィードバック機能のサポートのパッチ
+
+fixdap は参加者制限なしにしてても[http://d.hatena.ne.jp/himadatanode/20080220/p2:title=添付ファイルはログインしないと見えない]らしいので xyzzy Wiki の方にも [http://xyzzy.s53.xrea.com/wiki/index.php?patch%2F27:title=パッチを投げときました]。
+
+
+「参加者制限なし」にしているのに添付ファイルは制限されるのは明らかにおかしいので[http://fixdap.com/p/more/7583/:title=fixdap に要望を出しつつ]、直りそうになかったらゲストアカウント作っちゃえばいいかなぁ。
+
+
+あと fixdap の RSS feed を LDR で購読してるんですけど、LDR で見れるようになるまで異様に遅くないっすか？
+2/19 に書いたコメントが 2/23 時点で LDR にまだ来てないんですけど。。。
+
+
+*ime_feedback_on_lisp*[xyzzy]Lisp だけで IMEの前後参照変換機能
+
+[http://xyzzy.s53.xrea.com/wiki/index.php?tips%2FIME%A4%CE%C1%B0%B8%E5%BB%B2%BE%C8%CA%D1%B4%B9%B5%A1%C7%BD:title=tips/IMEの前後参照変換機能 - XyzzyWiki]
+
+あーすごいなぁ。
+ウィンドウのサブクラス化とかよく分からなかったので SetWindowsHook でなんとかしようとして挫折してました。
+
+
+
+あと、構造体の元ネタのポインタを指定できることも知らなかった。
+
+>|lisp|
+(make-RECONVERTSTRING nil lparam)
+||<
+
+xycairo では自前でマクロ書いてしまった気が。。

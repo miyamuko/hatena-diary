@@ -1,0 +1,91 @@
+
+*p1*カレー化
+
+http://www.ibm.com/jp/developerworks/java/050922/j_j-pg08235.shtml
+
+><blockquote>
+実用的なGroovy: カレー化クロージャーによる...
+</blockquote><
+
+カレーっておいしいよね。
+
+
+
+*p2*[Perl] ネストしたクロージャ
+
+><blockquote cite="http://bulknews.net/lib/doc-ja/etoys.ja.html" title="ワナ: ネストした例外">
+<p>
+Error モジュールのような新しいテクノロジーに挑戦する時は、いくつか注意しないといけないことがあります。実行されるたびに毎回メモリリークを引き起こすようなコード構造があることにきづきました。ネストした try{} を含んでいて、このような感じです: 
+</p>
+<pre>
+    my $foo;
+    try {
+        # some stuff...
+        try {
+            $foo++;
+            # more stuff...
+        } catch Error with {
+            # handle error
+        };
+
+    } catch Error with {
+        # handle other error
+    };
+</pre>
+</blockquote><
+
+気をつけていたんだけどハマってしまった。orz...
+
+><pre class="source">
+<span class="keyword1">[]sub[]</span>[] with_foo {[]
+[]    []<span class="keyword1">[]my[]</span>[] $code = []<span class="keyword3">[]shift[]</span>[];[]
+[]    $code&#45;&gt;&#40;&#41;;[]
+[]}[]
+
+<span class="keyword1">[]sub[]</span>[] with_bar {[]
+[]    []<span class="keyword1">[]my[]</span>[] $code = []<span class="keyword3">[]shift[]</span>[];[]
+[]    $code&#45;&gt;&#40;&#41;;[]
+[]}[]
+
+<span class="keyword1">[]sub[]</span>[] loop_w_nest {[]
+[]    []<span class="keyword1">[]my[]</span>[] $foo = []<span class="keyword3">[]shift[]</span>[];[]
+[]    []<span class="keyword1">[]while[]</span>[] &#40;1&#41; {[]
+[]        with_foo&#40;[]<span class="keyword1">[]sub[]</span>[] {[]
+[]            with_bar&#40;[]<span class="keyword1">[]sub[]</span>[] {[]
+[]                $foo&#45;&gt;&#91;0&#93;&#43;&#43;;[]
+[]            }&#41;;[]
+[]        }&#41;;[]
+[]    }[]
+[]}[]
+
+<span class="keyword1">[]my[]</span>[] $foo = &#91; 1 &#46;&#46; 1000000 &#93;;[]
+[]loop_w_nest&#40;$foo&#41;;[]
+</pre><
+
+コレだとメモリリークするので with_foo から with_bar を直接呼ばずに関数を一個はさむようにしたら OK ↓
+
+><pre class="source">
+<span class="keyword1">[]sub[]</span>[] do_bar {[]
+[]    []<span class="keyword1">[]my[]</span>[] $foo = []<span class="keyword3">[]shift[]</span>[];[]
+[]    with_bar&#40;[]<span class="keyword1">[]sub[]</span>[] {[]
+[]        $foo&#45;&gt;&#91;0&#93;&#43;&#43;;[]
+[]    }&#41;;[]
+[]}[]
+
+<span class="keyword1">[]sub[]</span>[] loop_wo_nest {[]
+[]    []<span class="keyword1">[]my[]</span>[] $foo = []<span class="keyword3">[]shift[]</span>[];[]
+[]    []<span class="keyword1">[]while[]</span>[] &#40;1&#41; {[]
+[]        with_foo&#40;[]<span class="keyword1">[]sub[]</span>[] {[]
+[]            do_bar&#40;$foo&#41;;[]
+[]        }&#41;;[]
+[]    }[]
+[]}[]
+
+<span class="keyword1">[]my[]</span>[] $foo = &#91; 1 &#46;&#46; 1000000 &#93;;[]
+[]loop_wo_nest&#40;$foo&#41;;[]
+</pre><
+
+
+
+メンドクセ
+

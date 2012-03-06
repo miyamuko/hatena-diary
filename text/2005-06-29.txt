@@ -1,0 +1,23 @@
+
+*1120016029*[xyzzy] synchronize with repository
+
+Eclipse の Synchronize with Repository が欲しかったので作ってみました。
+trunk と local の diff を取ります。[http://www.rubyist.net/~nobu/t/20050213.html:title=cvs-mode] が必要なので入れてください。
+
+>||
+(defun cvs::synchronize-with-repository ()
+  (interactive)
+  (unless (get-buffer-file-name)
+    (return-from cvs::synchronize-with-repository))
+  (let* ((orig (selected-buffer))
+         (file (get-buffer-file-name))
+         (head (cvs::extract (cvs::repository-name file) "-Dnow"))
+         (tmp (make-temp-file-name "cvs_" "now")))
+    (set-buffer head)
+    (write-file tmp)
+    (delete-buffer head)
+    (diff tmp file)
+    (delete-file tmp)))
+
+(define-key cvs::*mode-sub-map* #\m 'synchronize-with-repository)
+||<

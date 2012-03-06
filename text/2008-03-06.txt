@@ -1,0 +1,18 @@
+
+*hatena_haiku_mode*[xyzzy][hatena-haiku-mode]hatena-haiku-mode 0.2.1 リリース!
+
+hatena-haiku-mode を更新しました。
+
+http://miyamuko.s56.xrea.com/xyzzy/hatena-haiku-mode/intro.htm
+
+hatena-haiku-mode は xyzzy 用のはてなハイクを専用ブラウザです。
+
+
+** 変更点
+
+- [http://d.hatena.ne.jp/hatenahaiku/20080305/1204713785:title=はてなハイクのニコニコ動画対応]にともない、HTML がそのまま表示されてしまう問題の修正。
+-- 今はニコニコ動画の url に変換しています。
+-- ニコニコ API でタイトルを自動的に取得して勝手に表示するのもありかも。
+- [http://d.hatena.ne.jp/hatenahaiku/20080304/1204619327:title=Recent ページから Following が削除された]ので対応。
+- はてなスターの描画を完全に非同期にして待ち時間をなくしました。
+-- あとは通常のエントリの取得も完全に非同期化して待ち時間０にしたいと思っています。

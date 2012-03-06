@@ -1,0 +1,67 @@
+
+*win32_captureie*[Ruby][win32-captureie]win32-captureie 0.2.0 リリース!
+
+IE を使って Web ページのスクリーンショットを取得するライブラリを[http://rubyforge.org/forum/forum.php?forum_id=19704:title=更新]しました。
+
+0.2.0 では以下の機能を実装しています。
+
+- [http://rubyforge.org/projects/rmagick:title=RMagick] に対応
+-- RMagick がインストールされているのなら png, jpg などで保存できます
+-- RMagick がインストールされていないなら bmp のみ保存できます
+-- ファイルタイプはファイル名の拡張子で指定します
+-- 画像の保存前に RMagick でフィルタを画像を編集できます
+- ストリームに対応
+-- ファイルだけじゃなくストリーム (正確には write メソッドを実装したオブジェクト) を出力先に指定できます
+-- ファイルタイプは :format => "png" のように指定します
+- capture_elements を実装
+-- 指定された DOM 要素だけを保存します
+-- 要素は id または WIN32OLE オブジェクトで指定します
+-- 要素を複数指定した場合は、指定した要素すべてを含む最小の矩形領域を保存します
+- capture_xxx_image
+-- キャプチャした画像を Magick::ImageList オブジェクトで返します
+-- RMagick がインストールされていない場合はビットマップを String で返します
+
+
+** インストール
+
+>||
+gem install win32-captureie
+||<
+
+または [http://rubyforge.org/projects/win32-captureie:title=プロジェクトページ] から zip をダウンロードして ruby setup.rb でインストールしてください。
+
+
+** 使い方
+
+*** www.ruby-lang.org を時刻付きで保存 (要 RMagick)
+
+>|ruby|
+require "time"
+
+require "rubygems"
+require "win32/capture_ie"
+
+Win32::CaptureIE.start("http://www.ruby-lang.org") do |ie|
+  now = Time.now
+  ie.capture_page("ruby-lang-#{now.to_i}.png") do |image|
+    gc = Magick::Draw.new
+    # 現在時刻を画像に書き込む
+    gc.stroke = "white"
+    gc.text_undercolor("blue")
+    gc.text(5, ie.body_area.height - 5, now.iso8601)
+    gc.draw(image)
+    image
+  end
+end
+||<
+
+
+** 過去のリリース
+
+- [http://d.hatena.ne.jp/miyamuko/20071123/win32_captureie:title=0.1.0]
+
+
+** リンク
+
+- [http://win32-captureie.rubyforge.org:title=ドキュメント]
+- [http://rubyforge.org/projects/win32-captureie:title=プロジェクトページ]

@@ -1,0 +1,65 @@
+
+*p1*[OCaml] ocamlc と ocamlopt
+
+><blockquote>
+Windowsでocamloptを利用するには、MicrosoftのアセンブラMASMが必要です。
+mlというコマンドになっています。
+OCamlのソースコードの拡張子が.mlなのでエラーメッセージがわかりにくいですよね。
+</blockquote><
+
+あー、なるほど。というか ocamlopt と ocamlc の違いも分かってませんでした。
+
+
+ocamlopt がネイティブコンパイラで ocamlc がバイトコードコンパイラなんですね。
+
+だから、ocamlc でコンパイルした exe を ocaml をインストールしていない環境で実行するとエラーになる。
+
+>||
+>test.exe
+Cannot exec ocamlrun
+||<
+
+で、しょせんはバイトコードなんで ocamlrun に指定すると普通に動く。
+
+>||
+>ocamlrun test.exe
+579
+||<
+
+http://ocaml.jp/archive/ocaml-manual-3.06-ja/manual024.html
+http://ocaml.jp/archive/ocaml-manual-3.06-ja/manual025.html
+
+なるほどー。
+
+
+*p2*[OCaml] Windows で ocamlopt
+
+Windows で ocamlopt を動かすまで。
+
+とりあえず、これを見て MASM32 をインストールする。
+http://www7.plala.or.jp/hop-step-jump/prog02.html
+
+ライセンス的にグレーらしいのでまじめな人は変わりに Windows DDK を入れましょう。
+
+
+で、実行。
+
+>||
+>ocamlopt t.mli t.ml -o test.exe
+'cl' は、内部コマンドまたは外部コマンド、
+操作可能なプログラムまたはバッチ ファイルとして認識されていません。
+Error during linking
+||<
+
+うっ cl もいるのか・・・。
+
+
+昔入れた VCTK 2003 を引っ張り出してきて再実行。
+
+>||
+>ocamlopt t.mli t.ml -o test.exe
+>test.exe
+579
+||<
+
+ok。

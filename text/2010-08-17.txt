@@ -1,0 +1,72 @@
+
+*p1*[Twitter][Hatena]はてなが Quirks モードを使ってた。別れたい…
+
+
+Quirks モードだと position で fixed 使われた時なんか恥ずかしいｗｗ
+下向いちゃうしｗｗ
+（後略）
+
+
+**サブタイトル: はてなダイアリーに貼り付けた Follow me バッジが IE でずれる問題の回避方法
+
+[http://farm5.static.flickr.com/4117/4901231620_0b4b92cf37_b_d.jpg:image]
+
+
+**回避方法
+
+以下の CSS をはてなのデザイン画面→スタイルシートに貼り付けます。
+top, right の値は好きに変更してください。
+
+>|css|
+#twitterFollowBadge {
+  position: absolute;
+  top: 180px;
+  right: 0;
+}
+||<
+
+これで IE の場合でも右下にずれることなく表示されます。
+ただし、スクロールすると画面の外に消えてしまいますが・・・
+
+あと、#tfbTab にスタイルを設定するとなぜかうまくいきません。
+
+参考: [http://hp.vector.co.jp/authors/VA026021/IT/iePositionFixed.html:title]
+
+
+
+**なぜずれるの？
+
+まず、はてなの DOCTYPE は URL なしの HTML 4.01 Transitional です。
+
+>|html|
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN">
+||<
+
+この場合、以下のように IE は Quirks モード (IE5 と同等な機能を利用して表示) で表示します。
+
+>http://blogs.technet.com/b/jpieblog/archive/2009/09/09/3280034.aspx:title>
+<Quirks モードで表示するための DOCTYPE 宣言>
+
+・ HTML4.0 Transitional の DOCTYPE 宣言で DTD の URL を記述していない場合
+例) <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<<
+
+IE8 の開発者ツールでも Quirks モードになっていることが確認できます。
+
+[http://farm5.static.flickr.com/4141/4900642067_190f7809e0_z_d.jpg:image]
+
+
+次に、Follow me バッジは position: fixed でバッジを固定して表示します。
+
+[http://farm5.static.flickr.com/4123/4900642099_7e1f432af0_z_d.jpg:image]
+
+で、Quirks モードの IE では position: fixed をサポートしていないので、この指定は無視されて画面の左下に表示されてしまいます。
+
+開発者ツールで IE8 標準モードなどに変更すると、position: fixed がちゃんと処理されずれなくなることも確認できますね。
+
+
+**まとめ
+
+-IE ではてなを見ると Quirks モードになって、IE5 並の CSS しか使えず position: fixed が無視されて Follow me バッジがずれる
+-標準準拠モードへ対応は 5 年前から要望があがっているけどスルー中 (idea:4818)
+-別れたい・・・

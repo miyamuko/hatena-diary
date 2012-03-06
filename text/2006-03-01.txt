@@ -1,0 +1,180 @@
+
+*p1*[Ruby] FasterCSV のベンチマーク
+
+[http://www.oreillynet.com/ruby/blog/2006/02/faster_csv_with_fastercsv.html:title=Faster CSV with FasterCSV - O'Reilly Ruby] 経由。
+
+Ruby 標準添付の csv パーサが鬼のように遅いので [http://fastercsv.rubyforge.org/:title=FasterCSV] を試してみました。
+速いということは "" などは無視して手を抜いて parse しているのかと一瞬疑ってしまったのですが、quote された field もちゃんと扱えました ("" 内の改行文字として LF と CRLF 両方 ok でした)。
+# もちろん標準添付の csv も扱えます。
+
+>||
+% cat a.csv
+"a""aa","b
+bb","ccc"
+zzz,yyy,xxx
+% ruby -rfaster_csv -e "FasterCSV.foreach(ARGV.shift){|row| p row}" a.csv
+["a\"aa", "b\nbb", "ccc"]
+["zzz", "yyy", "xxx"]
+||<
+
+あと、pure ruby なので Windows な人でもインストールが楽なのがうれしい (gem もあるし)。
+
+
+で、せっかくなのでベンチマークをとってみました。
+
+**環境
+
+環境は以下のとおりです。
+
+|*CPU|Pentium 4 2GHz (HT なし)|
+|*メモリ|1G (512 * 2)|
+|*HD|SAMSUNG SV0602H|
+|*OS|Windows XP Professional SP2|
+
+**テストデータ
+
+テスト用の csv データは [http://www.post.japanpost.jp/zipcode/dl/oogaki.html:title=郵便番号 csv の 全国一括] を以下のようにして 3 倍したものを利用しました。
+
+>||
+> cat KEN_ALL.CSV KEN_ALL.CSV KEN_ALL.CSV > KEN_ALL3.CSV
+||<
+
+**結果
+
+csv を parse して行数を数えるだけのスクリプト（後述）の実行時間を GNU time で測定しました。
+
+|*対象|*結果|
+|ruby 1.8.4 + 標準添付の csv|12分26秒56|
+|ruby 1.8.4 + FasterCSV 0.1.9|2分34秒92|
+
+FasterCSV は標準添付の csv パーサの 5〜6 倍速いようです。
+
+
+ついでに他の LL の結果。
+
+|*対象|*結果|
+|perl 5.8.6 + Text::CSV_XS 0.23|37秒46|
+|python 2.4.2 + 標準添付の csv|3秒46|
+
+Python は ruby の約 245 倍速いようです。
+
+orz... (まぁ pure ruby だししょうーがないか)
+
+
+**まとめ
+
+CSV の解析なら Python で。
+
+
+
+**ソース
+
+csv を parse して行数を表示するだけです。
+
+- ruby (CSV)
+
+><pre class="source">
+<span class="keyword1">[]require[]</span>[] []<span class="fg10">"</span><span class="fg10">[]csv[]</span><span class="fg10">"</span>
+
+[]n = 0[]
+[]CSV&#46;[]<span class="keyword3">[]open[]</span>[]&#40;ARGV&#46;shift, []<span class="fg10">"</span><span class="fg10">[]r[]</span><span class="fg10">"</span>[]&#41; []<span class="keyword1">[]do[]</span>[] &#124;row&#124;[]
+[]  n &#43;= 1[]
+<span class="keyword1">[]end[]</span>
+
+<span class="keyword3">[]puts[]</span>[] n[]
+</pre><
+
+- ruby (FasterCSV)
+
+><pre class="source">
+<span class="keyword1">[]require[]</span>[] []<span class="fg10">"</span><span class="fg10">[]faster_csv[]</span><span class="fg10">"</span>
+
+[]n = 0[]
+[]FasterCSV&#46;foreach&#40;ARGV&#46;shift&#41; []<span class="keyword1">[]do[]</span>[] &#124;row&#124;[]
+[]  n &#43;= 1[]
+<span class="keyword1">[]end[]</span>
+
+<span class="keyword3">[]puts[]</span>[] n[]
+</pre><
+
+- perl (Text::CSV_XS)
+
+><pre class="source">
+<span class="keyword1">[]use[]</span>[] strict;[]
+<span class="keyword1">[]use[]</span>[] warnings;[]
+
+<span class="keyword1">[]use[]</span>[] IO::File;[]
+<span class="keyword1">[]use[]</span>[] Text::CSV_XS;[]
+
+<span class="keyword1">[]my[]</span>[] $io = IO::File&#45;>new&#40;[]<span class="keyword3">[]shift[]</span>[]&#40;@ARGV&#41;, []<span class="string">[]"r"[]</span>[]&#41;;[]
+<span class="keyword1">[]my[]</span>[] $csv = Text::CSV_XS&#45;>new&#40;{binary => 1}&#41;;[]
+
+<span class="keyword1">[]my[]</span>[] $n = 0;[]
+<span class="keyword1">[]while[]</span>[] &#40;[]<span class="keyword2">[]not[]</span>[] $io&#45;>[]<span class="keyword3">[]eof[]</span>[] []<span class="keyword2">[]and[]</span>[] $csv&#45;>getline&#40;$io&#41;&#41; {[]
+[]    $n&#43;&#43;;[]
+[]}[]
+
+<span class="keyword3">[]print[]</span>[] []<span class="string">[]"$n\n"[]</span>[];[]
+</pre><
+
+- python
+
+><pre class="source">
+<span class="keyword1">[]import[]</span>[] sys[]
+<span class="keyword1">[]import[]</span>[] csv[]
+
+[]reader = csv&#46;reader&#40;file&#40;sys&#46;argv&#91;1&#93;&#41;&#41;[]
+
+[]n = 0[]
+<span class="keyword1">[]for[]</span>[] row []<span class="keyword1">[]in[]</span>[] reader:[]
+[]    n &#43;= 1[]
+
+<span class="keyword1">[]print[]</span>[] n[]
+</pre><
+
+**結果詳細
+
+- ruby (CSV)
+
+>||
+>ruby -v
+ruby 1.8.4 (2005-12-24) [i386-mswin32]
+
+>time ruby csv.rb KEN_ALL3.CSV
+364755
+0.01user 0.01system 12:26.56elapsed 0%CPU (0avgtext+0avgdata 5792maxresident)k
+0inputs+0outputs (441major+0minor)pagefaults 0swaps
+||<
+
+- ruby (FasterCSV)
+
+>||
+>time ruby fastercsv.rb KEN_ALL3.CSV
+364755
+0.01user 0.01system 2:34.92elapsed 0%CPU (0avgtext+0avgdata 5744maxresident)k
+0inputs+0outputs (438major+0minor)pagefaults 0swaps
+||<
+
+- perl (Text::CSV_XS)
+
+>||
+>perl -v | grep perl,
+This is perl, v5.8.6 built for MSWin32-x86-multi-thread
+
+>time perl csv_xs.pl KEN_ALL3.CSV
+364755
+0.03user 0.01system 0:37.46elapsed 0%CPU (0avgtext+0avgdata 5744maxresident)k
+0inputs+0outputs (438major+0minor)pagefaults 0swaps
+||<
+
+- python
+
+>||
+>python -V
+Python 2.4.2
+
+>time python csv.py KEN_ALL3.CSV
+364755
+0.01user 0.01system 0:03.46elapsed 0%CPU (0avgtext+0avgdata 5808maxresident)k
+0inputs+0outputs (441major+0minor)pagefaults 0swaps
+||<

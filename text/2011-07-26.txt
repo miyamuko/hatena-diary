@@ -1,0 +1,41 @@
+
+*p1*[xyzzy][power-usage]中部電力と九州電力の電力使用状況を xyzzy のモードラインに表示
+
+
+いつのまにか Yahoo の 電気使用状況 API が [http://pr.yahoo.co.jp/release/2011/0714a.html:title=中部電力と九州電力に対応] していたので [http://miyamuko.s56.xrea.com/xyzzy/power-usage/intro.htm:title=power-usage] でも対応しました。
+
+
+>|lisp|
+(require "power-usage")
+;; 中部電力
+; (setf power-usage:*power-usage-area* :chubu)
+;; 九州電力
+; (setf power-usage:*power-usage-area* :kyushu)
+(power-usage:power-usage-mode t)
+||<
+
+
+あと、今までは 1 時間ごとの平均値を取得していたのですが、数分間隔に更新される最新の電気使用量を取得するようにしました（中部電力を除く）。
+power-usage ではデフォルトでは 5 分ごとに更新します。
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ちなみに、この前まで九州って県が 9 つあると思っていました。
+7 県しかないんですね（さっき Wikipedia で調べた）。
+九州の人ごめんなさい。ごめんなさい。

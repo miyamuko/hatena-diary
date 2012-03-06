@@ -1,0 +1,185 @@
+
+*p1*[xyzzy]clickable-uriについて最初に知るべき５つのリスト
+
+**1. 任意の schema を開けるようにする
+
+デフォルトでは http, https, ftp などしか開くことができませんが、設定しだいでは何でも開くようにできます。
+たとえば asin:4274066371 と書くだけで Amazon を開くようにもできます。
+
+>|lisp|
+(defun define-clickable-schema (name url &key (type :url))
+  (let* ((schema (concat "^" name ":"))
+         (cmd (case type
+                (:command
+                 #'(lambda (link)
+                     (execute-shell-command (format nil url (substitute-string link schema "")))))
+                (t
+                 #'(lambda (link)
+                     (shell-execute (format nil url (substitute-string link schema ""))
+                                    t))))))
+    (setf *clickable-uri-open-command-alist*
+          (remove schema *clickable-uri-open-command-alist*
+                  :test #'string= :key #'car))
+    (push (cons schema cmd)
+          *clickable-uri-open-command-alist*)
+    (pushnew name *clickable-uri-scheme-list*
+             :test #'string=)))
+
+
+;;; --- ここから開く schema の設定
+
+;; asin:yyyy を開く
+(define-clickable-schema "asin" "http://www.amazon.co.jp/dp/~A")
+
+;; ruby-xxx:yyyy を開く
+(let ((blade-uri "http://blade.nagaokaut.ac.jp/cgi-bin/scat.rb/ruby/~A/~~A"))
+  (dolist (ml '("ruby-dev" "ruby-list" "ruby-ext" "ruby-core" "ruby-cvs" "ruby-talk"))
+    (define-clickable-schema ml (format nil blade-uri ml))))
+
+;; マイドキュメント\rdp\ に rdp ファイルを保存しておいて
+;; rdp:session でリモートデスクトップを開く
+(define-clickable-schema "rdp" (concat (get-special-folder-location :personal)
+                                       "/rdp/~A.rdp"))
+
+;; putty:session で putty 起動
+;; (関連付けじゃなくて) コマンドを実行する場合は :type :command を指定
+(define-clickable-schema "putty" "\"C:/Program Files/PuTTY/putty.exe\" -load ~A"
+                         :type :command)
+
+;;; --- ここまで
+
+;; define-clickable-schema を反映
+(clickable-uri-set-regexp)
+||<
+
+
+(タイトルはホッテントリメーカです)
+
+
+*p2*[xyzzy]鳴かぬならやめてしまえsubstitute-string
+
+substitute-string で置換したときは最後にマッチした部分を match-string で取り出せるかと思ったら取り出せないんだな。
+少しハマった。
+
+>|lisp|
+(list
+ (substitute-string "foo fuga" "\\(f..\\)" "BAR")
+ (match-string 1))
+;;=> ("BAR BARa" nil)
+||<
+
+Ruby の場合。
+
+>|ruby|
+irb(main):001:0> ["foo fuga".gsub(/(f..)/, "BAR"), $1]
+["BAR BARa", "fug"]
+||<
+
+(タイトルはホッテントリメーカです)
+
+
+*p3*[読書メモ]レバレッジ・リーディング
+
+[http://www.amazon.co.jp/exec/obidos/ASIN/4492042695/miyamuko-22/ref=nosim/:title=レバレッジ・リーディング] の読書メモです。
+
+(括弧内は余白に私が書いたメモ、それ以外はすべて同書からの引用です。)
+
+
+- スケジュールどうりに一日を過ごせたかを時間家計簿として記録
+- 同じ本を数年後に読み返すと線を引く箇所が違う
+-- 自分が成長しているから
+
+
+メモを取らずに読んだから少なめ。
+今までは本を汚すのがいやだったんだけど、今後はペンを片手に読もうと思いました。
+
+
+*p4*[読書メモ]レバレッジ・シンキング 無限大の成果を生み出す 4 つの自己投資術
+
+[http://www.amazon.co.jp/exec/obidos/ASIN/4492042806/miyamuko-22/ref=nosim/:title=レバレッジ・シンキング 無限大の成果を生み出す 4 つの自己投資術] の読書メモです。
+
+(括弧内は余白に私が書いたメモ、それ以外はすべて同書からの引用です。)
+
+
+- p62:
+-- すぐに勉強を始めるのではなく、まず勉強法を学ぶ
+- p66:
+-- 勉強していなくても過去問から始める
+-- 解けなくてもいい
+-- できないと言うことを知る
+--- (無知の知か)
+-- 現時点と合格点のギャップが分かる
+- p70
+-- 労力のレバレッジは自分ができると思うことが重要
+- p78:
+-- 時間があるから成果が上がらない
+-- 夏休み最終日効果
+--- (オレオレｗｗｗ)
+- p81
+-- 時間があれば余った時間を何に使うかも決まっているはず
+- p91
+-- TODO
+--- やらなくてはいけないこと
+--- (ウホ!)
+-- Task
+--- 自発的に請け負った仕事
+- p93
+-- プリショットルーチン
+- p95
+-- 時間の使い方にはお金以上の意識を持つことが大切
+-- (時は金なり、恋せよ乙女)
+- p99
+-- 14-19 時の 5 時間でタスクを効率的に行う
+-- その他は自己投資のためのインプット
+- p103
+-- 勉強効率化のためのコツ
+-- デッドラインを決める
+- p106
+-- 睡眠は固定費の中でもっと長い
+- p107
+-- 布団の中にいたらいつまでたっても目が覚めない
+- p108
+-- NASA の疲労対策プログラム
+--- 40 分間の仮眠
+--- パフォーマンス: 平均 34% up
+--- 覚醒度: 100% up
+- p116
+-- スポーツ選手の時間の使い方
+--- 試合時間 : トレーニング時間 == 1 : 4
+-- ビジネスパーソンの時間の使い方
+--- 仕事時間 : 投資時間 == 60 : 1
+- p120
+-- 鮨職人
+--- 何十年も修行を積まないと一人前になれないと言う時代は終わった
+--- (鮨職人の高速道路)
+- p122
+-- 最初は真似事から始まる by イチロー
+-- (守破離の守)
+- p123
+-- まじめで賢い人は他人の真似をよしとしない
+- p140
+-- レバレッジ会議
+-- 同じ本を読むことで共通の価値観を持つ
+- p143
+-- 業績が良いとき→自分の成果
+-- 業績が悪いとき→誰のせいでもない
+-- (行動ファイナンスでいう「自己責任バイアス」)
+--- (自己高揚バイアス)
+--- (自己防衛的バイアス)
+- p146
+-- ガンバレ
+--- 人によって定義が違う
+--- 斜め上にがんばる人もいる
+- p166
+-- 組織に属している人
+--- 常にやる気がある 20%
+--- どちらにでも傾く 60%
+--- 常にやる気がない 20%
+
+
+
+ペンを片手に線を引き余白にメモを取りながら読んでみた。
+読み終わったあとはページを追った部分を辿りながら、メモを ChangeLog メモとして転記。
+で、はてな形式に変換してコピペで完成。
+
+手を動かしている分集中して読めます。

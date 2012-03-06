@@ -1,0 +1,107 @@
+
+*p1*[Selenium] Ruby で Java 製 Web アプリのテスト
+
+Selenium で Java 製 Web アプリのテストを書いているんですけど、
+
+- HTML だと入力値のバリデーションなど同じようなテストを書いていると嫌になる。
+- JSP で書いて重複部分をまとめるのは・・・もっとつらい。
+- こんななら Java で書いたほうが楽かもと思ったけどそれもちょっと。というか Tomcat と Eclipse を同時に酷使するとメモリが・・・（少ないんです orz)
+
+というわけで ruby でかけないか調べてみました。
+
+まず、selenium の java ドライバのソースを眺めてみると com.thoughtworks.selenium.outbedded.CommandBridgeClient と CommandBridge でごにょごにょしているのが分かった。
+＃XML-RPC インターフェイスは (まだ?) 用意されていないみたい。
+
+CommandBridgeClient は /driver に対して以下のようなリクエストを投げる。
+
+>||
+xxx/driver?commandRequest=|command|target|value|
+||<
+
+するとごにょごにょテストが動いて結果が返ってくる。
+
+- テストが成功すると OK や PASSED が返ってくる。
+- 失敗するとエラーメッセージ。
+- test_complete すると空文字列が返ってくる。
+
+という具合なのでそれを ruby で実装するとこんな感じ。
+selenium-0.6.0-ruby.zip の selenium.rb が必要。
+
+><pre class="source">
+<span class="keyword1">[]require[]</span>[] []<span class="fg10">&quot;</span><span class="fg10">[]net[]</span><span class="fg10">[]/[]</span><span class="fg10">[]http[]</span><span class="fg10">&quot;</span>
+<span class="keyword1">[]require[]</span>[] []<span class="fg10">&quot;</span><span class="fg10">[]uri[]</span><span class="fg10">&quot;</span>
+
+<span class="keyword1">[]require[]</span>[] []<span class="fg10">&quot;</span><span class="fg10">[]selenium[]</span><span class="fg10">&quot;</span>
+
+[]Net::HTTP&#46;version_1_2[]
+
+<span class="keyword1">[]module[]</span>[] Selenium[]
+
+[]  []<span class="keyword1">[]class[]</span>[] CommandBridgeClient[]
+
+[]    include Selenium[]
+[]    include WEBrick::HTTPUtils []<span class="fg9">[]#[]</span><span class="fg9">[] []</span><span class="keyword3"><span class="fg9">[]escape[]</span></span><span class="fg9">[] mixin[]
+</span>
+[]    []<span class="keyword1">[]def[]</span>[] []<span class="keyword3">[]initialize[]</span>[]&#40;driver_uri&#41;[]
+[]      []<span class="keyword3">[]@driver[]</span>[] = URI&#40;driver_uri&#41;[]
+[]    []<span class="keyword1">[]end[]</span>
+
+[]    []<span class="keyword1">[]def[]</span>[] []<span class="keyword3">[]method_missing[]</span>[]&#40;method, &#42;args&#41;[]
+[]      method_name = translate_method_to_wire_command&#40;method&#41;[]
+[]      element_identifier, []<span class="keyword3">[]value[]</span>[] = &#42;args[]
+[]      command_string = []<span class="fg10">&quot;</span><span class="fg10">&#124;</span><span class="fg10">[]#{[]</span>[]method_name[]<span class="fg10">[]}[]</span><span class="fg10">&#124;</span><span class="fg10">[]#{[]</span>[]element_identifier[]<span class="fg10">[]}[]</span><span class="fg10">&#124;</span><span class="fg10">[]#{[]</span><span class="keyword3">[]value[]</span><span class="fg10">[]}[]</span><span class="fg10">&#124;</span><span class="fg10">&quot;</span>
+[]      do_command&#40;command_string&#41;[]
+[]    []<span class="keyword1">[]end[]</span>
+
+[]    []<span class="keyword1">[]def[]</span>[] do_command&#40;commandString&#41;[]
+[]      result = Net::HTTP&#46;[]<span class="keyword3">[]start[]</span>&#40;<span class="keyword3">[]@driver[]</span>[]&#46;host, []<span class="keyword3">[]@driver[]</span>[]&#46;port&#41; []<span class="keyword1">[]do[]</span>[] &#124;http&#124;[]
+[]        res = http&#46;post&#40;[]<span class="keyword3">[]@driver[]</span>&#46;<span class="keyword3">[]path[]</span>[], []<span class="fg10">&quot;</span><span class="fg10">[]commandRequest=[]</span><span class="fg10">[]#{[]</span>[]escape_form&#40;commandString&#41;[]<span class="fg10">[]}[]</span><span class="fg10">&quot;</span>&#41;
+[]        res&#46;[]<span class="keyword3">[]body[]</span>
+[]      []<span class="keyword1">[]end[]</span>
+
+[]      []<span class="keyword1">[]if[]</span>[] &#91;[]<span class="keyword2">[]nil[]</span>[], []<span class="fg10">&quot;</span><span class="fg10">&quot;</span>[], []<span class="fg10">&quot;</span><span class="fg10">[]OK[]</span><span class="fg10">&quot;</span>[], []<span class="fg10">&quot;</span><span class="fg10">[]PASSED[]</span><span class="fg10">&quot;</span>[]&#93;&#46;any? {&#124;e&#124; e == result }[]
+[]        []<span class="keyword1">[]return[]</span>[] result[]
+[]      []<span class="keyword1">[]end[]</span>
+
+[]      []<span class="keyword1">[]raise[]</span>[] SeleniumCommandError, result[]
+[]    []<span class="keyword1">[]end[]</span>
+
+[]  []<span class="keyword1">[]end[]</span>
+
+<span class="keyword1">[]end[]</span>
+</pre><
+
+実際のテストコードはこんな感じ。
+
+- Tomcat は事前に動かしておく。動かし方は以下がくわしい。
+-- http://popo.dyndns.info/~manhole/diary/20051104.html#p01
+-- 要は /driver に対して com.thoughtworks.selenium.outbedded.CommandBridge が動けばいい。
+- ブラウザに IE を使う場合はこれを見て SeleneseRunner.html を直しておく。
+-- http://d.hatena.ne.jp/masakitk/20051002/1128244259
+
+><pre class="source">
+<span class="keyword1">[]require[]</span>[] []<span class="fg10">[]'[]</span><span class="fg10">[]selenium&#45;client[]</span><span class="fg10">[]'[]</span>
+
+[]selenium = Selenium::CommandBridgeClient&#46;[]<span class="keyword3">[]new[]</span>&#40;<span class="fg10">&quot;</span><span class="fg0 bg0"><span class="fg10">[]http:[]</span></span><span class="fg0 bg0"><span class="fg10">[]/[]</span></span><span class="fg0 bg0"><span class="fg10">[]/[]</span></span><span class="fg0 bg0"><span class="fg10">[]localhost:8080[]</span></span><span class="fg0 bg0"><span class="fg10">[]/[]</span></span><span class="fg0 bg0"><span class="fg10">[]test[]</span></span><span class="fg0 bg0"><span class="fg10">[]/[]</span></span><span class="fg0 bg0"><span class="fg10">[]driver[]</span></span><span class="fg10">&quot;</span>&#41;
+
+[]browser = Selenium::WindowsDefaultBrowserLauncher&#46;[]<span class="keyword3">[]new[]</span>
+<span class="fg9">[]#[]</span><span class="fg9">[]browser = Selenium::WindowsIEBrowserLauncher&#46;[]</span><span class="keyword3"><span class="fg9">[]new[]</span></span><span class="fg9">
+</span>[]browser&#46;launch&#40;[]<span class="fg10">&quot;</span><span class="fg0 bg0"><span class="fg10">[]http:[]</span></span><span class="fg0 bg0"><span class="fg10">[]/[]</span></span><span class="fg0 bg0"><span class="fg10">[]/[]</span></span><span class="fg0 bg0"><span class="fg10">[]localhost:8080[]</span></span><span class="fg0 bg0"><span class="fg10">[]/[]</span></span><span class="fg0 bg0"><span class="fg10">[]test[]</span></span><span class="fg0 bg0"><span class="fg10">[]/[]</span></span><span class="fg0 bg0"><span class="fg10">[]SeleneseRunner&#46;[]</span></span><span class="keyword3"><span class="fg10">[]html[]</span></span><span class="fg10">&quot;</span>&#41;
+
+<span class="keyword1">[]begin[]</span>
+[]  selenium&#46;[]<span class="keyword3">[]open[]</span>&#40;<span class="fg10">[]'[]</span><span class="fg0 bg0"><span class="fg10">[]http:[]</span></span><span class="fg0 bg0"><span class="fg10">[]/[]</span></span><span class="fg0 bg0"><span class="fg10">[]/[]</span></span><span class="fg0 bg0"><span class="fg10">[]localhost:8080[]</span></span><span class="fg0 bg0"><span class="fg10">[]/[]</span></span><span class="fg0 bg0"><span class="fg10">[]hoge[]</span></span><span class="fg0 bg0"><span class="fg10">[]'[]</span></span><span class="fg0 bg0">&#41;</span>
+[]  selenium&#46;verify_location&#40;[]<span class="fg10">&quot;</span><span class="fg10">[]/[]</span><span class="fg10">[]hoge[]</span><span class="fg10">[]/[]</span><span class="fg10">&quot;</span>&#41;
+[]  selenium&#46;verify_title&#40;[]<span class="fg10">&quot;</span><span class="fg10">[]Welcome Hogehoge[]</span><span class="fg10">&quot;</span>&#41;
+<span class="keyword1">[]ensure[]</span>
+[]  selenium&#46;test_complete[]
+<span class="keyword1">[]end[]</span>
+</pre><
+
+
+これで ruby でさくさくとテストがかけるようになったけど、
+
+- com.thoughtworks.selenium.outbedded.CommandBridge は ISO_8859_1 前提なので日本語が化け化け。改造が必要。
+-- ちなみに ruby 側で POST にしているのは Tomcat 5.x だと GET に対して setCharacterEncoding が効かないから。
+- テスト書くのは楽になったけど毎回ブラウザが起動するのがうっとうしい。かなりうっとうしい。
+
+・・・というわけで Ruby でテストを書いて HTML を生成するようなスクリプトを作って、TestRunner で実行するのが一番楽な気がしてきた orz

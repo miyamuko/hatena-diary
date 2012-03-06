@@ -1,0 +1,28 @@
+
+*p1*[xyzzy][guidgen] guidgen 1.0.0 リリース
+
+guidgen 0.1 をリリースしました。
+
+f:id:miyamuko:20060709193910p:image:w200
+
+- [http://miyamuko.s56.xrea.com/xyzzy/archives/guidgen.zip:title=ダウンロード]
+- [http://miyamuko.s56.xrea.com/xyzzy/guidgen.html:title=ドキュメント]
+
+GUID を生成したり、カーソル化の GUID を更新したりできます。前置引数に対応しているので大量に GUID を生成することもできます。
+
+
+
+実験的に clisp にも対応しています。
+
+>||
+xyzzy/site-lisp> clisp --silent -i guidgen\guidgen.l
+;; Loading file guidgen\guidgen.l ...
+;;  Loading file guidgen\package.l ...
+;;  Loaded file guidgen\package.l
+;;  Loading file guidgen\guidgen-ffi.l ...
+;;  Loaded file guidgen\guidgen-ffi.l
+;; Loaded file guidgen\guidgen.l
+[1]> (guidgen:guidgen)
+"7D518485-5F3E-4CCC-A05B-359F07179636" ;
+(2102494341 24382 19660 160 91 53 159 7 23 150 54)
+||<

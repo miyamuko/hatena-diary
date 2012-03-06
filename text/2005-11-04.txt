@@ -1,0 +1,147 @@
+
+*p1*[Rabbit] ソースコードに色付け on Windows
+
+f:id:miyamuko:20051104204015p:image:w200 f:id:miyamuko:20051104204042p:image:w200
+
+ruby-gnome2 が VC7 でコンパイルされているから基本 One Click Installer でね。
+
+** Windows 版の Enscript をインストール
+
+http://sourceforge.net/project/showfiles.php?group_id=23617&package_id=16960 から enscript-1.6.3-9-bin.exe をダウンロードしてインストールする。
+<インストール先>\Gnu\Enscript\bin を環境変数 PATH に追加する。
+
+** Enscript の Ruby 定義ファイル? のインストール
+
+>||
+> cd <インストール先>\Gnu\Enscript\share\enscript\hl
+> ruby -ropen-uri -e "puts open('http://rubyforge.org/cgi-bin/viewcvs.cgi/*checkout*/support/ruby.st?rev=HEAD&content-type=text/plain').read" > ruby.st
+||<
+
+まだ色は付かない。ソースを眺めると htree がいるらしい。
+
+** htree のインストール
+
+http://cvs.m17n.org/~akr/htree/ から htree.tar.gz をダウンロードして:
+>||
+> ruby install.rb
+||<
+でインストール。
+
+ワクワクテカテカしながら実行すると:
+
+>||
+D:/home/SandBox/rabbit/lib/rabbit/ext/enscript.rb:57:in `enscript_html_to_rabbit': undefined method `HTree'; for #<Rabbit::Ext::BlockVerbatim:0x4417860> (NoMethodError)
+        from D:\home\SandBox\rabbit\lib/rabbit/ext/enscript.rb:47:in `enscript_block';
+||<
+
+なんじゃこりゃーと思ったら One Click Installer には iconv.so が付いてこないらしい。
+http://pub.cozmixng.org/~the-rwiki/rw-cgi.rb?cmd=view;name=iconv
+
+だから htree が中途半端にロードされて defined?(HTree) だけど HTree() は定義されていないという状態になってしまう。
+知らんがな。
+
+** iconv のインストール
+
+[ruby-talk:154217] で公開してくれている人がいるらしいので iconv をインストール。
+http://www.dave.burt.id.au/ruby/iconv.zip
+
+setup.rb を実行すると Windows の System32 に DLL をインストールするとか言ってくるので手でインストール（汚されたくない）。
+
+** おわり
+
+お疲れ様でした。
+
+1.8.4 の One Click Installer には iconv はデフォルトで含まれるといいなぁ。
+
+
+
+
+あ、rd はこんな感じ。
+
+>||
+= 色がつくかも
+
+どう？
+
+  # enscript elisp
+  ;; こんなかんじに
+  (defun rabbit-mode ()
+    "rabbit-mode"
+    (interactive)
+    (kill-all-local-variables)
+    (msgbox "なりますよ"))
+
+どう？
+||<
+
+elisp で代用と。
+
+
+*p2*[Rabbit] 感想 on Windows
+
+全体的にもっさりもっさり。
+
+** テーブル
+
+普通に動いた。
+
+** rabrick
+
+普通に動いた。ちょっと感動。
+でも、GO を押すと [BUG] になった。
+
+>||
+D:/home/SandBox/rabbit/lib/rabbit/menu.rb:233: [BUG] Segmentation fault
+ruby 1.8.2 (2004-12-25) [i386-mswin32]
+||<
+
+あ、bat ファイル作ったほうがいいのかな。
+
+** 覗き穴 (E, N)
+
+普通に動いた。最初レンダリングがうまくいってなくて画面がちらついているだけかと思ったのは秘密。
+
+Windows XP だと穴を開けている最中、タイトルバーがクラシックな感じになるのが気になった。
+
+** 真っ白あるいは真っ黒 (W, B)
+
+普通に動いた。
+まれに [BUG] になる。
+
+** メモ (M)
+
+なんか時々 [BUG] になる。
+
+** 一覧 (i)
+
+これも時々 [BUG] になる。うーむ。
+
+[BUG] で落ちるときは大体 D:/home/SandBox/rabbit/lib/rabbit/menu.rb:233: [BUG] Segmentation fault なんだよなぁ。
+
+** --print
+
+Windows 上 (gladewin32 の GTK+) では gnome print がないみたいなので使えなかった。
+さようなら PDF。
+
+** --output-html
+
+普通に動いた。ファイルがいっぱいできるので出力先のディレクトリを指定したいかも。
+
+** --type memory
+
+><blockquote>
+<pre>
+   : memory
+
+     ソースをメモリ上に置いて管理します．このタイプではdRuby
+     やSOAPなどのインターフェイスを用いてソースの内容を書き
+     換えることができます．
+</pre>
+</blockquote><
+
+要はエディタから soap を用いてガリガリ書き換えれるってことかなぁ。
+
+** rabbit-mode
+
+M-x rabbit-mode を実行するたびにメニューが増えるwww。
+# さっき気づいた。直さないと。

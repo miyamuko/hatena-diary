@@ -1,0 +1,187 @@
+
+*pci_movie_lens*[xyzzy][PCI]xyzzy lisp で集合知プログラミング - 2.8 MovieLens のデータセットを使う
+
+[http://www.amazon.co.jp/exec/obidos/ASIN/9780596529321/miyamuko-22/ref=nosim/:title=集合知プログラミング]を xyzzy lisp で写経します。
+
+
+ソースは CodeRepos に入れてあります。
+
+http://coderepos.org/share/browser/lang/xyzzy/pci-code/site-lisp/chapter2/hateburec.l
+
+なお、オリジナルのソースコード (Python) は以下からダウンロードできます。
+
+http://oreilly.com/catalog/9780596529321/
+
+
+**hashtable で書き換え
+
+今まで書いてきたコードは alist ベースで非破壊的に書いていたんですが、大量のデータが入力するととても遅かったので hashtable ベースで全面的に書き直しました。
+
+ただ、少量のデータでプロトタイプするときは alist のほうが便利です。
+というわけで alist と hashtable を両方扱えるアクセッサを定義しておきます。
+
+>|lisp|
+(defun kvs-get (key-value-store keys &key (test 'equal))
+  (when key-value-store
+    (let ((keys (if (and keys (atom keys)) (list keys) keys)))
+      (cond ((null keys)
+             key-value-store)
+            (t
+             (kvs-get (if (hash-table-p key-value-store)
+                          (gethash (car keys) key-value-store)
+                        (cdr (assoc (car keys) key-value-store :test test)))
+                      (cdr keys)
+                      :test test))
+            ))))
+
+(defun kvs-put (key-value-store keys new-value &key (test 'equal))
+  (labels ((put-hashtable (hashtable keys new-value)
+             (when keys
+               (if (cdr keys)
+                   (let ((node (or (gethash (car keys) hashtable)
+                                   (let ((new-node (make-hash-table :test test)))
+                                     (setf (gethash (car keys) hashtable) new-node)
+                                     new-node))))
+                     (put-hashtable node (cdr keys) new-value))
+                 (setf (gethash (car keys) hashtable) new-value))
+               hashtable))
+           (put-alist (alist keys new-value)
+             (when keys
+               (let ((node (or (assoc (car keys) alist :test test)
+                               (let ((new-node (cons (car keys) nil)))
+                                 (nconc alist (list new-node))
+                                 new-node))))
+                 (if (cdr keys)
+                     (put-alist node (cdr keys) new-value)
+                   (setf (cdr node) new-value))
+                 (or alist (list node))))))
+    (let ((keys (if (and keys (atom keys)) (list keys) keys)))
+      (if (hash-table-p key-value-store)
+          (put-hashtable key-value-store keys new-value)
+        (put-alist key-value-store keys new-value)))))
+||<
+
+
+kvs-get は指定された複数のキーを辿りながら alist または hashtable から値を取得します。
+
+>|lisp|
+(kvs-get '((:foo (:bar . 2) (:baz . 3))) '(:foo :bar)) ;;=> 2
+(let ((h (make-hash-table)))
+  (setf (gethash :foo h) 4)
+  (kvs-get h '(:foo)))
+;;=> 4
+||<
+
+
+kvs-put は指定された複数のキーを辿りながら alist または hashtable に値を格納します。
+途中のキーがなければ勝手に作成します。
+
+>|lisp|
+(kvs-put '((:bar . 1)) '(:foo :bar) 10) ;;=> ((:bar . 1) (:foo (:bar . 10)))
+||<
+
+
+最後にもっと楽に alist や hashtable にアクセスできるように $ 関数でラップします。
+あと、setf で値を設定できるように [http://lispdoc.com/?q=defsetf:title=defsetf] しておきます。
+
+>|lisp|
+(defun $ (key-value-store &rest keys)
+  (kvs-get key-value-store keys :test 'equal))
+
+(defsetf $ (key-value-store &rest keys) (new-value)
+  `(setf ,key-value-store
+         (kvs-put ,key-value-store (list ,@keys) ,new-value :test 'equal)))
+||<
+
+こんな感じで使えます。
+
+>|lisp|
+(let ((v nil))
+  (setf ($ v :foo :bar :baz) 2)
+  ($ v :foo))
+;;=> ((:bar (:baz . 2)))
+||<
+
+
+**MovieLens のデータセットのロード
+
+>|lisp|
+(defun load-movielens (path)
+  (flet ((readlines (path)
+           (let ((buf (get-buffer-create "*tmp*")))
+             (set-buffer buf)
+             (read-file path)
+             (unwind-protect
+                 (split-string
+                  (buffer-substring (point-min) (point-max))
+                  #\LFD)
+               (delete-buffer buf)))))
+    (long-operation
+      (let ((u-item (merge-pathnames "u.item" path))
+            (u-data (merge-pathnames "u.data" path))
+            (movies (kvs-make-hash :size 100000))
+            (prefs (kvs-make-hash :size 100000)))
+        (dolist (line (readlines u-item))
+          (let ((cols (split-string line #\|)))
+            (setf ($ movies (car cols)) (cadr cols))))
+        (let* ((lines (readlines u-data))
+               (len (length lines))
+               (i 0))
+          (dolist (line lines)
+            (incf i)
+            (when (zerop (mod i 5000))
+              (message "~D/~D (~F%)" i len (* (/ i len) 100.0)))
+            (multiple-value-bind (user movieid rating ts)
+                (values-list (split-string line #\TAB))
+              (setf ($ prefs user ($ movies movieid))
+                    (read-from-string rating))
+              )))
+        prefs))))
+||<
+
+
+***テスト
+
+[http://www.grouplens.org/node/73#attachments:title=MovieLens] の 100K のデータセットで calculateSimilarItems の計算時間が、
+- オリジナルの Python 版が 156 秒
+- xyzzy lisp (バイトコンパイル済み) だと 5640 秒 (1.5時間)
+もかかってしまいます。。。
+
+>|lisp|
+;; ベンチマークマクロ
+(defmacro benchmark (&body body)
+  `(let ((s (get-internal-real-time)))
+     (values
+      (progn ,@body)
+      (/ (- (get-internal-real-time) s) 1000.0))))
+
+;; MovieLens のデータをロード
+(setf prefs (load-movielens "."))
+
+;; ユーザベースの推薦
+(benchmark
+ (get-recommendations prefs "87"))
+((5.0 . "Saint of Fort Washington, The (1993)")
+ (5.0 . "Great Day in Harlem, A (1994)")
+   :
+ )
+21.032
+
+;; アイテムの類似度を事前に計算
+(benchmark
+ (setf itemsim (calculate-similar-items prefs :n 50)))
+#<hashtable 152732420>
+5640.469
+
+;; 事前に計算した類似度からアイテムベースの推薦
+(benchmark
+ (get-recommended-items prefs itemsim "87"))
+((5.0 . "Silence of the Lambs, The (1991)")
+ (5.0 . "Sword in the Stone, The (1963)")
+   :
+ )
+2.047
+||<
+
+
+困った。

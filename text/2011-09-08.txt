@@ -1,0 +1,61 @@
+
+*p1*[xyzzy]cl-interpol 移植メモ
+
+[http://d.hatena.ne.jp/miyamuko/20110907/p1:title=xl-ppcre] を実装すると今度は正規表現がリテラルが欲しくなってきたので、[http://weitz.de/cl-interpol/:title=cl-interpol] を移植しようと調査したメモ。
+
+
+cl-interpol を修正した点。
+
+- パッケージ名の修正
+-- :cl → :lisp
+-- :cl-user → :user
+- defpackage の :export オプションを (export ...) で書き換え
+- 文字 (#\Newline など) の違いは [https://gist.github.com/1202374:title=一括で変換するコマンドを書いた]
+- 足りない関数 (ecase, write-string) は適当に定義
+- (declare ...) がなんかエラーになるので削除
+- (define-condition simple-reader-error (simple-condition reader-error) ()) を修正
+-- 「引数が多すぎます: (#1=#:|| . #1#)」 っていうエラー
+-- 複数の親は指定できない (?) ので 2 回 define-condition する
+- defvar-unbound で (defvar foo) しているけど、xyzzy だと変数が定義されないので (defvar foo nil) にする
+- ユニコード周りは潔くあきらめる
+-- \N の処理とか cl-unicode への依存は削除
+
+ここまでの修正でだいたい動くが test/simple の一部がうまく動かない。
+
+>|lisp|
+(string= #?"\x" (string (code-char 0)))
+;=> EOFに達しました: #<buffer stream 79302864>
+||<
+
+
+原因は interpol::read-while 内で使っている [https://gist.github.com/520799:title=xyzzy の loop マクロのバグ]。
+
+>|lisp|
+(with-input-from-string (s "\\x")
+  (let ((interpol::*stream* s))
+    (interpol::read-while (lambda (c)
+                            (digit-char-p c 10)))))
+;=> "\\"
+||<
+
+
+clisp だとこうなる。
+
+>|lisp|
+[1]> (ql:quickload :cl-interpol)
+To load "cl-interpol":
+  Load 1 ASDF system:
+    cl-interpol
+; Loading "cl-interpol"
+;;; Computing Hangul syllable names
+(:CL-INTERPOL)
+[2]> (with-input-from-string (s "\\x")
+  (let ((interpol::*stream* s))
+    (interpol::read-while (lambda (c)
+                            (digit-char-p c 10)))))
+""
+||<
+
+
+cmu_loop.l を使わないように書き換えるか、loop マクロを直すか。
+なんか急に面倒になってきた。

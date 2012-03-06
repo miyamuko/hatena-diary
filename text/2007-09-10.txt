@@ -1,0 +1,14 @@
+
+*p1*[xyzzy][xtal-mode] xtal-mode 0.0.3 release!
+
+9月10日なので xtal-mode 0.0.3 をリリースしました。
+
+http://miyamuko.s56.xrea.com/xyzzy/xtal-mode/intro.htm
+
+ix を xyzzy 内で実行できるようになりましたが、2007/09/10 時点でリリースされている xtal 0.9.7.1 では動きません。
+xtal trunk を使ってください。
+
+
+
+
+あと、℃-uteの日リリースは肉の日と違って1年に一回しかリリースしなくていいので気が楽です。

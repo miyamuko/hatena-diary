@@ -1,0 +1,56 @@
+
+*hatena_haiku_mode*[xyzzy][hatena-haiku-mode]hatena-haiku-mode 0.0.3 リリース!
+
+hatena-haiku-mode を更新しました。
+
+http://miyamuko.s56.xrea.com/xyzzy/hatena-haiku-mode/intro.htm
+
+[http://d.hatena.ne.jp/hatenahaiku/20080120/1200796608:title=関連キーワード機能]に対応しました。
+
+キーワードページで K で表示をトグルします。
+
+
+
+*json_syck*[xyzzy][json-syck]json-syck 0.0.2 released!
+
+json-syck 0.0.2 をリリースしました。
+
+http://miyamuko.s56.xrea.com/xyzzy/json-syck/intro.htm
+
+巨大な json を読ませても落ちないようにしたのと (yaml-syck の修正)、メモリ使用量を減らしたつもりです。
+
+
+*yaml_syck*[xyzzy][yaml-syck]yaml-syck 0.0.3 released!
+
+yaml-syck 0.0.3 をリリースしました。
+
+http://miyamuko.s56.xrea.com/xyzzy/yaml-syck/intro.htm
+
+
+syck-load に指定した文字列から si:make-string-chunk で確保したメモリ領域が GC されてしまい、タイミングによってはクラッシュしていたのを修正しました。
+
+
+
+
+syck の API は以下のようにパースする文字列の指定とパースの実行は別 API になっています。
+
+>|c|
+void
+syck_parser_str( SyckParser *p, char *ptr, long len, SyckIoStrRead r )
+
+SYMID
+syck_parse( SyckParser *p )
+||<
+
+
+で、これを以下のように呼び出していました。
+
+>|lisp|
+(syck_parser_str p (si:make-string-chunk lisp-string) len r)
+(syck_parse p)
+||<
+
+
+最初の si:make-string-chunk で確保したメモリは syck の内部から参照されてはいますが、xyzzy からはそんなことはわからないので、syck_parse の実行中に GC＆再利用されてしまいクラッシュすることがありました。
+
+とりあえず、syck に渡す chunk については GC されないようにスッペシャル変数で保持して最後に開放するようにしました。

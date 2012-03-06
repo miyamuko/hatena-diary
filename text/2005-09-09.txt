@@ -1,0 +1,67 @@
+
+*p1*[xyzzy] cygwin から xyzzy
+
+昔 Meadow 関係の Tips からもらってきたもの。
+.zshrc に書いておく。
+
+>||
+alias xyzzycli=/cygdrive/d/Tools/xyzzy/xyzzycli.exe
+function xyzzy() {
+    if [ $# -eq 0 ]; then
+        xyzzycli
+    else
+        xyzzycli `cygpath -w $*`
+    fi
+}
+||<
+
+
+*p2*[xyzzy] ほかの言語での COM - xyzzy の場合
+
+http://jp.rubyist.net/magazine/?0009-Win32OLE
+
+><pre class="source">
+&#40;<span class="keyword1">[]require[]</span>[] []<span class="string">[]&quot;ole&quot;[]</span>&#41;
+&#40;<span class="keyword1">[]setf[]</span>[] ie &#40;[]<span class="fg12 bg0">[]ole&#45;create&#45;object[]</span>[] []<span class="string">[]&quot;InternetExplorer&#46;Application&quot;[]</span>[]&#41;&#41;[]
+
+&#40;<span class="fg12 bg0">[]ole&#45;create&#45;event&#45;sink[]</span>[] ie []<span class="string">[]&quot;DWebBrowserEvents2&quot;[]</span>
+[]                       &#40;[]<span class="keyword1">[]merge&#45;pathnames[]</span>[] []<span class="string">[]&quot;system32/shdocvw&#46;dll&quot;[]</span>[] &#40;[]<span class="keyword1">[]si:getenv[]</span>[] []<span class="string">[]&quot;SystemRoot&quot;[]</span>[]&#41;&#41;&#41;[]
+&#40;<span class="fg12 bg0">[]set&#45;ole&#45;event&#45;handler[]</span>[] ie []<span class="string">[]&quot;DownloadComplete&quot;[]</span>
+[]                       #&#39;&#40;[]<span class="keyword1">[]lambda[]</span>[] &#40;&#41; &#40;[]<span class="keyword1">[]msgbox[]</span>[] []<span class="string">[]&quot;Download Complete&#46;&quot;[]</span>[]&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]setf[]</span>[] #{ie&#46;Visible} []<span class="keyword3">[]t[]</span>&#41;
+
+[]#{ie&#46;GoHome}[]
+&#40;<span class="keyword1">[]while[]</span>[] &#40;[]<span class="keyword1">[]not[]</span>[] &#40;[]<span class="keyword1">[]=[]</span>[] #{ie&#46;ReadyState} 4&#41;&#41;[]
+[]  &#40;[]<span class="keyword1">[]sit&#45;for[]</span>[] 0&#46;5&#41;&#41;[]
+
+[]#{ie&#46;Navigate &#91;[]<span class="string">&quot;</span><span class="fg4 bg0"><span class="underline">[]http://www&#46;ruby&#45;lang&#46;org/[]</span></span><span class="string">&quot;</span>[]&#93;}[]
+&#40;<span class="keyword1">[]while[]</span>[] &#40;[]<span class="keyword1">[]not[]</span>[] &#40;[]<span class="keyword1">[]=[]</span>[] #{ie&#46;ReadyState} 4&#41;&#41;[]
+[]  &#40;[]<span class="keyword1">[]sit&#45;for[]</span>[] 0&#46;5&#41;&#41;[]
+
+&#40;<span class="keyword1">[]setf[]</span>[] cnt 0&#41;[]
+[]&#40;ole&#45;for&#45;each &#40;e #{ie&#46;Document&#46;all}&#41; []<span class="comment">[];; エラー orz[]
+</span>[]  &#40;[]<span class="keyword1">[]incf[]</span>[] cnt&#41;&#41;[]
+
+&#40;<span class="keyword1">[]msgbox[]</span>[] []<span class="string">[]&quot;complete\n~D elements found&quot;[]</span>[] cnt&#41;[]
+</pre><
+
+
+ole-create-event-sink に TypeLib のファイル名を明示的に指定しないとだめだったり、
+WIN32OLE_EVENT.message_loop 相当のやり方がわからなかったので sit-for でごまかしたり、
+ie.Document.all の IEnum を取得できなかったり。
+
+
+><blockquote>
+なお、xyzzy の COM/OLE Automation の機能が実装される際には Ruby の Win32OLE を参考にされたようです。
+そう聞くと少し親近感がわいてきます。
+</blockquote><
+
+へぇ〜。
+
+><blockquote>
+ただ、xyzzy というエディタは実際使おうとするとドキュメントがどこにあるのかよく分からないところがあるので、
+注意が必要です。
+</blockquote><
+
+いや、きっとドキュメントはみんなのこｋ（ｒｙ

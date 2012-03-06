@@ -1,0 +1,77 @@
+
+*p1*[lisp]cl-ppcre:split と Perl の split の違い
+
+
+Perl Compatible をうたっている [http://weitz.de/cl-ppcre/:title=cl-ppcre] の split の挙動が微妙に Perl と違ったので調べてみました。
+
+
+Perl などの split の挙動は以下にまとまっています。
+
+>http://0xcc.net/blog/archives/000201.html:title>
+split 関数の挙動が言語ごとに微妙に異なると知人と話題になったので調べてみました。
+<<
+
+
+** cl-ppcre (clisp)
+
+>|lisp|
+% clisp
+   :
+[1]> (ql:quickload :cl-ppcre)
+To load "cl-ppcre":
+  Load 1 ASDF system:
+    cl-ppcre
+; Loading "cl-ppcre"
+
+(:CL-PPCRE)
+[2]> (ql-dist:release :cl-ppcre)
+#<QL-DIST:RELEASE cl-ppcre-2.0.3 / quicklisp 2011-08-29>
+
+まずは普通に分割
+[3]> (cl-ppcre:split "," "a,b,c")
+("a" "b" "c")
+
+末尾に空要素があると、省略されてしまう
+[4]> (cl-ppcre:split "," "a,,c,,")
+("a" "" "c")
+
+末尾の空要素を省略しないためには limit が必要
+[5]> (cl-ppcre:split "," "a,,c,," :limit most-positive-fixnum )
+("a" "" "c" "" "")
+
+limit に -1 を指定すると分割されない
+[6]> (cl-ppcre:split "," "a,,c,," :limit -1)
+("a,,c,,")
+
+空文字列だと結果も空
+[7]> (cl-ppcre:split "," "")
+NIL
+
+limit をつけて空文字列を分割するとリストに空文字列がひとつ入る
+[8]> (cl-ppcre:split "," "" :limit most-positive-fixnum)
+("")
+
+分割パターンは文字列では指定できない（正規表現として解釈される）
+[9]> (cl-ppcre:split "[:;]" "a:b;c.d")
+("a" "b" "c.d")
+
+分割パターンが空の正規表現だったら？
+[10]> (cl-ppcre:split "" "abc")
+("a" "b" "c")
+
+分割パターンの正規表現が . だったら？
+[11]> (cl-ppcre:split "." "abc")
+NIL
+||<
+
+
+
+**Perl と違うところ
+
+|*言語     |*末尾の空要素                                    |*入力が空文字列かつ limit 指定あり |
+|*Perl     | 省略される (-1で抑制)                           | 空の配列                          |
+|*cl-ppcre | 省略される (:limit most-positive-fixnum で抑制) | 空文字列入りの配列                |
+
+
+
+他にもあるかも。

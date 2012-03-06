@@ -1,0 +1,140 @@
+
+*p1*[Trac]異常なチケットを表示する TracReports
+
+なにかがおかしいチケットを表示するレポートです。
+
+
+**完了したマイルストーンの未解決チケット (マイルストーン別)
+
+- 完了しているのにまだ未解決っておかしいですね。
+- そのマイルストーンで直さないと決めたのなら、そのチケットは次のバージョンのマイルストーンに移動すべき。
+
+>|sql|
+SELECT p.value AS __color__
+     , t.milestone AS __group__
+     , t.id AS ticket
+     , t.summary AS 概要
+     , t.component AS コンポーネント
+     , t.type AS 分類
+     , t.owner AS 担当者
+     , t.reporter AS 報告者
+     , t.status AS ステータス
+     , t.version AS バージョン
+     , t.time AS created
+     , t.changetime AS changetime
+     , t.description AS _説明
+FROM ticket t
+  LEFT JOIN enum p
+    ON p.name = t.priority AND p.type = 'priority'
+  LEFT JOIN milestone m
+    ON m.name = t.milestone
+WHERE status <> 'closed'
+  AND m.completed != 0
+ORDER BY t.milestone, t.time DESC, t.id DESC
+||<
+
+
+**3 回以上 reopen している未解決チケット (マイルストーン別)
+
+- reopen 回数が多いのは何か問題がおきている可能性があります
+
+>|sql|
+SELECT p.value AS __color__
+     , t.milestone AS __group__
+     , t.id AS ticket
+     , c.change_count AS 'reopen回数'
+     , t.summary AS 概要
+     , t.component AS コンポーネント
+     , t.type AS 分類
+     , t.owner AS 担当者
+     , t.reporter AS 報告者
+     , t.status AS ステータス
+     , t.version AS バージョン
+     , t.time AS created
+     , t.changetime AS changetime
+FROM ticket t
+  LEFT JOIN enum p
+    ON p.name = t.priority AND p.type = 'priority'
+  LEFT JOIN (SELECT t1.id as id, COUNT(*) as change_count
+             FROM ticket as t1
+               JOIN ticket_change as c
+                 ON t1.id = c.ticket
+             WHERE c.field = 'status' and c.newvalue = 'reopened'
+             GROUP BY t1.id
+             ) c
+    ON t.id = c.id
+WHERE status <> 'closed'
+  AND c.change_count >= 3
+ORDER BY (milestone IS NULL), milestone DESC, time
+||<
+
+
+**議論が紛糾している未解決チケット (マイルストーン別)
+
+- comment 回数が異常に多いのは (20 回以上) 何か問題がおきている可能性があります
+
+>|sql|
+SELECT p.value AS __color__
+     , t.milestone AS __group__
+     , t.id AS ticket
+     , c.change_count AS 'comment数'
+     , t.summary AS 概要
+     , t.component AS コンポーネント
+     , t.type AS 分類
+     , t.owner AS 担当者
+     , t.reporter AS 報告者
+     , t.status AS ステータス
+     , t.version AS バージョン
+     , t.time AS created
+     , t.changetime AS changetime
+FROM ticket t
+  LEFT JOIN enum p
+    ON p.name = t.priority AND p.type = 'priority'
+  LEFT JOIN (SELECT t1.id as id, COUNT(*) as change_count
+             FROM ticket as t1
+               JOIN ticket_change as c
+                 ON t1.id = c.ticket
+             WHERE c.field = 'comment' 
+               AND c.newvalue IS NOT NULL AND c.newvalue != ''
+             GROUP BY t1.id
+             ) c
+    ON t.id = c.id
+WHERE status <> 'closed'
+  AND c.change_count >= 20
+ORDER BY (milestone IS NULL), milestone DESC, time
+||<
+
+
+**たらいまわしになっている未解決チケット (マイルストーン別)
+
+- 担当者の変更が頻繁に発生しているチケットは何か問題がおきている可能性があります
+
+>|sql|
+SELECT p.value AS __color__
+     , t.milestone AS __group__
+     , t.id AS ticket
+     , c.change_count AS 'owner変更数'
+     , t.summary AS 概要
+     , t.component AS コンポーネント
+     , t.type AS 分類
+     , t.owner AS 担当者
+     , t.reporter AS 報告者
+     , t.status AS ステータス
+     , t.version AS バージョン
+     , t.time AS created
+     , t.changetime AS changetime
+FROM ticket t
+  LEFT JOIN enum p
+    ON p.name = t.priority AND p.type = 'priority'
+  LEFT JOIN (SELECT t1.id as id, COUNT(*) as change_count
+             FROM ticket as t1
+               JOIN ticket_change as c
+                 ON t1.id = c.ticket
+             WHERE c.field = 'owner' 
+             GROUP BY t1.id
+             ) c
+    ON t.id = c.id
+WHERE status <> 'closed'
+  AND c.change_count >= 3
+ORDER BY (milestone IS NULL), milestone DESC, time
+||<

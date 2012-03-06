@@ -1,0 +1,24 @@
+
+*p1*[xyzzy] chunkp
+
+chunk かどうか判断したいんだが chunkp ってないのか。
+
+><pre class="source">
+&#40;<span class="keyword1">[]setf[]</span>[] chunk &#40;[]<span class="keyword1">[]si:make&#45;chunk[]</span>[] []<span class="keyword3">[]nil[]</span>[] 0&#41;&#41;[]
+&#40;<span class="keyword1">[]type&#45;of[]</span>[] chunk&#41;[]
+[]system:chunk[]
+&#40;<span class="fg12 bg0">[]typep[]</span>[] chunk 'system:chunk&#41;[]
+<span class="keyword3">[]nil[]</span>
+&#40;<span class="fg12 bg0">[]typep[]</span>[] chunk &#40;[]<span class="keyword1">[]type&#45;of[]</span>[] chunk&#41;&#41;[]
+<span class="keyword3">[]nil[]</span>
+</pre><
+
+ちょｗｗｗｗｗ typep ｗｗｗ
+
+><pre class="source">
+&#40;<span class="keyword1">[]eq[]</span>[] 'system:chunk &#40;[]<span class="keyword1">[]type&#45;of[]</span>[] chunk&#41;&#41;[]
+<span class="keyword3">[]t[]</span>
+</pre><
+
+いいやこれで。
+

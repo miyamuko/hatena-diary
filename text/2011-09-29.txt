@@ -1,0 +1,78 @@
+
+*p1*[xyzzy][ansi-loop]MCL の loop マクロを xyzzy に移植しました
+
+xyzzy 付属の cmu_loop.l は少しバグっていて Common Lisp のライブラリを移植する場合などにいろいろ困っていたところ、@g000001 さんからありがたいアドバイスがありました。美味しそうなアイコンですね！ありがとうございます！！
+
+
+twitter:116819925112340480:detail
+twitter:116820420572872704:detail
+
+
+試してみると確かにパッケージ周りを直せばそのまま動くので、早速リリースしようと思ったのですが、ライセンスがファイルの中に一言「This file, like the LOOP it is derived from, has unrestricted distribution」と書いてあるだけで明確でなくちょっと躊躇してました。
+
+
+（中略）
+
+
+で、最終的に [http://code.google.com/p/mcl/:title=MCL] に含まれる loop マクロ (loop.lisp と extended-loop.lisp) を xyzzy に移植してリリースしました。
+
+http://miyamuko.s56.xrea.com/xyzzy/ansi-loop/intro.htm
+https://github.com/miyamuko/ansi-loop
+
+
+
+こんな感じで使えます。
+
+>|lisp|
+(require "cmu_loop")
+;=> t
+
+(loop for i from 0 to 10
+  when (and (> i 3) i)
+  collect it
+  when (> i 6)
+  do (loop-finish))
+;=> 変数が定義されていません: it
+
+(require "ansi-loop")
+;=> t
+
+(shadowing-import '(ansi-loop:loop
+                    ansi-loop:loop-finish))
+;=> t
+
+(loop for i from 0 to 10
+  when (and (> i 3) i)
+  collect it
+  when (> i 6)
+  do (loop-finish))
+;=> (4 5 6 7)
+||<
+
+
+
+なお、cmu_loop.l のバグに依存しているアプリケーションがあるかもしれないので、lisp::loop および lisp::loop-finish は安全のため上書きしません。
+
+ansi-loop を利用したい場合は必要な関数・マクロを ansi-loop パッケージから shadowing-import してください。
+
+>|lisp|
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (unless (find-package :your-cool-application)
+    (require "ansi-loop")
+
+    (defpackage :your-cool-application
+      (:use :lisp :editor)
+      (:shadowing-import-from :ansi-loop
+       :loop
+       :loop-finish
+       :define-loop-iteration-path
+       :define-loop-sequence-path
+       ))
+    ))
+||<
+
+
+
+パッケージとか shadowing-import って何？って人は実践 Common Lisp の題 21 章を、そもそも LOOP マクロって何？って人は題 22 章を読むといいと思います。
+
+<div class="amazlet-box" style="margin-bottom:0px;"><div class="amazlet-image" style="float:left;margin:0px 12px 1px 0px;"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4274067211/miyamuko-22/ref=nosim/" name="amazletlink" target="_blank"><img src="http://ecx.images-amazon.com/images/I/51igxAWGMiL._SL160_.jpg" alt="実践Common Lisp" style="border: none;" /></a></div><div class="amazlet-info" style="line-height:120%; margin-bottom: 10px"><div class="amazlet-name" style="margin-bottom:10px;line-height:120%"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4274067211/miyamuko-22/ref=nosim/" name="amazletlink" target="_blank">実践Common Lisp</a><div class="amazlet-powered-date" style="font-size:80%;margin-top:5px;line-height:120%">posted with <a href="http://www.amazlet.com/browse/ASIN/4274067211/miyamuko-22/ref=nosim/" title="実践Common Lisp" target="_blank">amazlet</a> at 11.09.29</div></div><div class="amazlet-detail">Peter Seibel <br />オーム社 <br />売り上げランキング: 91768<br /></div><div class="amazlet-sub-info" style="float: left;"><div class="amazlet-link" style="margin-top: 5px"><a href="http://www.amazon.co.jp/exec/obidos/ASIN/4274067211/miyamuko-22/ref=nosim/" name="amazletlink" target="_blank">Amazon.co.jp で詳細を見る</a></div></div></div><div class="amazlet-footer" style="clear: left"></div></div>

@@ -1,0 +1,42 @@
+
+*p1*[Trac]TracReports を表示する TracReports を作っておくと便利
+
+Trac のレポートは便利なんですがレポート一覧がシンプルすぎていくつか不満があります。
+
+- レポート一覧のデフォルトのソート順が id 順 (作った順番なんてどうでもいい)
+- タイトルだけで詳細が分からない
+- レポートが追加されても分からない
+- どういう SQL を実行しているのかを（まとめて）知りたい
+
+というわけで Trac のレポートを表示するレポートを作成しておくと便利です。
+
+
+**利点
+
+- デフォルトのソート順はタイトル順
+- タイトルと詳細と Wiki からリンクを張るための TracLink を表示
+- ページ下部の RSS を Subsclibe しておけばレポートの追加を知ることができる
+- ページ下部の CSV でダウンロードすれば、SQL がまとめて取得可能
+
+
+**Report SQL
+
+>|sql|
+SELECT 1 as __color__
+     , (CASE WHEN query LIKE 'query:%'
+             THEN 'TracQuery'
+             ELSE 'TracReports'
+        END) as __group__
+     , id as report
+     , title
+     , '[report:' || id || ' ' || title || ']' as _TracLink_
+     , description as _description_
+     , query as _query
+FROM report r
+ORDER BY __group__, title
+||<
+
+
+**Screenshot
+
+[http://farm4.static.flickr.com/3310/3185641660_b23ffc4429_o.png:image:w600]

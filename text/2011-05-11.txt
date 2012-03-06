@@ -1,0 +1,39 @@
+
+*p1*[xyzzy]lisp-criticでスタイルチェック for xyzzy
+
+>http://cadr.g.hatena.ne.jp/g000001/20110510/1305025908:title>
+最近LISPのスタイルチェッカーに興味があって色々調べてみたりしていますが、そういえばスタイルを批評してくれるツールがどっかにあったなと思い出して探し出してセットアップしてみました。
+
+lisp-criticというツールなのですが大学でLISPを教える際の補助ツール的なもののようです。
+<<
+
+面白そうなツールだったので [https://github.com/miyamuko/xl-critic:title=xyzzy に移植] してみました。
+
+
+[http://farm3.static.flickr.com/2035/5709976600_81992f84ea_b_d.jpg:image]
+
+
+ちなみに処理はとても遅いです。
+バイトコンパイルすれば早くなりそうですが、まだバグっていてバイトコンパイルすると動きません（直し方が普通にわからない）。
+
+
+
+**移植メモ
+
+- パッケージ周りの修正
+-- :common-lisp → :lisp
+-- xyzzy の defpackage は :export がバグっているので、in-pakcage の中から export するように修正
+- 文字周りの修正
+-- #\space, #\newline, #\enter → #\LFD
+-- #\tab → #\TAB
+-- #\space → #\SPC
+- 足りない関数の修正・追加
+-- [http://lispdoc.com/?q=search:title=search]
+--- [http://lispdoc.com/?q=search:title=position] で代用
+-- [http://lispdoc.com/?q=make-string:title=make-string]
+--- 適当に書いた
+-- [http://lispdoc.com/?q=write-string:title=write-string]
+--- 適当に書いた
+-- [http://lispdoc.com/?q=destructuring-bind:title=destructuring-bind]
+--- id:g000001 さんが移植してこれていたものを利用
+--- http://coderepos.org/share/browser/lang/xyzzy/destructuring/site-lisp/destructuring-bind.l

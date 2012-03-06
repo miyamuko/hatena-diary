@@ -1,0 +1,35 @@
+
+*p1*[Hibernate] Hibernate + DbUnit
+
+closeConnection() をオーバライドするのを忘れがち。
+
+><pre class="source">
+<span class="keyword1">[]public[]</span>[] []<span class="keyword1">[]class[]</span>[] HibernateTestCase []<span class="keyword1">[]extends[]</span>[] DatabaseTestCase {[]
+[]    []<span class="keyword1">[]protected[]</span>[] []<span class="keyword1">[]final[]</span>[] IDatabaseConnection getConnection&#40;&#41; []<span class="keyword1">[]throws[]</span>[] Exception {[]
+[]        Connection conn = HibernateUtil&#46;currentSession&#40;&#41;&#46;connection&#40;&#41;;[]
+[]        []<span class="keyword1">[]return[]</span>[] []<span class="keyword1">[]new[]</span>[] DatabaseConnection&#40;conn, []<span class="string">[]"スキーマ名"[]</span>[]&#41;;[]
+[]    }[]
+
+[]    []<span class="keyword1">[]protected[]</span>[] []<span class="keyword1">[]final[]</span>[] []<span class="keyword1">[]void[]</span>[] closeConnection&#40;IDatabaseConnection connection&#41; []<span class="keyword1">[]throws[]</span>[] Exception {[]
+[]        []<span class="comment">[]// Hibernate の connection を勝手に close するなと[]
+</span>[]    }[]
+
+[]    []<span class="keyword1">[]protected[]</span>[] IDataSet getDataSet&#40;&#41; []<span class="keyword1">[]throws[]</span>[] Exception {[]
+[]        []<span class="comment">[]// 実装しろとうるさいのでとりあえず空の DataSet を返しておく[]
+</span>[]        []<span class="keyword1">[]return[]</span>[] []<span class="keyword1">[]new[]</span>[] DefaultDataSet&#40;&#41;;[]
+[]    }[]
+[]}[]
+</pre><
+
+でも DatabaseTestCase は setUp で getDataSet を返したものを DatabaseOperation.CLEAN_INSERT するだけなので継承する必要はないな。
+こいつを継承すると [http://www.morijp.com/masarl/homepage3.nifty.com/masarl/article/junit/tips.html:title=CommonTestCase] が使えないし。
+
+DatabaseOperation と XXXDataSet と Assertion は便利。
+
+- http://muimi.com/j/test/dbunit/
+- http://www.stackasterisk.jp/tech/java/dbunit01_02.jsp
+- http://www-6.ibm.com/jp/developerworks/java/040528/j_j-dbunit.html
+- http://www.theserverside.com/articles/article.tss?l=UnitTesting
+- http://www.morijp.com/masarl/homepage3.nifty.com/masarl/article/junit/tips.html
+- http://dbunit.sourceforge.net/apidocs/index.html
+

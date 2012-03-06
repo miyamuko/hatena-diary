@@ -1,0 +1,55 @@
+
+*p1*[xyzzy]xyzzy で htdigest 生成
+
+ふと、htdigest を生成したくなったのですが Apache とかが入っていなかったので xyzzy で自分で作りました。
+
+ついでに基本的に同じな realm を毎回指定して生成するのも面倒なので、YAML でユーザ情報を記述して一括生成する関数も作ってあります。
+
+
+**使い方
+
+- M-x htdigest-insert で mini buffer から入力して生成
+- YAML 形式でアカウント情報を記述して一括生成 ([http://miyamuko.s56.xrea.com/xyzzy/yaml-syck/:title=yaml-syck] が必要)
+++ YAML で記述
+++ region で囲む
+++ M-x htdigest-from-yaml-region
+
+**コード
+
+>|lisp|
+(defun htdigest (realm username password)
+  (let ((prefix (format nil "~A:~A:" username realm)))
+    (concat prefix (si:md5 (concat prefix password)))))
+
+(defun htdigest-insert (realm username password)
+  (interactive "sRealm: \nsUsername: \nsPassword: ")
+  (insert (htdigest realm username password) #\LFD))
+
+
+#|
+YAML で記述して一括生成
+
+== YAML Examples ==
+
+realm_name:
+  username: password
+trac:
+  admin: admin
+  guest: guest
+|#
+(require "yaml-syck")
+
+(defun htdigest-from-yaml (yaml)
+  (mapcan #'(lambda (realm-accounts)
+              (let ((realm (car realm-accounts)))
+                (mapcar #'(lambda (account)
+                            (htdigest realm (car account) (cdr account)))
+                        (cdr realm-accounts))))
+          (yaml-syck:syck-load yaml)))
+
+(defun htdigest-from-yaml-region (s e)
+  (interactive "r*")
+  (if (< e s) (rotatef s e))
+  (dolist (htdigest (htdigest-from-yaml (buffer-substring s e)))
+    (insert htdigest #\LFD)))
+||<

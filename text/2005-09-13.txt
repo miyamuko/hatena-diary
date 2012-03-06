@@ -1,0 +1,95 @@
+
+*p1*[xyzzy] ole-create-enumerator
+
+id:miyamuko:20050909 のつづき。
+
+ie.Document.all の IEnum を取得できなかったのを直してみた。
+ほとんど ruby の ext/win32ole/win32ole.c の fole_each から頂いたコードです。
+
+>||
+Index: lisp/ole.l
+===================================================================
+--- lisp/ole.l	(revision 10)
++++ lisp/ole.l	(revision 11)
+@@ -72,7 +72,7 @@
+      ,x))
+ 
+ (defmacro ole-for-each ((var obj &optional (resultform nil)) &body body)
+-  `(let ((#1=#:e #{,obj._NewEnum}))
++  `(let ((#1=#:e (ole-create-enumerator ,obj)))
+      (ole-enumerator-reset #1#)
+      (loop
+        (let ((,var (ole-enumerator-next #1#)))
+Index: src/oledata.cc
+===================================================================
+--- src/oledata.cc	(revision 10)
++++ src/oledata.cc	(revision 11)
+@@ -856,7 +856,52 @@
+   return boole (hr == S_OK);
+ }
+ 
++lisp
++Fole_create_enumerator (lisp lobj)
++{
++  check_oledata (lobj);
++  if (!xoledata_disp (lobj))
++      FEprogram_error (Einvalid_idispatch);
+ 
++  DISPPARAMS params;
++  bzero (&params, sizeof params);
++  params.rgvarg = NULL;
++  params.rgdispidNamedArgs = NULL;
++  params.cNamedArgs = 0;
++  params.cArgs = 0;
++
++  EXCEPINFO excep;
++  bzero (&excep, sizeof excep);
++  UINT argerr = UINT (-1);
++  VARIANT result;
++  VariantInit(&result);
++
++  HRESULT hr;
++  hr = xoledata_disp (lobj)->Invoke (DISPID_NEWENUM, IID_NULL, LOCALE_USER_DEFAULT,
++                                     DISPATCH_METHOD | DISPATCH_PROPERTYGET,
++                                     &params, &result, &excep, &argerr);
++  if (FAILED(hr)) {
++    VariantClear(&result);
++    FEprogram_error (Einvalid_ienum_variant);
++  }
++
++  IEnumVARIANT *e = 0;
++  if (V_VT(&result) == VT_UNKNOWN) {
++    ole_error (V_UNKNOWN(&result)->QueryInterface(IID_IEnumVARIANT, (void**)&e));
++  } else if (V_VT(&result) == VT_DISPATCH) {
++    ole_error (V_DISPATCH(&result)->QueryInterface(IID_IEnumVARIANT, (void**)&e));
++  }
++
++  lisp obj = make_oledata ();
++  xoledata_enumerator (obj) = e;
++  if (e) {
++    e->Reset ();
++  }
++
++  return obj;
++}
++
++
+ /*
+ DevStudio/SharedIDE/bin/DEVSHL.DLL
+ DevStudio/SharedIDE/bin/ide/DEVDBG.PKG
+Index: src/gen-syms.cc
+===================================================================
+--- src/gen-syms.cc	(revision 10)
++++ src/gen-syms.cc	(revision 11)
+@@ -2488,6 +2488,7 @@
+   DEFUN3 (ole-enumerator-next, 1, 0, 0),
+   DEFUN3 (ole-enumerator-reset, 1, 0, 0),
+   DEFUN3 (ole-enumerator-skip, 1, 1, 0),
++  DEFUN3 (ole-create-enumerator, 1, 0, 0),
+ 
+   /* lread.cc */
+   DEFUN3 (read-as-string, 1, 2, 0),
+
+||<
+
+とりあえず動いているけどこんなんでいいんだろうか。

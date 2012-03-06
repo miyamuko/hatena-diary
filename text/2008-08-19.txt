@@ -1,0 +1,111 @@
+
+*p1*[Ruby][IRB]仕事を楽しくする .irbrc の4ステップ
+
+.irbrc ファイルが長くなってきたので分割することにしました。
+
+**.irbrc にはこれだけを書いておく
+
+.irbrc に書いておくのはこれだけです。
+
+>|ruby|
+rc_d = File.expand_path(IRB.rc_file("rc.d"))
+Dir.glob("#{rc_d}/*.rb").sort.each do |rc|
+  puts "Load #{rc}" if $DEBUG
+  load rc
+end
+||<
+
+
+**あとは .irbrc.d/ にファイルを作る
+
+拡張子を .rb にして .irbrc.d/ 配下にファイルを置いておくと勝手にロードします。
+
+>||
+.irbrc/00irb.rb
+.irbrc/01win32ole.rb
+  :
+||<
+
+一部の機能を読み込みたくないなら拡張子を .rb 以外にするだけで OK。
+
+
+*p2*[Ruby][IRB][Win32OLE]Win32OLE.const_load について本気出して考えてみようとしたけどやめた
+
+Win32OLE.const_load の存在をいつも忘れてしまい、定数ってどうやって取るんだっけ・・・と悩むことってよくありますよね。
+あと、定数の一覧がほしい・・・とか。
+
+**そういうときは以下を .irbrc に追加
+
+>|ruby|
+class WIN32OLE
+  @@constants = {}
+
+  def _const
+    key = self.ole_obj_help.name rescue self
+    unless @@constants[key]
+      m = Module.new
+      WIN32OLE.const_load(self, m)
+      @@constants[key] = m
+    end
+    @@constants[key]
+  end
+
+  def _constants
+    _const.constants
+  end
+
+  def _const_get(name)
+    _const.const_get(name)
+  end
+
+  def _const_hash
+    _constants.inject({}) {|h,name|
+      h[name] = _const_get(name)
+      h
+    }
+  end
+
+  def _const_help
+    _constants.sort.each do |name|
+      v = _const_get(name)
+      if Integer === v
+        puts "%-47s  %-8s  %-8d  0x%08x" % [name, v.class, v, v]
+      else
+        puts "%-47s  %-8s  %s" % [name, v.class, v.inspect]
+      end
+    end
+    nil
+  end
+end
+||<
+
+
+**これで irb でスパイク中は定数が簡単に取れます
+
+>|ruby|
+irb(main):001:0> ie = WIN32OLE.new("InternetExplorer.Application")
+#<WIN32OLE:0x33218f8> ...
+irb(main):002:0> ie._constants
+["CSC_UPDATECOMMANDS", "OLECMDID_SELECTALL", "OLECMDID_ENABLE_INTERACTION", ...]
+irb(main):003:0> ie._const_help
+CONSTANTS                                        Hash      {}
+CSC_NAVIGATEBACK                                 Fixnum    2         0x00000002
+CSC_NAVIGATEFORWARD                              Fixnum    1         0x00000001
+CSC_UPDATECOMMANDS                               Fixnum    -1        0xffffffff
+OLECMDEXECOPT_DODEFAULT                          Fixnum    0         0x00000000
+              :
+||<
+
+
+**まとめ
+
+- irb でスパイク中は定数が簡単に取れるようになる
+- → WIN32OLE の定数の存在を忘れなくなる
+- → たとえ、WIN32OLE.const_load の存在を忘れてしまっても .irbrc を眺めればすぐに思い出せる
+- → 一覧も _const_help で簡単
+
+
+**See Also
+
+- [http://d.hatena.ne.jp/miyamuko/20070225/p1:title=win32ole-pp - WIN32OLE オブジェクトを pp で表示する]
+- [http://d.hatena.ne.jp/miyamuko/20080819/p1:title=仕事を楽しくする .irbrc の4ステップ]

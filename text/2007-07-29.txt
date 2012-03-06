@@ -1,0 +1,42 @@
+
+*sleipnir_api*[Ruby][sleipnir-api] sleipnir-api 0.2.0 リリース
+
+Sleipnir の COM インターフェイス (Sleipnir.API) を Ruby から利用するためのライブラリを[http://rubyforge.org/forum/forum.php?forum_id=16309:title=更新]しました。
+
+**grepnir
+
+0.2.0 では grepnir というコマンドを追加しました。
+
+grepnir はその名のとおり Sleipnir で開いている Web サイトを grep するコマンドです。
+
+>||
+> grepnir cairo_create
+||<
+
+上記コマンドを実行する以下の処理を行います。
+- cairo_create を含むタブに対して：
+-- タイトルにスター (*) をつけて
+-- そのページの最初に現れる cairo_create を選択 (ウィンドウもスクロールする)
+-- 最初のタブをアクティブ
+
+他にもナビゲートロックしたりハイライトしたりすることができます。
+詳しくは [http://sleipnir-api.rubyforge.org:title=ドキュメント] をどうぞ。
+
+
+
+私は off ハック派なんで (オンラインは[http://www.nicovideo.jp/:title=誘惑]が多すぎる) いつもタブを開けるだけ開いて off ハックに出かけているのですが、たまにタブを開きすぎて探すの面倒になってしまうことがあります。
+そんなときはこの grepnir を使えばある程度絞込みができるで便利です。
+
+＃あとは、マッチしたタブを前方にまとめて移動できれば完璧なですが、移動の仕方が分からない・・・
+
+
+
+**過去のリリース
+
+- [http://d.hatena.ne.jp/miyamuko/20070722/p1:title=0.1.0]
+
+
+**リンク
+
+- [http://sleipnir-api.rubyforge.org:title=ドキュメント]
+- [http://rubyforge.org/projects/sleipnir-api:title=プロジェクトページ]

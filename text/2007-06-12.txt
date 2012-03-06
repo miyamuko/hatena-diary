@@ -1,0 +1,7 @@
+
+*p1*[GoogleGears] Google Gears + Sleipnir
+
+Sleipnir で Remember the milk にアクセスしたら Google Gears を allow するか？って聞かれたので、そういえば [http://sho.tdiary.net/20070605.html#p02:title=Google Gears と Sleipnir って相性悪い]よなっていう話を思い出し、とりあえず allow してみたらまじで Sleipnir が落ちた。
+
+で、困ったことに設定を覚えさせてしまったので RTM を開くたびに落ちるようになってしまったんで、どうしたもんかなぁと思って filemon で Sleipnir の挙動を見てたら %APPDATA%\Google\Google Gears for Internet Explorer 配下にそれっぽいファイルを作ってたんでごっそり消したら直った。
+よかった。

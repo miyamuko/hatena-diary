@@ -1,0 +1,31 @@
+
+*p1*[gonzui] langscan/perl
+
+Shift_JIS なファイルを取り込むと PPI::Tokenizer がたまにエラーを吐く。
+＃ PPI は最新版 (1.003) なので ALLOW_NONASCII は関係ない。
+
+gonzui から渡されたコードをファイルに落としてみると ~ (チルダ) が 203E (OVERLINE) に変換されていたのが原因みたい。
+
+とりあえず .gonzuirc で shift_jis より cp932 を優先するようにしてみた。
+
+
+
+*p2*[gonzui] segv
+
+>||
+% ./gonzui-import ~/src/Hibernate3
+./langscan/java.rb:41: [BUG] Segmentation faultoooooooooooooooooooooooo       | ETA:  00:01:15
+ruby 1.9.0 (2005-03-31) [i686-linux]
+
+zsh: abort      ./gonzui-import ~/src/Hibernate3
+||<
+
+セグメンテーション フォールトゥォォーーーーーーーーーーーーーーーーーーーーーッ！
+
+
+
+
+
+
+
+＃ripper が gonzui に取り込まれたから、もう無理して 1.9 を使う必要はないのか。

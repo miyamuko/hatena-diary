@@ -1,0 +1,314 @@
+
+*p1*[xyzzy] xyzzyのプログラムで今月「日曜日」が何回あるのか教えてください
+
+question:1129120181 のものすごくアフォな解き方。
+賢い解き方は他の人が答えているので。
+
+><pre class="source">
+&#40;<span class="keyword1">[]require[]</span>[] []<span class="string">[]"calendar"[]</span>&#41;
+
+&#40;<span class="keyword1">[]defun[]</span>[] count&#45;sunday &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>&#41;
+[]  &#40;[]<span class="keyword1">[]multiple&#45;value&#45;bind[]</span>[] &#40;s im h d m y&#41;[]
+[]      &#40;[]<span class="keyword1">[]decode&#45;universal&#45;time[]</span>[] &#40;[]<span class="keyword1">[]get&#45;universal&#45;time[]</span>[]&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]msgbox[]</span>[] &#40;count&#45;wdays y m :日&#41;&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] count&#45;wdays &#40;year month wday&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>[] []<span class="string">[]"n年: \nn月: \nS曜日: "[]</span>&#41;
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;r &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="string">[]"~D年~D月の~A曜日は~D日"[]</span>
+[]                   year month wday[]
+[]                   &#40;count&#45;wdays0 year month wday&#41;&#41;&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]if[]</span>[] &#40;[]<span class="keyword1">[]interactive&#45;p[]</span>&#41;
+[]        &#40;[]<span class="keyword1">[]msgbox[]</span>[] r&#41;[]
+[]      r&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] count&#45;wdays0 &#40;year month wday&#41;[]
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;result 0&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]save&#45;window&#45;excursion[]</span>
+[]      &#40;[]<span class="keyword1">[]with&#45;output&#45;to&#45;temp&#45;buffer[]</span>[] &#40;[]<span class="string">[]"&#42;tmp&#42;"[]</span>&#41;
+[]        &#40;[]<span class="fg12 bg0">[]ed::calendar&#45;print&#45;month[]</span>[] year month&#41;[]
+[]        &#40;[]<span class="keyword1">[]goto&#45;char[]</span>[] &#40;[]<span class="keyword1">[]point&#45;min[]</span>[]&#41;&#41;[]
+[]        &#40;[]<span class="keyword1">[]next&#45;line[]</span>&#41;
+[]        &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]scan&#45;buffer[]</span>[] &#40;[]<span class="keyword1">[]string[]</span>[] wday&#41;[]
+[]                           :limit &#40;[]<span class="keyword1">[]save&#45;excursion[]</span>[] &#40;[]<span class="keyword1">[]goto&#45;eol[]</span>[]&#41; &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;&#41;[]
+[]          &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;col &#40;[]<span class="keyword1">[]current&#45;column[]</span>[]&#41;&#41;&#41;[]
+[]            &#40;[]<span class="keyword1">[]while[]</span>[] &#40;[]<span class="keyword1">[]and[]</span>[] &#40;[]<span class="keyword1">[]next&#45;line[]</span>&#41;
+[]                        &#40;[]<span class="keyword1">[]=[]</span>[] col &#40;[]<span class="keyword1">[]goto&#45;column[]</span>[] col&#41;&#41;&#41;[]
+[]              &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]looking&#45;at[]</span>[] []<span class="string">[]" ?&#91;0&#45;9&#93;\\{1,2\\}"[]</span>&#41;
+[]                &#40;[]<span class="keyword1">[]incf[]</span>[] result&#41;&#41;&#41;&#41;&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]delete&#45;buffer[]</span>[] &#40;[]<span class="keyword1">[]find&#45;buffer[]</span>[] []<span class="string">[]"&#42;tmp&#42;"[]</span>[]&#41;&#41;&#41;[]
+[]    result&#41;&#41;[]
+</pre><
+
+><pre class="source">
+&#40;<span class="keyword1">[]mapcar[]</span>[] &#39;&#40;[]<span class="keyword1">[]lambda[]</span>[] &#40;wday&#41;[]
+[]          &#40;count&#45;wdays 2005 10 wday&#41;&#41;[]
+[]        &#39;&#40;日 月 火 水 木 金 土 カレー&#41;&#41;[]
+[]=>[]
+&#40;<span class="string">[]"2005年10月の日曜日は5日"[]</span>
+[] []<span class="string">[]"2005年10月の月曜日は5日"[]</span>
+[] []<span class="string">[]"2005年10月の火曜日は4日"[]</span>
+[] []<span class="string">[]"2005年10月の水曜日は4日"[]</span>
+[] []<span class="string">[]"2005年10月の木曜日は4日"[]</span>
+[] []<span class="string">[]"2005年10月の金曜日は4日"[]</span>
+[] []<span class="string">[]"2005年10月の土曜日は5日"[]</span>
+[] []<span class="string">[]"2005年10月のカレー曜日は0日"[]</span>&#41;
+</pre><
+
+
+
+*p2*[xyzzy] C-u 1752 M-x calendar
+
+http://znz.s1.xrea.com/t/?date=20051014#p01
+
+><blockquote>
+<p>
+余談 calコマンドの出力は常に6行か？というのはcal 9 1752が例外のはず。
+</p>
+</blockquote><
+
+へぇ。
+
+>||
+% cal 9 1752
+   September 1752
+Su Mo Tu We Th Fr Sa
+       1  2 14 15 16
+17 18 19 20 21 22 23
+24 25 26 27 28 29 30
+||<
+
+ほんとだ。
+
+ということで xyzzy で C-u 1752 M-x calendar をやってみると・・・
+
+><pre class="source">
+ry)
+
+[] 1752年7月               1752年8月               1752年9月[]
+[] []<span class="fg1">[]日[]</span>[] 月 火 水 木 金 []<span class="fg4">[]土[]</span>[]    []<span class="fg1">[]日[]</span>[] 月 火 水 木 金 []<span class="fg4">[]土[]</span>[]    []<span class="fg1">[]日[]</span>[] 月 火 水 木 金 []<span class="fg4">[]土[]</span>
+[]                   []<span class="fg4">[] 1[]</span>[]           1  2  3  4 []<span class="fg4">[] 5[]</span>[]                    1 []<span class="fg4">[] 2[]</span>
+[] []<span class="fg1">[] 2[]</span>[]  3  4  5  6  7 []<span class="fg4">[] 8[]</span>[]    []<span class="fg1">[] 6[]</span>[]  7  8  9 10 11 []<span class="fg4">[]12[]</span>[]    []<span class="fg1">[] 3[]</span>[]  4  5  6  7  8 []<span class="fg4">[] 9[]</span>
+[] []<span class="fg1">[] 9[]</span>[] 10 11 12 13 14 []<span class="fg4">[]15[]</span>[]    []<span class="fg1">[]13[]</span>[] 14 15 16 17 18 []<span class="fg4">[]19[]</span>[]    []<span class="fg1">[]10[]</span>[] 11 12 13 14 15 []<span class="fg4">[]16[]</span>
+[] []<span class="fg1">[]16[]</span>[] 17 18 19 20 21 []<span class="fg4">[]22[]</span>[]    []<span class="fg1">[]20[]</span>[] 21 22 23 24 25 []<span class="fg4">[]26[]</span>[]    []<span class="fg1">[]17[]</span>[] 18 19 20 21 22 []<span class="fg4">[]23[]</span>
+[] []<span class="fg1">[]23[]</span>[] 24 25 26 27 28 []<span class="fg4">[]29[]</span>[]    []<span class="fg1">[]27[]</span>[] 28 29 30 31          []<span class="fg1">[]24[]</span>[] 25 26 27 28 29 []<span class="fg4">[]30[]</span>
+[] []<span class="fg1">[]30[]</span>[] 31[]
+</pre><
+
+ん？
+ソースを眺めていたら以下のような記述があった。
+
+><pre class="source">
+&#40;<span class="keyword1">[]defvar[]</span>[] &#42;calendar&#45;gregorian&#45;reform&#45;year&#42; 1582&#41;[]
+&#40;<span class="keyword1">[]defvar[]</span>[] &#42;calendar&#45;gregorian&#45;reform&#45;month&#42; 10&#41;[]
+&#40;<span class="keyword1">[]defvar[]</span>[] &#42;calendar&#45;gregorian&#45;reform&#45;day&#42; 15&#41;[]
+</pre><
+
+グレゴリオ暦でぐぐってみるとこういうことらしい。
+
+><blockquote cite="http://ja.wikipedia.org/wiki/%E3%82%B0%E3%83%AC%E3%82%B4%E3%83%AA%E3%82%AA%E6%9A%A6" title="グレゴリオ暦導入の歴史">
+<ul>
+<li>1582年10月15日 - イタリア、スペイン、ポルトガル、ポーランド </li>
+<li>1582年12月20日 - フランス　後に中断(フランス共和暦)</li>
+<li>1583年1月1日 - ベルギー、オランダの一部地域 </li>
+<li>1583年から1587年まで - ドイツ、スイス、ハンガリーのカトリック諸都市 </li>
+<li>1700年3月1日 - ドイツのプロテスタント諸都市、デンマーク </li>
+<li>1752年9月14日 - イギリス </li>
+<li>1753年3月1日 - スウェーデン </li>
+<li>1873年（明治6年）1月1日 - 日本 </li>
+<li>1912年（民国1年）1月1日 - 中国（中華民国が建国とともに採用、同年2月12日の清朝滅亡とともに国内全域で正式な暦となる）</li>
+</ul>
+</blockquote><
+
+要は cal はイギリスがグレゴリオ暦を導入した 1752 年 9 月 14 日で計算しているけど、xyzzy は イタリア、スペイン、ポルトガル、ポーランドがグレゴリオ暦を導入した 1582 年 10 月 15 日で計算していると。
+
+
+じゃあこうしてみると・・・
+
+><pre class="source">
+&#40;<span class="keyword1">[]setf[]</span>[] ed::&#42;calendar&#45;gregorian&#45;reform&#45;year&#42; 1752[]
+[]      ed::&#42;calendar&#45;gregorian&#45;reform&#45;month&#42; 9[]
+[]      ed::&#42;calendar&#45;gregorian&#45;reform&#45;day&#42; 14&#41;[]
+</pre><
+
+こうなった。
+
+><pre class="source">
+[] 1752年7月               1752年8月               1752年9月[]
+[] []<span class="fg1">[]日[]</span>[] 月 火 水 木 金 []<span class="fg4">[]土[]</span>[]    []<span class="fg1">[]日[]</span>[] 月 火 水 木 金 []<span class="fg4">[]土[]</span>[]    []<span class="fg1">[]日[]</span>[] 月 火 水 木 金 []<span class="fg4">[]土[]</span>
+[]           1  2  3 []<span class="fg4">[] 4[]</span>[]                      []<span class="fg4">[] 1[]</span>[]           1  2 14 15 []<span class="fg4">[]16[]</span>
+[] []<span class="fg1">[] 5[]</span>[]  6  7  8  9 10 []<span class="fg4">[]11[]</span>[]    []<span class="fg1">[] 2[]</span>[]  3  4  5  6  7 []<span class="fg4">[] 8[]</span>[]    []<span class="fg1">[]17[]</span>[] 18 19 20 21 22 []<span class="fg4">[]23[]</span>
+[] []<span class="fg1">[]12[]</span>[] 13 14 15 16 17 []<span class="fg4">[]18[]</span>[]    []<span class="fg1">[] 9[]</span>[] 10 11 12 13 14 []<span class="fg4">[]15[]</span>[]    []<span class="fg1">[]24[]</span>[] 25 26 27 28 29 []<span class="fg4">[]30[]</span>
+[] []<span class="fg1">[]19[]</span>[] 20 21 22 23 24 []<span class="fg4">[]25[]</span>[]    []<span class="fg1">[]16[]</span>[] 17 18 19 20 21 []<span class="fg4">[]22[]</span>
+[] []<span class="fg1">[]26[]</span>[] 27 28 29 30 31       []<span class="fg1">[]23[]</span>[] 24 25 26 27 28 []<span class="fg4">[]29[]</span>
+[]                         []<span class="fg1">[]30[]</span>[] 31[]
+</pre><
+
+なるほど。
+
+
+
+
+さて、ここまではいい。
+
+
+><blockquote cite="http://ja.wikipedia.org/wiki/%E3%82%B0%E3%83%AC%E3%82%B4%E3%83%AA%E3%82%AA%E6%9A%A6" title="日本におけるグレゴリオ暦導入">
+<p>
+日本では暦法を明治6年(1873年)1月1日から太陽暦であるグレゴリオ暦（新暦）に改めた。
+明治5年12月2日 (旧暦)（新暦の1872年12月31日）まで使用されていた天保暦は旧暦ということになった。
+このため明治5年の12月は2日しかなく社会的混乱をきたした。
+</p>
+</blockquote><
+
+2 日しかないカレンダーというのを見てみたかったので以下のようにしてみた。
+
+><pre class="source">
+&#40;<span class="keyword1">[]setf[]</span>[] ed::&#42;calendar&#45;gregorian&#45;reform&#45;year&#42; 1873[]
+[]      ed::&#42;calendar&#45;gregorian&#45;reform&#45;month&#42; 1[]
+[]      ed::&#42;calendar&#45;gregorian&#45;reform&#45;day&#42; 1&#41;[]
+</pre><
+
+で、C-u 1872 M-x calendar すると・・・
+
+><pre class="source">
+[] 1872年10月              1872年11月              1872年12月[]
+[] []<span class="fg1">[]日[]</span>[] 月 火 水 木 金 []<span class="fg4">[]土[]</span>[]    []<span class="fg1">[]日[]</span>[] 月 火 水 木 金 []<span class="fg4">[]土[]</span>[]    []<span class="fg1">[]日[]</span>[] 月 火 水 木 金 []<span class="fg4">[]土[]</span>
+[] []<span class="fg1">[] 1[]</span>[]  2  3  4  5  6 []<span class="fg4">[] 7[]</span>[]              1  2  3 []<span class="fg4">[] 4[]</span>[]                    1 []<span class="fg4">[] 2[]</span>
+[] []<span class="fg1">[] 8[]</span>[]  9 10 11 12 13 []<span class="fg4">[]14[]</span>[]    []<span class="fg1">[] 5[]</span>[]  6  7  8  9 10 []<span class="fg4">[]11[]</span>[]    []<span class="fg1">[] 3[]</span>[]  4  5  6  7  8 []<span class="fg4">[] 9[]</span>
+[] []<span class="fg1">[]15[]</span>[] 16 17 18 19 20 []<span class="fg4">[]21[]</span>[]    []<span class="fg1">[]12[]</span>[] 13 14 15 16 17 []<span class="fg4">[]18[]</span>[]    []<span class="fg1">[]10[]</span>[] 11 12 13 14 15 []<span class="fg4">[]16[]</span>
+[] []<span class="fg1">[]22[]</span>[] 23 24 25 26 27 []<span class="fg4">[]28[]</span>[]    []<span class="fg1">[]19[]</span>[] 20 21 22 23 24 []<span class="fg4">[]25[]</span>[]    []<span class="fg1">[]17[]</span>[] 18 19[]
+[] []<span class="fg1">[]29[]</span>[] 30 31                []<span class="fg1">[]26[]</span>[] 27 28 29 30[]
+</pre><
+
+19 日もあるんですけど・・・？
+<del datetime="2005-10-14T15:41:44+09:00">xyzzy がバグってるってことか？</del>
+<ins datetime="2005-10-14T15:41:44+09:00">→バグじゃない。私の勘違い。</ins>
+
+
+他のカレンダーソフトで検証してみようと思ってぐぐると ncal なるものがあるらしい。
+ncal -p で国別にグレゴリオ暦を導入した日が分かるとのこと。
+
+さっそくやってみると・・・
+
+>||
+% man ncal
+     -p      Print the country codes and switching days from Julian to Grego-
+             rian Calendar as they are assumed by ncal.  The country code as
+             determined from the local environment is marked with an asterisk.
+
+% ncal -p
+ AL Albania        1912-11-30      IT Italy          1582-10-04
+ AT Austria        1583-10-05      JP Japan          1918-12-18
+ ry)
+||<
+
+「JP Japan          1918-12-18」って・・・
+
+><pre class="aa">
+　　ワケ　　　　　ワカ　　　　　ラン♪
+　 ∧＿∧　　　∧＿∧　　　　∧＿∧
+　（　・∀・）　　（　・∀・）　　　（　・∀・）
+⊂　⊂　 ）　　（　Ｕ　　つ　　⊂__へ　つ
+　<　<　<　　　　）　）　）　　　　　（＿）|
+　（＿（＿）　　（_＿）＿）　　　 彡（_＿）
+</pre><
+
+
+
+** 追記
+
+るby でやってみると 1872-12-19 まであった。
+
+>||
+irb(main):001:0> require "date"
+=> false
+irb(main):002:0> class Date
+irb(main):003:1>   JAPAN = Date.civil_to_jd(1873, 1, 1)
+irb(main):004:1> end
+=> 2405160
+irb(main):005:0> y187212 = Date.civil(1872, 12, 1, Date::JAPAN)
+=> #<Date: 4810281/2,0,2405160>
+irb(main):006:0> 20.times {|i| puts y187212 + i}
+1872-12-01
+1872-12-02
+1872-12-03
+1872-12-04
+1872-12-05
+1872-12-06
+1872-12-07
+1872-12-08
+1872-12-09
+1872-12-10
+1872-12-11
+1872-12-12
+1872-12-13
+1872-12-14
+1872-12-15
+1872-12-16
+1872-12-17
+1872-12-18
+1872-12-19
+1873-01-01
+=> 20
+||<
+
+
+><blockquote>
+明治5年12月2日 (ry まで使用されていた天保暦は旧暦ということになった。
+</blockquote><
+
+そうか、「天保暦」というやつでは12月2日までという意味か。
+疑ってすまん＞ <span class="aa"> ノノ*＾ー＾)</span>
+違う、疑ってすいません＞ 亀井さん
+
+
+** 追記その２
+
+「天保暦」とやらを調べてみた。
+天保暦 == 旧暦で るby で旧暦を扱うために calendar というモジュールがあるらしい。
+
+というわけで RAA から calendar を持ってきてインストール (要コンパイラ)。
+calclass.rb という便利クラスがアーカイブに入っているけどインストールしてくれないので手でコピー。
+
+で、例によって例のごとくドキュメントが皆無なのでソースを眺めながら使い方を調べてテスト。
+
+>||
+irb(main):001:0> require "calclass"
+=> true
+irb(main):002:0> class Date
+irb(main):003:1>   JAPAN = Date.civil_to_jd(1873, 1, 1)
+irb(main):004:1>   def kyureki
+irb(main):005:2>     Kyureki.at(Calendar.absolute_from_julian(mon, mday, year))
+irb(main):006:2>   end
+irb(main):007:1> end
+=> nil
+irb(main):008:0> y187212 = Date.civil(1872, 12, 1, Date::JAPAN)
+=> #<Date: 4810281/2,0,2405160>
+irb(main):009:0> 20.times{|i| puts "#{y187212 + i} => #{(y187212 + i).kyureki}"}
+
+1872-12-01 => Taian, Shimotsuki, 13, 1872
+1872-12-02 => Shakku, Shimotsuki, 14, 1872
+1872-12-03 => Senkachi, Shimotsuki, 15, 1872
+1872-12-04 => Tomobiki, Shimotsuki, 16, 1872
+1872-12-05 => Semmake, Shimotsuki, 17, 1872
+1872-12-06 => Butsumetsu, Shimotsuki, 18, 1872
+1872-12-07 => Taian, Shimotsuki, 19, 1872
+1872-12-08 => Shakku, Shimotsuki, 20, 1872
+1872-12-09 => Senkachi, Shimotsuki, 21, 1872
+1872-12-10 => Tomobiki, Shimotsuki, 22, 1872
+1872-12-11 => Semmake, Shimotsuki, 23, 1872
+1872-12-12 => Butsumetsu, Shimotsuki, 24, 1872
+1872-12-13 => Taian, Shimotsuki, 25, 1872
+1872-12-14 => Shakku, Shimotsuki, 26, 1872
+1872-12-15 => Senkachi, Shimotsuki, 27, 1872
+1872-12-16 => Tomobiki, Shimotsuki, 28, 1872
+1872-12-17 => Semmake, Shimotsuki, 29, 1872
+1872-12-18 => Shakku, Shiwasu, 1, 1872
+1872-12-19 => Senkachi, Shiwasu, 2, 1872
+1873-01-01 => Tomobiki, Shiwasu, 15, 1872
+=> 20
+||<
+
+(天保暦で) 1872-12-02 の次の日が (西暦で) 1873-01-01 になったわけか。
+
+そりゃまたすごい師走だな。

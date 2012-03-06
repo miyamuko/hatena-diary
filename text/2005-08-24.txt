@@ -1,0 +1,194 @@
+
+*p1*[gonzui] Cannot allocate memory
+
+見たことないエラーだから記念はてなダイアリー。
+
+>||
+% ./gonzui-import ~/src/Hibernate3
+./gonzui/dbm.rb:391:in `[]=': unable to allocate space from the buffer cache -- Cannot allocate memory (BDB::Fatal)01:17:48
+        from ./gonzui/dbm.rb:391:in `flush_cache'
+        from ./gonzui/dbm.rb:390:in `each'
+        from ./gonzui/dbm.rb:390:in `flush_cache'
+        from ./gonzui/dbm.rb:388:in `each'
+        from ./gonzui/dbm.rb:388:in `flush_cache'
+        from ./gonzui/importer.rb:50:in `import_package'
+        from ./gonzui/importer.rb:65:in `import'
+        from ./gonzui-import:129:in `import'
+        from ./gonzui-import:153:in `do_start'
+        from ./gonzui-import:152:in `each'
+        from ./gonzui-import:152:in `do_start'
+        from ./gonzui/cmdapp/app.rb:142:in `start'
+        from ./gonzui/cmdapp/app.rb:168:in `start'
+        from ./gonzui-import:162
+zsh: exit 1     ./gonzui-import ~/src/Hibernate3
+||<
+
+>||
+% du -h gonzui.db
+969M    gonzui.db
+||<
+
+
+orz...
+
+
+いい機会だからディスクの拡張でもしよっと。
+
+
+*p2*[Hibernate] XDoclet の入力補完
+
+@hibernate.property とか入力するのめんどいねー
+
+- Doclipse (http://beust.com/doclipse/)
+- XtremeJ XTag Plug-in (http://www.xtremej.com/xtag.php)
+
+ということで、この 2 つを試してみた。
+
+
+- Doclipse
+
+20 個ぐらいの XDoclet タグをサポートしていて、Hibernate タグは最初から使えた。
+Window -> Preference -> Doclipse で on/off 可能。
+補完するタグは XML で定義ファイルを書くことで自由に追加可能。
+http://beust.com/doclipse/main.html#definition_file 
+
+補完機能はいまいち。
+
+例えば:
+
+>|
+@hibernate.property cascade =
+|<
+
+と入力して Ctrl-SPC すると「all,none,save-update,delete」が補完候補として出てくる。
+で、うっかり Enter を押そうものならこうなる。
+
+>|
+@hibernate.property cascade = "all,none,save-update,delete"
+|<
+
+だめじゃん。
+
+
+- XtremeJ XTag Plug-in
+
+Hibernate はデフォルトでは使えなかったけど、
+<eclipse_home>/plugins/com.xtremej.xtag_1.0.0/modules に
+xdoclet-hibernate-module-x.y.z.jar をコピーして Eclipse を再起動することで使えるようになる。
+
+補完は以下のようにバラバラに候補が出てくるので使いやすい。
+
+>|
+cascade="all"
+cascade="none"
+cascade="save-update"
+cascade="delete"
+|<
+
+
+というわけで XTag でいいや。
+
+
+
+*p3*[Hibernate] XDoclet タグのスペルチェック
+
+補完プラグインを入れてもスペルチェックはしてくれないのね。
+あたりまえか。
+
+キーワードっぽいものを xdoclet-hibernate-module-1.2.3.jar の resource の中から適当に抜き出してみた。
+これを Window -> Preference -> Java -> Editor -> Spelling で設定している辞書に追加しておけばおｋ。
+
+>||
+@hibernate.any
+@hibernate.any-column
+@hibernate.array
+@hibernate.bag
+@hibernate.cache
+@hibernate.class
+@hibernate.collection-cache
+@hibernate.collection-composite-element
+@hibernate.collection-composite-index
+@hibernate.collection-element
+@hibernate.collection-index
+@hibernate.collection-jcs-cache
+@hibernate.collection-key
+@hibernate.collection-key-column
+@hibernate.collection-many-to-many
+@hibernate.collection-one-to-many
+@hibernate.column
+@hibernate.component
+@hibernate.discriminator
+@hibernate.generator-param
+@hibernate.id
+@hibernate.index-many-to-many
+@hibernate.jcs-cache
+@hibernate.joined-subclass
+@hibernate.joined-subclass-key
+@hibernate.list
+@hibernate.many-to-any
+@hibernate.many-to-any-column
+@hibernate.many-to-one
+@hibernate.map
+@hibernate.mapping
+@hibernate.one-to-one
+@hibernate.parent
+@hibernate.primitive-array
+@hibernate.property
+@hibernate.query
+@hibernate.set
+@hibernate.subclass
+@hibernate.timestamp
+@hibernate.version
+access
+auto-import
+batch-size
+cascade
+class
+column
+constrained
+default-cascade
+discriminator-value
+dynamic-insert
+dynamic-update
+element-class
+force
+foreign-key
+formula
+generator-class
+generator-parameter-1
+generator-parameter-2
+generator-parameter-3
+id-type
+index
+insert
+inverse
+lazy
+length
+meta-type
+mutable
+name
+not-null
+optimistic-lock
+order-by
+outer-join
+persister
+polymorphism
+property-ref
+proxy
+query
+readonly
+schema
+select-before-update
+sort
+sql-type
+table
+type
+unique
+unique-key
+unsaved-value
+update
+usage
+value
+version
+where
+||<

@@ -1,0 +1,48 @@
+
+*p1*[bookmarklet]ニコニコ動画をリピート再生するブックマークレット
+
+[http://www.nicovideo.jp/:title=ニコニコ動画] で [http://www.nicovideo.jp/watch/utMU9Ui4807r4:title=見ている動画] をリピート再生するブックマークレットを作ってみました。
+
+リピート再生するには動画の再生時間を取得したり、はじめから再生したりする必要があるんですが、JavaScript から Flash にアクセスする方法がよくわからなかったので無理やり実装しました。
+
+以下のようないまいちな実装方法です。
+
+- 再生時間は iframe で表示されている [http://www.nicovideo.jp/thumb?v=utMU9Ui4807r4:title=サムネイルページ] からスクレイプして取得。
+- はじめから再生は今のページを reload してしまうと setInterval したものが消えてしまうので、子 window を開いてそれを reload するようにしました。
+
+かなり強引だと思うのでもっとうまいやり方を知っている人は教えてくださぃ。
+
+
+ブックマークレットのソースは以下のとおりです。
+- [http://subsimple.com/bookmarklets/jsbuilder.htm:title=Bookmarklet Builder] とかで１行にしてブックマークしてください。
+- 実行すると「再生時間 + 5 秒」後にウィンドウが新しく開きます。以降はそのウィンドウでリピート再生を行います。
+- 元のウィンドウは閉じないでください (同じ動画でブラウザのタブが 2 つ開かれることになります)。
+
+>|javascript|
+javascript:(function() {
+    var dt=5;
+    var f=document.getElementsByTagName("iframe")[0];
+    var d=f.Document || f.contentDocument;
+    var p=d.getElementsByTagName("p")[2];
+    var c=p.getElementsByTagName("strong")[0].innerHTML;
+    if(c.match(/(\d+)\D+(\d+)/)){
+        var t=parseInt(RegExp.$1)*60+parseInt(RegExp.$2)+dt;
+        var h=location.href;
+        var w;
+        setInterval(function () {
+            if(w&&!w.closed){
+                w.location.reload();
+            }else{
+                w=window.open(h);
+            }
+        },t*1000);
+    }
+    undefined;
+})();
+||<
+
+
+
+あと、Flash プレイヤーの API を JavaScript から使えるようにして欲しいです。
+
+以上です。

@@ -1,0 +1,89 @@
+
+*p1*[xyzzy] xyzzy から C++ の name demangling
+
+暇なので GCC の name mangling のルールを xyzzy lisp で実装しようと思ったけど・・・挫折しました
+orz
+
+
+
+ということで binutils を使って demangling してみました。
+まず ftp://ftp.gnu.org/gnu/binutils/ から binutils-2.16.tar.gz をダウンロードして dll を作ります。
+
+今回は VC++ でコンパイルしてみるので、binutils-2.16\include\demangle.h の cplus_demangle_v3 に __declspec(dllexport) をつけます。
+
+>||
+__declspec(dllexport)
+extern char*
+cplus_demangle_v3 PARAMS ((const char* mangled, int options));
+||<
+
+で、コンパイル。
+
+>||
+> cd binutils-2.16\libiberty
+> cl /I../include /LD cp-demangle.c
+||<
+
+これで cp-demangle.dll ができたので xyzzy から呼べるようにします。
+
+><pre class="source">
+[]&#40;c:&#42;define&#45;dll&#45;entry &#40;c:char []<span class="keyword1">&#42;</span>[]&#41; cplus_demangle_v3 &#40;&#40;c:char []<span class="keyword1">&#42;</span>[]&#41; c:int&#41;[]
+[]  []<span class="string">[]&quot;D:/tmp/binutils&#45;2&#46;16/libiberty/cp&#45;demangle&#46;dll&quot;[]</span>[] []<span class="string">[]&quot;cplus_demangle_v3&quot;[]</span>&#41;
+</pre><
+
+＃cplus-dem.c を使えば gcc 2.x 相当の demangling ができる (のかなぁ?)
+
+さて、demangling した結果は cplus_demangle_v3 内部で malloc されて、そのポインタが戻り値として帰ってきます。
+xyzzy からは integer として見えるのですがここからどうやって文字列を取り出していいのかよく分かりません。
+
+
+苦肉の策として xyzzy で用意した chunk へ strcpy でコピーして si:unpack-string してみます。
+
+><pre class="source">
+[]&#40;c:&#42;define&#45;dll&#45;entry &#40;c:char []<span class="keyword1">&#42;</span>[]&#41; strcpy &#40;&#40;c:char []<span class="keyword1">&#42;</span>[]&#41; &#40;c:char []<span class="keyword1">&#42;</span>[]&#41;&#41;[]
+[]  []<span class="string">[]&quot;msvcrt&quot;[]</span>[] []<span class="string">[]&quot;strcpy&quot;[]</span>&#41;
+
+&#40;<span class="keyword1">[]setf[]</span>[] demangled &#40;cplus_demangle_v3 &#40;[]<span class="keyword1">[]si:make&#45;string&#45;chunk[]</span>[] []<span class="string">[]&quot;_ZNSt3_In4wardE&quot;[]</span>[]&#41; 0&#41;&#41;[]
+[]179914168[]
+&#40;<span class="keyword1">[]setf[]</span>[] buff &#40;[]<span class="keyword1">[]si:make&#45;chunk[]</span>[] []<span class="keyword3">[]nil[]</span>[] 255&#41;&#41;[]
+[]#&lt;chunk 143921404&gt;[]
+[]&#40;strcpy buff demangled&#41;[]
+[]54348088[]
+&#40;<span class="keyword1">[]si:unpack&#45;string[]</span>[] buff 0&#41;[]
+<span class="string">[]&quot;std::_In::ward&quot;[]
+</span></pre><
+
+おｋ。
+全部まとめるとこんな感じでしょうか。
+
+><pre class="source">
+[]&#40;c:&#42;define&#45;dll&#45;entry &#40;c:char []<span class="keyword1">&#42;</span>[]&#41; strcpy &#40;&#40;c:char []<span class="keyword1">&#42;</span>[]&#41; &#40;c:char []<span class="keyword1">&#42;</span>[]&#41;&#41;[]
+[]  []<span class="string">[]&quot;msvcrt&quot;[]</span>[] []<span class="string">[]&quot;strcpy&quot;[]</span>&#41;
+
+[]&#40;c:&#42;define&#45;dll&#45;entry &#40;c:char []<span class="keyword1">&#42;</span>[]&#41; cplus_demangle_v3 &#40;&#40;c:char []<span class="keyword1">&#42;</span>[]&#41; c:int&#41;[]
+[]  []<span class="string">[]&quot;D:/tmp/binutils&#45;2&#46;16/libiberty/cp&#45;demangle&#46;dll&quot;[]</span>[] []<span class="string">[]&quot;cplus_demangle_v3&quot;[]</span>&#41;
+
+&#40;<span class="keyword1">[]defun[]</span>[] c&#43;&#43;&#45;demangle &#40;mangled &amp;optional &#40;options 0&#41;&#41;[]
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;demangled buff&#41;[]
+[]    &#40;[]<span class="keyword1">[]setf[]</span>[] demangled &#40;cplus_demangle_v3 &#40;[]<span class="keyword1">[]si:make&#45;string&#45;chunk[]</span>[] mangled&#41; options&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]if[]</span>[] &#40;[]<span class="keyword1">[]zerop[]</span>[] demangled&#41;[]
+[]        mangled[]
+[]      &#40;[]<span class="keyword1">[]progn[]</span>
+[]        &#40;[]<span class="keyword1">[]setf[]</span>[] buff &#40;[]<span class="keyword1">[]si:make&#45;chunk[]</span>[] []<span class="keyword3">[]nil[]</span>[] 255&#41;&#41;[]
+[]        &#40;strcpy buff demangled&#41;[]
+[]        &#40;[]<span class="keyword1">[]si:unpack&#45;string[]</span>[] buff 0&#41;&#41;&#41;&#41;&#41;[]
+
+[]&#40;c&#43;&#43;&#45;demangle []<span class="string">[]&quot;_ZNSt3_In4wardE&quot;[]</span>&#41;
+<span class="string">[]&quot;std::_In::ward&quot;[]</span>
+[]&#40;c&#43;&#43;&#45;demangle []<span class="string">[]&quot;_ZTIN6NanikaE&quot;[]</span>&#41;
+<span class="string">[]&quot;typeinfo for Nanika&quot;[]</span>
+[]&#40;c&#43;&#43;&#45;demangle []<span class="string">[]&quot;_ZTIPKc&quot;[]</span>&#41;
+<span class="string">[]&quot;typeinfo for char const&#42;&quot;[]
+</span></pre><
+
+
+
+
+
+
+あ、free してないや。ま、いっか。

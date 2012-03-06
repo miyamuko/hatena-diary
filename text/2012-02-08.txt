@@ -1,0 +1,103 @@
+
+*p1*[xyzzy][xyttr]xyttrでstreaming-api
+
+この記事は [http://atnd.org/events/22889:title=xyttr Advent Calendar 2011] の 70 日目の記事ではありません。
+
+
+>http://d.hatena.ne.jp/youz/20111217/1324141659:title>
+xml-http-requestではストリーミング受信ができないのでconnect関数でHTTPアクセスし、タイマーを使ってデータを受信しています。
+  ：
+が、10月に入ってstreaming-apiがHTTPS接続限定にされ、connect関数でのアクセスができなくなった為お蔵入りに。
+<<
+
+
+HTTPS とストリーミングに対応している http-client で実装してみました。
+
+ポイントは http-cond-receiver でステータス・コードで条件分岐して、200 なら http-general-receiver で 1 行受信するごとに streaming-write で処理、それ以外なら http-string-receiver で全て受信したあとに oncomplete イベントでエラーメッセージを表示している部分です。
+
+
+<script src="https://gist.github.com/1716558.js"> </script>
+
+
+
+*p2*[xyzzy][xyttr]xyttrで画像投稿
+
+この記事は [http://atnd.org/events/22889:title=xyttr Advent Calendar 2011] の 70 日目の記事ではありません。
+
+
+>http://d.hatena.ne.jp/youz/20111226/1324917270:title>
+実装ですが、connect関数使ってベタで書いてるのはxhrだとこの辺の問題で投稿が失敗(500)してしまうため。
+
+Msxml2.XMLHTTP.6.0を使うようxhrを書き換えて試してみましたが、タイムライン系api等のapi.twitter.comへのリクエストは問題なかったものの画像アップロードは403でした。
+
+ちゃんとパケット調べてないけどやはり余計な0x00で問題起きてそう。
+<<
+
+
+xml-http-request だとまともにバイナリデータは扱えないですよね。。。
+そこで、バイナリデータにもばっちり対応している http-client で実装してみました。
+
+ポイントは http-post の第 2 引数で `(media[] :file ,image-path) としている部分です。http-client では multipart/form-data に対応しているのでこれだけでファイルアップロードができます。
+
+
+<script src="https://gist.github.com/1647575.js"> </script>
+
+
+*p3*[xyzzy][http-client]http-client 1.0.0 リリース
+
+xyzzy 用の HTTP クライアントを作成しました。
+Proxy、Basic/Digest 認証、SSL、Cookie、非同期通信などをサポートしています。
+
+- http://miyamuko.s56.xrea.com/xyzzy/http-client/intro.htm
+- https://github.com/miyamuko/http-client
+
+今までは xyzzy で HTTP 通信を行うライブラリとして [http://miyamuko.s56.xrea.com/xyzzy/xml-http-request/intro.htm:title=xml-http-request] と [http://www7a.biglobe.ne.jp/~hat/xyzzy/dl.html#junk-library:title=junk-library] がありましたが、それぞれ以下のような問題点があります。
+
+- xml-http-request
+-- ストリーミングに対応してない
+--- http://d.hatena.ne.jp/youz/20111217/1324141659
+-- バイナリデータの送受信ができない
+--- http://d.hatena.ne.jp/youz/20111226/1324917270
+--- http://d.hatena.ne.jp/miyamuko/20080304/xyzzy_ole_method_bug
+-- charset が不適切だと文字化けする場合がある
+--- http://www.bricklife.com/weblog/000628.html
+--- http://d.hatena.ne.jp/miyamuko/20060619/p1
+-- Shift_JIS 外の文字を扱えない
+--- http://d.hatena.ne.jp/miyamuko/20080324/google_ajax_language_api_meets_xyzzy
+- junk-library
+-- SSL に対応していない
+-- 同期 API しかない
+
+
+http-client にはこれらの問題点がありません。
+
+今まで xml-http-request などで困っていた人は是非使ってみてください。
+
+
+**リファレンス
+
+めずらしくリファレンスを書きました。
+
+https://github.com/miyamuko/http-client/blob/master/reference/http-client.md
+
+また、info-modoki-mode でリファレンスを引けるようにするには http-client と
+xy-reference をインストールしたあとに、*scratch* バッファで以下を評価してください。
+
+>|lisp|
+(require :xy-reference)
+(xy-reference:2txt)
+||<
+
+その後、xyzzy を再起動すれば見れるはずです。
+
+
+*p4*[xyzzy][xl-winhttp]xl-winhttp 1.0.0 リリース
+
+[http://msdn.microsoft.com/en-us/library/windows/desktop/aa384273.aspx:title=WinHTTP] の xyzzy バインディングを作成しました。
+
+- http://miyamuko.s56.xrea.com/xyzzy/xl-winhttp/intro.htm
+- https://github.com/miyamuko/xl-winhttp
+
+Windows 8 で追加される予定の API 以外はすべて実装してあります。
+
+とても低レベルな API なので、通常は [http://miyamuko.s56.xrea.com/xyzzy/http-client/intro.htm:title=http-client] の方を利用してください。

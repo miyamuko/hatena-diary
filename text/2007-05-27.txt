@@ -1,0 +1,50 @@
+
+*p1*[xyzzy][popup-dododo]ジョジョ風 効果音(?) を表示する popup-dododo 0.0.1 他リリース
+
+1年6ヶ月。
+
+[http://massacre.s59.xrea.com/game/dtddd/index.htm:title=デスクトップドドド]に衝撃を受けてから popup-dododo をリリースするまでに要した時間である (Shibuya.js 風)
+
+
+
+というわけで、popup-dododo 0.0.1 をリリースしました。
+
+http://miyamuko.s56.xrea.com/xyzzy/popup-dododo/intro.htm
+
+なお、以下のライブラリが必要です。こちらもあわせてインストール・アップデートしてください。
+
+- [http://miyamuko.s56.xrea.com/xyzzy/cairo/intro.htm:title=xycairo] 0.0.3 以上
+- [http://miyamuko.s56.xrea.com/xyzzy/layered-window/intro.htm:title=layered-widnow] 1.0.0 以上
+- [http://xyzzy.s53.xrea.com/wiki/index.php?%B3%C8%C4%A5lisp%2Fwinapi:title=api]
+
+
+構想1年5ヶ月、製作16日 (cairo 10日、popup-dododo + layered-window 6日)。
+一時期は挫折しかけたときもありました。諦めかけていたときもありました。
+
+なんとかリリースできたのは、「自分を信じろ、好きを貫ｋ」(省略されました。すべて読むには梅田望夫で検索してください) とアジりまくってくれた梅田氏のおかげです。
+
+ほんとうにありがとうございました。
+
+
+
+
+
+
+ちなみに、表示された「ド」などはドラッグして移動できます。また右クリックすることで削除することもできます。
+
+>http://www.forest.impress.co.jp/article/2005/12/20/dtddd.html:title>
+さらに、文字パレットの［振動］メニューより、現在表示されているすべての“ド”を上下または上下左右にぶるぶる震わせる機能もあり、迫力を倍加させることが可能だ。
+<<
+
+こういう振動機能はありません。
+
+>http://www.forest.impress.co.jp/article/2005/12/20/dtddd.html:title>
+【ソフト種別】フリーソフト（ただし『ジョジョの奇妙な冒険』全巻の購入が必須）
+<<
+
+デスクトップ ドドドはジョジョウェアですが、残念ながら popup-dododo は普通の MIT/X ライセンスです。
+
+
+
+なお、私はジョジョを１ページも読んだことがありません。ジョジョヲタの皆さんのフィードバックを募集しております。
+

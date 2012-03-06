@@ -1,0 +1,73 @@
+
+*win32_captureie*[Ruby][win32-captureie] win32-captureie 0.1.0 リリース!
+
+IE を使って Web ページのスクリーンショットを取得するライブラリを[http://rubyforge.org/forum/forum.php?forum_id=19259:title=リリース]しました。
+
+これは [http://d.hatena.ne.jp/miyamuko/20071027/p1:title=sleipnir-api] のスクリーンショット取得周りのコードを抜き出して IE だけで動くようにしたものです。
+0.1.0 では以下の機能を実装しています。
+
+- Web ページ全体をスクロールしながらすべて保存
+- IE のウィンドウをまるごと保存
+- IE のウィンドウの描画エリアだけど保存
+
+まだ、bitmap しか保存できません。そのうち RMagick に対応します。
+あと Perl の Win32::CaptureIE にあるドキュメントの要素だけを保存する機能 (CaptureElement) とかもまだ実装していません。
+
+
+** インストール
+
+>||
+gem install win32-captureie
+||<
+
+
+
+** 使い方
+
+*** www.ruby-lang.org を画像で保存
+
+>|ruby|
+require "rubygems"
+require "win32/capture_ie"
+
+Win32::CaptureIE.start("http://www.ruby-lang.org/") do |ie|
+  ie.capture_page("ruby-lang.bmp")
+end
+||<
+
+
+*** prtie コマンド
+
+win32-captureie には prtie (Print IE) コマンドが付属しています。
+
+>||
+Usage: prtie [options] URL
+
+    -w, --wait=SECONDS               wait SECONDS between retrievals
+    -d, --output-directory=DIRECTORY save capture to DIRECTORY/...
+    -o, --output=FILE                save capture to FILE
+    -D, --output-digest=ALGORITHM    use output filename as hex-encoded version
+                                     of a given URL
+                                     ALGORITHM: MD5, SHA1, SHA512 ...
+
+    -v, --version                    print the version
+    -h, --help                       print this message
+
+  Default options:
+    --output-digest=MD5
+||<
+
+prtie は Web ページのスクリーンショットを取得する簡単なコマンドです。
+今のところ必要最低限な機能を実装しています。
+
+
+** 謝辞
+
+スクリーンショット取得周りのコードの多くは Perl の [http://search.cpan.org/~psme/Win32-CaptureIE/:title=Win32::CaptureIE] および [http://search.cpan.org/~psme/Win32-Screenshot/:title=Win32::Screenshot] を参考にさせていただきました。
+ありがとうございます。
+
+
+** リンク
+
+- [http://win32-captureie.rubyforge.org:title=ドキュメント]
+- [http://rubyforge.org/projects/win32-captureie:title=プロジェクトページ]

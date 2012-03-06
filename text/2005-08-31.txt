@@ -1,0 +1,96 @@
+
+*p1*[Java] Readline というか Getline
+
+Windows 上の Java プログラムで readline を使いたくなったので調べてみた。
+
+http://java-readline.sourceforge.net/
+
+↑が見つかったので 0.8 を落として README を眺めていると Windows はサポートしていないので Getline を使えと。
+contrib/win32/JavaGetline.dll があるので早速試してみると・・・
+
+>||
+Exception in thread "main" java.lang.UnsatisfiedLinkError: JavaGetline.dll: ?????? ???P?[?V???????A?N?Z?X????????・?B
+        at java.lang.ClassLoader$NativeLibrary.load(Native Method)
+        at java.lang.ClassLoader.loadLibrary0(Unknown Source)
+        at java.lang.ClassLoader.loadLibrary(Unknown Source)
+        at java.lang.Runtime.loadLibrary0(Unknown Source)
+        at java.lang.System.loadLibrary(Unknown Source)
+        at org.gnu.readline.Readline.load(Readline.java:133)
+        at test.ReadlineTest.main(ReadlineTest.java:60)
+||<
+
+キタコレ。
+
+
+http://sourceforge.net/mailarchive/forum.php?thread_id=2855001&forum_id=21220
+
+ここに仲間発見。
+
+そもそも objdump してみると objdump 自体が core を吐くし。
+
+>||
+% objdump -p contrib/win32/JavaGetline.dll
+
+contrib/win32/JavaGetline.dll:     file format pei-i386
+
+          : (ry
+
+The Import Tables (interpreted .idata section contents)
+ vma:            Hint    Time      Forward  DLL       First
+                 Table   Stamp     Chain    Name      Thunk
+ 0000e000       00000000 e0280000 00000000 00000000 e45e0000
+zsh: segmentation fault (core dumped)  objdump -p contrib/win32/JavaGetline.dll
+||<
+
+しょうがないので自分でビルドしてみる。
+
+用意するもの。
+
+- cygwin (GNU make のため、nmake だと動かない)
+- VCTK 2003
+- Platform SDK
+
+Makefile の修正。
+
+- Makefile
+-- 64 行目あたりの JAVA_HOME = ... と export PATH := ... を正しいパスに変える。
+
+- src/native/Makefile
+-- 38 行目あたりの INCLUDES = ... と LIB = ... を正しいパスに変える。
+-- INCLUDES に Platform SDK の include も追加する。
+-- 83 行目の $(CC) コマンドの最後に /link /NODEFAULTLIB:uuid.lib を追加する。
+
+で、make する。
+
+>||
+% env WIN32=MSC make
+||<
+
+libreadline-java.jar と JavaGetline.dll ができる（はず）。
+src/test/ にテスト用のコマンドがあるので動かしてみる。
+- 第 1 引数には readline 用の inputrc を指定する。今回は Getline なので何を指定してもいい。
+- 第 2 引数にはライブラリの種類を指定する。以下のどれか。指定しない場合は GnuReadline。
+-- GnuReadline
+-- Editline
+-- Getline
+-- PureJava
+- 終了は Ctrl-d。
+
+
+>||
+>touch dummy
+>java -cp libreadline-java.jar test.ReadlineTest dummy Getline
+linux> hogehoge
+line = >hogehoge<
+||<
+
+Getline の代わりに PureJava を指定すると System.in から単純に一行読むようになる。
+Ctrl-p や -k は使えないと。
+
+>||
+>java -cp libreadline-java.jar test.ReadlineTest dummy PureJava
+linux> hogehoge^P^N^A
+line = >hogehoge<
+||<
+
+Getline は補完ができない見たいなのでいまいちだなぁ。

@@ -1,0 +1,191 @@
+
+*anything_haiku*[xyzzy][anything]anything.l ではてなハイクのキーワードを開く
+
+[http://ottt.x0.com/xyzzy/anything.html:title=anything.l] ではてなハイクのキーワードページを絞り込めるようにしてみました。
+
+migemo をインストールして *anything-migemo-on* を t にしておくといい感じです。
+
+>|lisp|
+(require "cmu_loop")
+(defparameter *haiku-keyword-list*
+  (let ((max 20))
+    (mapcan #'(lambda (page)
+                (mapcar #'hatena-haiku.api:keyword-text
+                        (hatena-haiku.api:keyword-list :page page)))
+            (loop for i to (1- max) collect (1+ i)))))
+
+(add-anything-sources :name "Haiku Keyword"
+                      :candidates (lambda () *haiku-keyword-list*)
+                      :action (lambda (keyword) (haiku-keyword-entries-pane keyword)))
+||<
+
+
+*package*[xyzzy]Lisp のパッケージ
+
+>http://ottt.x0.com/xyzzy/diary/2008-02-12-1811.html:title>
+あれ、readme にある通りにしてみると、
+
+ 関数が定義されていません: with-xhr-post-async
+
+とかになる。request.l 見てみると export されてるっぽいしなぜ? 使い方おかしいのかな?
+<<
+
+たぶん scratch バッファで評価していると思うのですが、以下のようにパッケージ修飾子をつければ動くと思います。
+
+>|lisp|
+(xml-http-request:with-xhr-post-async ...)
+(xhr:with-xhr-post-async ...)                ;; こっちでも ok
+||<
+
+
+**外部シンボルと内部シンボル
+
+xml-http-request の関数はすべて xml-http-request パッケージ内に定義しています。「xhr:」でも ok というのはパッケージの nickname (別名みたいなもの) に xhr を設定しているからです。
+
+xml-http-request からはいくつかの関数などは export しています。これを「外部シンボル」と言うらしいです。外部シンボルを参照するには「パッケージ名:外部シンボル名」としてアクセスします。si:system-root とかです。
+
+export してないのは内部シンボルと言うらしく、「パッケージ名::内部シンボル名」とすればアクセスできます。こっちはコロンが 2 個です。ed::find-file-internal とかですね。
+
+
+export された外部シンボルが公開 API で、内部シンボルは非公開の内部用の関数です (という慣習があるかどうかは知らないのですが、私はそういう意図で export するかしないかを決めています)。
+[http://blade.nagaokaut.ac.jp/cgi-bin/scat.rb/ruby/ruby-dev/33702:title=ruby-dev:33702] 風に言えば
+
+- export されていない機能をいじって「ぎゃっ」となれば、それはその人の勝手です。
+- export している機能を使っていて「ぎゃっ」となれば、それは開発者の責任です。
+
+という感じです。
+
+
+**import と use-package
+
+でも、いちいちパッケージ修飾子をつけるのは面倒ですね。そこで import と use-package です。これらを使うと外部シンボルをパッケージ修飾子なしで使うことができます。
+
+scratch バッファで実験してみます。
+
+>|lisp|
+;; 現在の (scratch バッファ) のパッケージは user パッケージ
+*package*                       ;=> #<package: user>
+
+;; system パッケージ (si は nickname) の getenv を呼んでみる
+(si:getenv "USERNAME")          ;=> "miyamuko"
+
+;; パッケージ修飾子なしで呼んでみる => エラー
+(getenv "USERNAME")             ;=> 関数が定義されていません: getenv
+
+;; import してみる ... おっと。
+(import 'si:getenv)             ;=> 名前が衝突するためimportできません: system:getenv
+
+;; (getenv "USERNAME") を実行したときに getenv というシンボルが user パッケージに
+;; 登録されてしまったので import できませんでした。
+;; まずは unintern で user パッケージからシンボルを消して
+(unintern 'getenv)              ;=> t
+
+;; system の getenv を user に import
+(import 'si:getenv)             ;=> t
+
+;; si: なしで呼べる
+(getenv "USERNAME")             ;=> "miyamuko"
+||<
+
+
+という感じで import を使えばパッケージ修飾子なしで利用できるようになります。一個一個 import するのが面倒なときは use-package を使います。
+use-package は外部シンボルを全部まとめて import してくれます。
+
+
+**user と editor パッケージ
+
+import しないとパッケージ修飾子を省略できないのは分かった。でも editor パッケージで定義した関数は export するだけで scratch バッファとかから使えるじゃないか！と思うかもしれません。
+
+それは editor パッケージが user パッケージから use-package されているからです (scratch バッファは user パッケージ)。
+
+>|lisp|
+(find (find-package :editor) (package-use-list :user)) ;=> #<package: editor>
+(find (find-package :system) (package-use-list :user)) ;=> nil
+||<
+
+system と同じように xml-http-request も user からは use されていません。
+だから export されているだけではだめなんです。
+
+
+こんな実験も。
+
+>|lisp|
+;; car は lisp パッケージの外部シンボルで、user から use されている
+(symbol-package 'car)           ;=> #<package: lisp>
+(find (find-package :lisp) (package-use-list :user)) ;=> #<package: lisp>
+
+;; だから scratch バッファで普通に使える
+(car '(1))                      ;=> 1
+
+;; user から lisp パッケージを消してみると...
+(unuse-package :lisp :user)     ;=> lisp:t
+
+;; エラーになる
+(car '(1))                      ;=> 関数が定義されていません: car
+
+;; use して元に戻す
+(lisp:unintern 'car)            ;=> t
+(lisp:use-package :lisp :user)  ;=> t
+(car '(1))                      ;=> 1
+||<
+
+
+**defpackage
+
+パッケージを use するのは defpackage でもできます。以下は hatena-star.api パッケージの定義です。
+
+>|lisp|
+(eval-when (:compile-toplevel :load-toplevel :execute)
+  (require "xml-http-request")
+  (require "json")
+
+  (unless (find-package :hatena-star.api)
+    (defpackage :hatena-star.api
+      (:use
+       :lisp
+       :editor
+
+       :xml-http-request
+       :json
+       ))))
+||<
+
+
+**名前が衝突するためuseできません
+
+Q. scratch バッファで xml-http-request を use したらエラーになりました。なんでですか？
+A. 若さゆえの過ちです。
+
+>|lisp|
+(use-package :xml-http-request) ;=>名前が衝突するためuseできません: xml-http-request:status
+||<
+
+
+user パッケージに status というシンボルが intern されているとこうなります。intern されているのがポイントなので関数や変数が定義されているかどうかは関係ないです。だから例えば以下のようなコードが user パッケージのどこかにあればエラーになってしまいます。
+
+>|lisp|
+(defun hoge ()
+  (let ((status (foo)))
+    (fuga)))
+||<
+
+
+xml-http-request の最初のバージョンを書いた当時は use-package とか知らなくてパッケージ修飾子があるんだからシンボル名に prefix とか付けなくてもいいよね、とか思ってstatus とかいう一般的な名前を付けて export したのが敗因です。
+
+今は export しているものはすべて xhr- を頭につけています。将来的には xhr- が付いていないものは削除します。が、一度 export したものはなかなか消せないんです。。。
+＃「常にパッケージ修飾子はつけてください。その分シンボル名は短くします。」という方針もありかもしれませんが。
+
+
+とりあえず以下のようにしてみてください。
+
+>|lisp|
+(unintern 'status)
+(use-package :xml-http-request)
+||<
+
+
+**参考
+
+- [http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=%A5%D1%A5%C3%A5%B1%A1%BC%A5%B8:title=パッケージ]
+- [http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=%A5%D1%A5%C3%A5%B1%A1%BC%A5%B8%A4%CE%B3%B5%CD%D7:title=パッケージの概要]
+- [http://www.geocities.jp/m_hiroi/xyzzy_lisp/abclisp17.html:title=パッケージの基本的な使い方]

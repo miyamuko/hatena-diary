@@ -1,0 +1,62 @@
+
+*sleipnir_api*[Ruby][sleipnir-api] sleipnir-api 0.3.0 リリース!
+
+Sleipnir の COM インターフェイス (Sleipnir.API) を Ruby から利用するためのライブラリを[http://rubyforge.org/forum/forum.php?forum_id=17654:title=更新]しました。
+
+- [http://sleipnir-api.rubyforge.org:title=ドキュメント]
+- [http://rubyforge.org/projects/sleipnir-api:title=プロジェクトページ]
+
+
+**ExecCommand
+
+Sleipnir 1.66 のコマンドをすべて定義しました。コマンドの一覧は以下にあります。
+
+- [http://sleipnir-api.rubyforge.org/examples/exec_command.html:title=Sleipnir.API - ExecCommand に指定可能なコマンドの一覧]
+
+SleipnirAPI::Sleipnir#exec_command に日本語でコマンドを指定できます。
+
+>|ruby|
+pnir = SleipnirAPI.connect
+pnir.exec_command("コピー") # exec_command(57634) と同じ
+||<
+
+
+**SleipnirAPI::Profile
+
+ini ファイルからのデータの取得を簡単にできるようにしました。
+
+たとえば以下のコードで最後に開いていたページの URL をすべて取得できます
+(LastWnd.ini の LastWindow2 セクションにある ItemN_URL をすべて取得)。
+
+>|ruby|
+last_url = pnir.profile.LastWnd.LastWindow2.Item0_URL.list
+||<
+
+
+**Watir
+
+実験的に [http://wtr.rubyforge.org/:title=Watir] に対応しました。
+Sleipnir の各タブごとに Watir オブジェクトを取得できます。
+
+>|ruby|
+pnir = SleipnirAPI.connect
+tab = pnir.open("http://www.google.com")
+sleep(0.1) while tab.busy?
+br = tab.watir
+br.text_field(:name, "q").set("Sleipnir")
+br.button(:name, "btnG").click
+||<
+
+(あまりテストしていないので動かない場合があるかもしれません。)
+
+
+**過去のリリース
+
+- [http://d.hatena.ne.jp/miyamuko/20070729/p1:title=0.2.0]
+- [http://d.hatena.ne.jp/miyamuko/20070722/p1:title=0.1.0]
+
+
+**リンク
+
+- [http://sleipnir-api.rubyforge.org:title=ドキュメント]
+- [http://rubyforge.org/projects/sleipnir-api:title=プロジェクトページ]

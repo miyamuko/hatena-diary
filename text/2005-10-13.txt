@@ -1,0 +1,8 @@
+
+*p1*[xyzzy] 超 instant selenium mode
+
+風邪引いて仕事にならないので <a href="http://www.iburiworks.com/petittools/slp.html">selenium Processor</a> 用のテキストファイルを編集するメジャーモードをでっち上げてみた。
+
+色づけと補完と slp の実行しかできないけどいい感じ。
+instant.l さまさま。
+

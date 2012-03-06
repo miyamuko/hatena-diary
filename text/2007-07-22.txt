@@ -1,0 +1,71 @@
+
+*p1*[Ruby][sleipnir-api] sleipnir-api 0.1.0 リリース
+
+Sleipnir の COM インターフェイス (Sleipnir.API) を Ruby から利用するためのライブラリを[http://rubyforge.org/forum/forum.php?forum_id=16101:title=リリース]しました。
+
+- [http://sleipnir-api.rubyforge.org:title=ドキュメント]
+- [http://rubyforge.org/projects/sleipnir-api:title=プロジェクトページ]
+
+
+** インストール
+
+>>
+gem install sleipnir-api
+<<
+
+
+** 使い方
+
+
+*** 未読タブの一覧を表示
+
+>|ruby|
+require "rubygems"
+require "sleipnir_api"
+
+SleipnirAPI.connect do |pnir|
+  pnir.each do |tab|
+    next if tab.read?
+    doc = tab.document
+    puts "- #{doc.Title}"
+    puts "  #{doc.URL}"
+  end
+end
+||<
+
+
+*** ナビゲートロック中のタブの中からある程度の大きさの画像のリンクを抽出
+
+>|ruby|
+require "rubygems"
+require "sleipnir_api"
+
+EXT = %W(.jpg .png)
+MIN_WIDTH = 400
+MIN_HEIGHT = 300
+
+SleipnirAPI.connect do |pnir|
+  pnir.each do |tab|
+    next unless tab.navigate_lock?
+    imgs = tab.document.getElementsByTagName("img")
+    imgs.each do |img|
+      next if not img.src or img.src == ""
+      next unless EXT.any?{|ext|
+        File.extname(img.src).downcase == ext
+      }
+      next if img.height and img.height.to_i < MIN_HEIGHT
+      next if img.width and img.width.to_i < MIN_WIDTH
+      puts img.src
+    end
+  end
+end
+||<
+
+
+
+
+まだ Sleipnir 使っている人っているのかしら。。。
+
+＃Firefox にまともなインターフェイスがないから私はいまだに Sleipnir 1.66 ユーザ。
+
+＃MozRepl は telnet でコマンドをたたいて文字列解析というのがダサすぎる。

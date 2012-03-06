@@ -1,0 +1,187 @@
+
+*p1*[Ruby]win32ole-pp - WIN32OLE オブジェクトを pp で表示する
+
+
+Ruby で WIN32OLE を使ったアプリを書いていると、以下のような不満があります。
+
+- COM サーバがどのようなメソッドやプロパティを持っているのかが簡単にわからない
+- メソッドの戻り値がどのクラスのオブジェクトなのかが簡単にわからない
+
+で、毎回 foo.ole_methods でメソッドを調べたり、foo.ole_obj_help とかしてクラス名を調べて、あとはグーグルに聞いたりオブジェクトブラウザで調べたりと結構手間がかかったりします。
+
+
+・・・というわけで win32ole-pp というライブラリを作ってみました。
+
+**win32ole-pp ?
+
+win32ole-pp は以下の機能を追加するライブラリです。
+
+- WIN32OLE#to_s をちょっと賢くします。
+- WIN32OLE#pretty_print を追加します。これで WIN32OLE オブジェクトを pp で見やすく表示できます。
+
+**インストール
+
+gem でインストールしてください。
+
+>|ruby|
+gem win32ole-pp
+||<
+
+http://rubyforge.org/projects/win32ole-pp からダウンロードできます。
+
+**使い方
+
+win32ole_pp を require するだけです。
+
+>|ruby|
+require "rubygems"
+require "win32ole_pp"
+||<
+
+**例
+
+***before
+
+まずは従来の出力から。
+
+><pre>
+irb(main):001:0&gt; require "win32ole"
+=&gt; true
+irb(main):002:0&gt; require "pp"
+=&gt; true
+irb(main):003:0&gt; ie = WIN32OLE.new("InternetExplorer.Application")
+=&gt; <span style="color: blue">#&lt;WIN32OLE:0x2983094&gt;</span>
+irb(main):004:0&gt; ie.ole_obj_help
+=&gt; <span style="color: blue">IWebBrowser2</span>
+irb(main):005:0&gt; ie.ole_method("Navigate")
+=&gt; <span style="color: blue">Navigate</span>
+irb(main):006:0&gt; pp ie.ole_method("Navigate")
+<span style="color: blue">Navigate</span>
+=&gt; nil
+irb(main):007:0&gt; ie.Navigate("http://www.ruby-lang.org")
+=&gt; nil
+irb(main):008:0&gt; sleep(1) while ie.ReadyState != 4
+=&gt; nil
+irb(main):009:0&gt; news = ie.document.getElementById("news")
+=&gt; <span style="color: blue">#&lt;WIN32OLE:0x295ee74&gt;</span>
+irb(main):010:0&gt; ul = news.getElementsByTagName("ul")
+=&gt; <span style="color: blue">#&lt;WIN32OLE:0x2937a04&gt;</span>
+irb(main):011:0&gt; puts ul.Item(0).innerText
+SVNへの移行
+ Posted by Shugo Maeda on 22 Dec 2006
+Ruby 1.8.5-p2リリース
+ Posted by usa on 05 Dec 2006
+もう一つのCGIライブラリのDoS脆弱性について
+ Posted by Shugo Maeda on 04 Dec 2006
+=&gt; nil
+irb(main):012:0&gt; ie.Quit
+=&gt; nil
+</pre><
+
+WIN32OLE オブジェクトがすべて #<WIN32OLE:0xXXXXXXXX> となるので、実際の COM クラスを調べるのが面倒ですね。
+あと、WIN32OLE_METHOD オブジェクトの to_s が名前しか表示してくれないので詳細を調べるのも面倒です。
+
+***after
+
+で、win32ole_pp を require すると以下のようになります。
+
+><pre>
+irb(main):013:0&gt; require "rubygems"
+=&gt; true
+irb(main):014:0&gt; require "win32ole_pp"
+=&gt; true
+irb(main):015:0&gt; ie = WIN32OLE.new("InternetExplorer.Application")
+=&gt; <span style="color: blue">#&lt;WIN32OLE:0x34b4364: IWebBrowser2&gt;</span>
+irb(main):016:0&gt; ie.ole_obj_help
+=&gt; <span style="color: blue">#&lt;WIN32OLE_TYPE:0x34b28fc: IWebBrowser2&gt;</span>
+irb(main):017:0&gt; ie.ole_method("Navigate")
+=&gt; <span style="color: blue">#&lt;WIN32OLE_METHOD:0x34b0444: VOID Navigate([in] BSTR URL, [in, optional] VARIANT Flags, [in, optional] VARIANT TargetFrameName, [in, optional] VARIANT PostData, [in, optional] VARIANT Headers)&gt;</span>
+irb(main):018:0&gt; pp ie.ole_method("Navigate")
+<span style="color: blue">#&lt;WIN32OLE_METHOD:0x34ad474: Navigate
+  name="Navigate",
+  dispid=104,
+  helpstring="Navigates to a URL or file.",
+  helpcontext=0,
+  helpfile="",
+  invoke_kind="FUNC",
+  invkind=1,
+  return_type="VOID",
+  return_type_detail=["VOID"],
+  return_vtype=24,
+  size_opt_params=4,
+  size_params=5,
+  offset_vtbl=44,
+  visible?=true,
+  event?=false,
+  event_interface=nil,
+  params=
+   [#&lt;WIN32OLE_PARAM:0x34accf4: URL
+      name="URL",
+      ole_type="BSTR",
+      ole_type_detail=["BSTR"],
+      default=nil,
+      input?=true,
+      output?=false,
+      optional?=false,
+      retval?=false&gt;,
+    #&lt;WIN32OLE_PARAM:0x34acccc: Flags
+      name="Flags",
+      ole_type="VARIANT",
+      ole_type_detail=["PTR", "VARIANT"],
+      default=nil,
+      input?=true,
+      output?=false,
+      optional?=true,
+      retval?=false&gt;,
+    #&lt;WIN32OLE_PARAM:0x34acca4: TargetFrameName
+      name="TargetFrameName",
+      ole_type="VARIANT",
+      ole_type_detail=["PTR", "VARIANT"],
+      default=nil,
+      input?=true,
+      output?=false,
+      optional?=true,
+      retval?=false&gt;,
+    #&lt;WIN32OLE_PARAM:0x34acc7c: PostData
+      name="PostData",
+      ole_type="VARIANT",
+      ole_type_detail=["PTR", "VARIANT"],
+      default=nil,
+      input?=true,
+      output?=false,
+      optional?=true,
+      retval?=false&gt;,
+    #&lt;WIN32OLE_PARAM:0x34acc54: Headers
+      name="Headers",
+      ole_type="VARIANT",
+      ole_type_detail=["PTR", "VARIANT"],
+      default=nil,
+      input?=true,
+      output?=false,
+      optional?=true,
+      retval?=false&gt;]&gt;</span>
+=&gt; nil
+irb(main):019:0&gt; ie.Navigate("http://www.ruby-lang.org")
+=&gt; nil
+irb(main):020:0&gt; sleep(1) while ie.ReadyState != 4
+=&gt; nil
+irb(main):021:0&gt; news = ie.document.getElementById("news")
+=&gt; <span style="color: blue">#&lt;WIN32OLE:0x3495a2c: DispHTMLDivElement&gt;</span>
+irb(main):022:0&gt; ul = news.getElementsByTagName("ul")
+=&gt; <span style="color: blue">#&lt;WIN32OLE:0x3492e6c: DispHTMLElementCollection&gt;</span>
+irb(main):023:0&gt; ie.Quit
+=&gt; nil
+irb(main):024:0&gt;
+</pre><
+
+WIN32OLE オブジェクトには #<WIN32OLE:0xXXXXXXXX クラス名> と COM クラス名が含まれるようになります。
+あと、WIN32OLE_METHOD オブジェクトの to_s が IDL っぽい文字列を返すようになります。
+そして WIN32OLE_METHOD を pp するとさらに詳細な情報が得られます。
+もちろん WIN32OLE オブジェクトや WIN32OLE_TYPE なども pp で詳細を表示できます。
+
+**まとめ
+
+- win32ole 標準の to_s は情報量が少ない。また、pp にも対応していない。
+- win32ole-pp を使うと：
+-- to_s の情報量が増える。
+-- pp で WIN32OLE オブジェクトの詳細な情報が表示可能。

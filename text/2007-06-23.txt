@@ -1,0 +1,70 @@
+
+*rdoc_workaround*[Rake][rdoc] rdoc で生成した html ファイルが IE で見れないことがある件を回避するバッドノウハウ
+
+>http://www.fdiary.net/ml/rails/msg/2241:title>
+論理削除に関しては、acts_as_paranoidっていうプラグインがあります。
+
+http://ar-paranoid.rubyforge.org/
+# IEだと見られないかもしれない
+<<
+
+IE で見るとこうなっちゃうんですよね。
+
+
+>||
+XML ページを表示できません
+(ry
+
+間違った構文がコメント内に使用されました。
+リソース 'http://ar-paranoid.rubyforge.org/' の実行エラーです。
+ライン 8、位置 24
+
+    acts_as_paranoid -- protect your ActiveRecord objects from accidental deletion
+-----------------------^
+||<
+
+
+
+で、これ見て思い出しました (ここからちょっと別の話)。
+
+[http://feeddiscoverapi.rubyforge.org:title=livedoor-feeddiscover] の場合 IE でみると XML がそのまま表示されてしまう問題がありました (今は直ってます)。
+原因は IE の「Content-Type ではなく内容によってファイルを開く」という素敵な機能のため HTML なのに XML と判定されてしまっていたからでした。
+
+[http://win32ole-pp.rubyforge.org/:title=win32ole-pp] の時は問題なかったので、これは「ファイルの先頭を少ししか見てないから livedoor-feeddiscover のときは自動判別に失敗したんだなー」と思い、ファイルの先頭にある HTML コメントを消してみたところうまく自動判別してくれました。
+
+
+ちなみに rdoc が生成した index.html の先頭はこんな感じです。
+
+>|html|
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE html
+     PUBLIC "-//W3C//DTD XHTML 1.0 Frameset//EN"
+     "http://www.w3.org/TR/xhtml1/DTD/xhtml1-frameset.dtd">
+
+<!--
+
+     feeddiscoverapi's livedoor-feeddiscover-1.1.0 Documentation
+
+  -->
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+||<
+
+
+
+というわけで、rdoc を公開している人は Rakefile に以下を追加しておいてもらえると IE コンポーネントブラウザとかを使っている人は助かります。
+
+>|ruby|
+# remove HTML comment for IE.
+task :docs do
+  FileList["doc/**/*.html"].each do |html|
+    c = File.read(html)
+    if c.gsub!(/<!--.*?-->\n/m, "")
+      File.open(html, "w") {|w| w.puts c }
+    end
+  end
+end
+||<
+
+
+
+IE のセキュリティオプションの「ファイル拡張子ではなくコンテンツに基づいてファイルを開く」を無効にしても XML として表示されてしまうのはなんでだろう？

@@ -1,0 +1,66 @@
+
+*xl_cairo_1_8_0*[xyzzy][cairo][xl-cairo]xl-cairo 1.8.0 リリース
+
+xyzzy から cairo を使う xl-cairo 1.8.0 をリリースしました。
+今回から xycairo をやめて xl-cairo にしました。なんとなく見た目がいいからです。
+
+http://miyamuko.s56.xrea.com/xyzzy/cairo/intro.htm
+
+
+添付している dll を [http://cairographics.org/news/cairo-1.8.8/:title=cairo 1.8.8] にしています。
+
+
+**cairo 1.8
+
+cairo 1.6 まで PDF にテキストを出力した場合、画像として出力されていたためテキストのコピペなどはできませんでした。
+cairo 1.8 からはテキストはコピペなどができます。
+
+
+あと、ユーザフォントが追加されましたが残念ながら xl-cairo ではサポートしていません。
+
+
+**参考
+
+- [http://www.clear-code.com/blog/2008/9/27.html:title=rcairo 1.8.0リリース - ククログ(2008-09-27)]
+
+
+
+*how_to_build_cairo_18_for_mingw*[cairo]mingw + msys で cairo 1.8.8 をビルド
+
+mingw + msys 環境で cairo 1.8.8 をビルドをして libcairo-2.dll を作成するまでの手順。
+
+
+**zlib, libpng, pkg-config のビルド＆インストール
+
+[id:miyamuko:20080414:p1] を見てください。
+
+
+**pixman 0.14.0 のビルド＆インストール
+
+pixman 0.14.0 では --disable-shared をつけないと共有ライブラリ (/local/bin/libpixman-1-0.dll) が作成され libcairo-2.dll と動的リンクされます。
+xl-cairo では dll を増やしたくなかったので静的リンクするように --disable-shared をつけて libpixman-1-0.dll が生成されないようにしてビルドしています。
+
+>||
+$ wget http://cairographics.org/releases/pixman-0.14.0.tar.gz
+$ tar zxvf pixman-0.14.0.tar.gz
+$ cd pixman-0.14.0
+$ ./configure --disable-shared
+$ make
+$ make install
+||<
+
+
+**cairo 1.8.8 のビルド＆インストール
+
+>||
+$ wget http://cairographics.org/releases/cairo-1.8.8.tar.gz
+$ tar zxvf cairo-1.8.8.tar.gz
+$ cd cairo-1.8.8
+$ mv /local/lib/libpixman-1.la /local/lib/libpixman-1.la.delete
+$ export PKG_CONFIG_PATH=/mingw/lib/pkgconfig:/local/lib/pkgconfig
+$ ./configure
+$ make
+$ make install
+||<
+
+libpixman-1.la を削除している理由は [id:miyamuko:20080414:p1] を見てください。

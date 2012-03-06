@@ -1,0 +1,34 @@
+
+*p1*[xyzzy] get-file-buffer
+
+get-file-buffer はショートパス名だとだめなのかぁ。
+
+><pre class="source">
+&#40;<span class="keyword1">[]find&#45;file[]</span>[] []<span class="string">[]&quot;c:/Documents and Settings/miyamuko/hoge&#46;txt&quot;[]</span>&#41;
+<span class="keyword3">[]t[]</span>
+&#40;<span class="keyword1">[]get&#45;file&#45;buffer[]</span>[] []<span class="string">[]&quot;c:/Documents and Settings/miyamuko/hoge&#46;txt&quot;[]</span>&#41;
+[]#&lt;buffer: hoge&#46;txt&gt;[]
+&#40;<span class="keyword1">[]get&#45;file&#45;buffer[]</span>[] &#40;[]<span class="keyword1">[]get&#45;short&#45;path&#45;name[]</span>[] []<span class="string">[]&quot;c:/Documents and Settings/miyamuko/hoge&#46;txt&quot;[]</span>[]&#41;&#41;[]
+<span class="keyword3">[]nil[]</span>
+</pre><
+
+ロングパス名に変換すればいいかと思いきや get-long-path-name ってないんですね。
+というわけで適当に作る。
+
+><pre class="source">
+[]&#40;c:define&#45;dll&#45;entry winapi::DWORD GetLongPathName &#40;winapi::LPCSTR winapi::LPCSTR winapi::DWORD&#41;[]
+[]  []<span class="string">[]&quot;kernel32&quot;[]</span>[] []<span class="string">[]&quot;GetLongPathNameA&quot;[]</span>&#41;
+
+&#40;<span class="keyword1">[]defun[]</span>[] get&#45;long&#45;path&#45;name &#40;short&#45;path&#41;[]
+[]  &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;buf &#40;[]<span class="keyword1">[]si:make&#45;chunk[]</span>[] []<span class="keyword3">[]nil[]</span>[] 512&#41;&#41;&#41;[]
+[]    &#40;GetLongPathName &#40;[]<span class="keyword1">[]si:make&#45;string&#45;chunk[]</span>[] short&#45;path&#41; buf 512&#41;[]
+[]    &#40;[]<span class="keyword1">[]si:unpack&#45;string[]</span>[] buf 0&#41;&#41;&#41;[]
+</pre><
+
+FileSystemObject を使ってもいいかも。
+
+><pre class="source">
+&#40;<span class="keyword1">[]get&#45;file&#45;buffer[]</span>[] &#40;get&#45;long&#45;path&#45;name &#40;[]<span class="keyword1">[]get&#45;short&#45;path&#45;name[]</span>[] []<span class="string">[]&quot;c:/Documents and Settings/miyamuko/hoge&#46;txt&quot;[]</span>[]&#41;&#41;&#41;[]
+[]#&lt;buffer: hoge&#46;txt&gt;[]
+</pre><
+

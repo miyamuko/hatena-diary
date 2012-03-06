@@ -1,0 +1,76 @@
+
+*p1*[Eclipse] 複数のパッケージコメントのソースが検出されました
+
+Eclipse 3.0 の Javadoc Wizard と J2SE 5.0 の組み合わせだと Javadoc 作成時に「複数のパッケージコメントのソースが検出されました」というエラーになる。
+
+>||
+javadoc:
+  [javadoc] Generating Javadoc
+  [javadoc] Javadoc execution
+  [javadoc] javadoc: 警告 - パッケージ "foo.bar.baz" に複数のパッケージコメントのソースが検出されました。
+||<
+
+原因は:
+
++ Eclipse でコンパイルすると package.html がビルド先にコピーされる。
++ 3.0 の Javadoc Wizard は classpath に自分のソースのビルド先も追加してくれる。
++ 5.0 の Javadoc は classpath も見る (?) ので、ソースディレクトリとビルド先に package.html があるのを発見し、
++ 文句を言う
+
+>||
+<?xml version="1.0" encoding="UTF-8"?>
+<project default="javadoc">
+  <target name="javadoc">
+    <javadoc classpath="...;FooBar/classes;..."
+||<
+
+3.1 + 5.0 や 3.0 + 1.4 なら問題なし。
+
+
+*p2*[XDoclet] @hibernate.class は未知のタグです。
+
+XDoclet タグがあると Javadoc がうるさい件。
+
+>||
+javadoc:
+  [javadoc] Generating Javadoc
+  [javadoc] Javadoc execution
+  [javadoc] foo.bar.Baz.java:23: 警告 - @hibernate.class は未知のタグです。
+  [javadoc] foo.bar.Baz.java:76: 警告 - @hibernate.property は未知のタグです。
+  [javadoc] foo.bar.Baz.java:93: 警告 - @hibernate.property は未知のタグです。
+  [javadoc] foo.bar.Baz.java:111: 警告 - @hibernate.id は未知のタグです。
+||<
+
+J2SE 5.0 の javadoc だと以下の方法で黙らせることができる。
+http://forum.java.sun.com/thread.jspa?threadID=510867&tstart=150
+
+この方法は 1.4 だと (javadoc のバグで) 使えないため Taglet を自分で書くしかない。
+http://forum.java.sun.com/thread.jspa?threadID=432943&tstart=165
+
+
+実際には <tag name="hibernate.class" enabled="false"/> をビルドファイルに延々と書くより <tag dir="..."/> を使ったほうが見通しがいいね。
+
+>||
+<javadoc xxx="xxx">
+  <tag dir="tagdir"/>
+</javadoc>
+||<
+
+こうしておいて tagdir 配下に「タグ名:X」と書いたファイルを置いておく (X は無視するという意味)。
+これで @hibernate.class とかを無視できる。
+
+>||
+$ ls tagdir
+hibernate.tags
+$ cat tagdir/hibernate.tags
+hibernate.any:X
+hibernate.any-column:X
+hibernate.array:X
+hibernate.bag:X
+hibernate.cache:X
+hibernate.class:X
+  :
+||<
+
+http://ant.apache.org/manual/CoreTasks/javadoc.html
+http://java.sun.com/j2se/1.4.2/docs/tooldocs/windows/javadoc.html#spellcheckingtagnames

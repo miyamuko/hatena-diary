@@ -1,0 +1,20 @@
+
+*sleipnir_api*[Ruby][sleipnir-api] sleipnir-api 0.4.1 リリース!
+
+Sleipnir の COM インターフェイス (Sleipnir.API) を Ruby から利用するためのライブラリを[http://rubyforge.org/forum/forum.php?forum_id=18533:title=更新]しました（ポッキーの日リリース）。
+
+0.4.0 で追加したスクリーンショットの取得が特定のページで動作しない問題を修正しました。
+
+
+**過去のリリース
+
+- [http://d.hatena.ne.jp/miyamuko/20071027/p1:title=0.4.0]
+- [http://d.hatena.ne.jp/miyamuko/20070923/p1:title=0.3.0]
+- [http://d.hatena.ne.jp/miyamuko/20070729/p1:title=0.2.0]
+- [http://d.hatena.ne.jp/miyamuko/20070722/p1:title=0.1.0]
+
+
+**リンク
+
+- [http://sleipnir-api.rubyforge.org:title=ドキュメント]
+- [http://rubyforge.org/projects/sleipnir-api:title=プロジェクトページ]

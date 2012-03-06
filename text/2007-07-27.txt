@@ -1,0 +1,76 @@
+
+*rspec_gem*[Ruby][RSpec]gem install -t で RSpec のテストを実行する
+
+gem install -t xxx で gem のインストール時にテストを実行できるんですが、これは RSpec に対応していません。
+で、gem install -t xxx で無理やり RSpec を実行するようにしてみました。
+
+戦略としては RSpec を実行する Test::Unit::TestCase を作るというのもです。
+
+**Rakefile
+
+Rakefile では Hoe の test_globs に test/spec_runner.rb を指定。
+
+>|ruby|
+hoe = Hoe.new(GEM_NAME, VERS) do |p|
+    :
+  p.test_globs = ["test/spec_runner.rb"]
+    :
+end
+||<
+
+
+
+**test/spec_runner.rb
+
+test/spec_runner.rb では Spec::Runner を作って実行。
+
+>|ruby|
+require 'test/unit'
+
+class SpecRunner < Test::Unit::TestCase
+
+  def load_spec
+    begin
+      require "spec"
+    rescue LoadError
+      retry if require "rubygems"
+      puts "All tests are skipped."
+      return
+    end
+  end
+
+  def with_save_behaviour_runner
+    r = $behaviour_runner if defined?($behaviour_runner)
+    begin
+      yield
+    ensure
+      $behaviour_runner = r if r
+    end
+  end
+
+  def test_spec
+    return unless load_spec
+    require File.join(File.dirname(__FILE__),
+                      '../spec/spec_helper.rb')
+
+    argv = Dir.glob(File.join(File.dirname(__FILE__),
+                    '../spec/**/*_spec.rb'))
+    failures = with_save_behaviour_runner {
+      parser = Spec::Runner::OptionParser.new
+      $behaviour_runner = parser.create_behaviour_runner(
+        argv, $stdout, $stderr, true)
+      $behaviour_runner.run(argv, false)
+    }
+    unless failures.zero?
+      fail "#{failures} failure(s)."
+    end
+  end
+
+end
+||<
+
+
+
+
+
+いちおう動いているっぽいです。

@@ -1,0 +1,24 @@
+
+*p1*[xyzzy] cygwin-mount 0.1
+
+>||
+225 名前：名無しさん＠お腹いっぱい。[sage] 投稿日：2005/11/29(火) 01:23:50 ID:9EwAI9lY0
+meadowのcygwin-mount.elに相当するようなものはありますか？
+||<
+
+たぶんないと思います。なので作ってみました。
+
+- アーカイブ: http://miyamuko.s56.xrea.com/xyzzy/archives/cygwin-mount.zip
+- ドキュメント: http://miyamuko.s56.xrea.com/xyzzy/cygwin-mount.html
+
+(cygwin-mount-activate) を実行すると *before-find-file-hook* で cygwin のパスを windows のパスに書き換えて開きます。
+
+
+しかし、コマンドラインから xyzzy /etc/foo とすると勝手にドライブ文字がつけられてしまいうまくいかないことがあります (詳しい話はドキュメントに書いてあります)。
+ということに実装したあとに気づきました。。。orz
+
+こんなんでよければどうぞ。
+
+
+まぁ、cygwin-mount.l に頼るより cygwin 側で cygpath を使ったほうが確実でしょう。
+私はそうしてます (id:miyamuko:20050909)。

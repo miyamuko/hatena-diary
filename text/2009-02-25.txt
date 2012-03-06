@@ -1,0 +1,100 @@
+
+*pci_sim_pearon*[xyzzy][PCI]xyzzy lisp で 2.3.3 ピアソン相関によるスコア
+
+http://d.hatena.ne.jp/miyamuko/20090224/pci_sim_euclid_distance のつづき。
+
+[http://www.amazon.co.jp/exec/obidos/ASIN/9780596529321/miyamuko-22/ref=nosim/:title=集合知プログラミング]の「2 章 推薦を行う」の「2.3.3 ピアソン相関によるスコア」を xyzzy lisp で写経します。
+
+
+ソースは CodeRepos に入れてあります。
+
+http://coderepos.org/share/browser/lang/xyzzy/pci-code/site-lisp/chapter2/recommendations.l
+
+なお、オリジナルのソースコード (Python) は以下からダウンロードできます。
+
+http://oreilly.com/catalog/9780596529321/
+
+
+**ピアソン相関
+
+>|lisp|
+(defun sim-pearson (prefs person1 person2)
+  (flet ((sum (fn &rest args)
+           (apply #'+ (apply #'mapcar fn args)))
+         (pow2 (n)
+           (expt n 2))
+         (items (prefs person)
+           (mapcar #'car ($ prefs person)))
+         (ratings (prefs person items)
+           (mapcar #'(lambda (item)
+                       ($ prefs person item))
+                   items)))
+    ;; 両者が互いに評価しているアイテムのリストを取得
+    (let* ((si (intersection (items prefs person1)
+                             (items prefs person2)
+                             :test #'equal))
+           (n (length si)))
+      ;; 共に評価しているアイテムがなければ 0 を返す
+      (if (zerop n)
+          0
+        (let* ((ratings1 (ratings prefs person1 si))
+               (ratings2 (ratings prefs person2 si))
+               ;; すべての嗜好を合計する
+               (sum1 (sum #'identity ratings1))
+               (sum2 (sum #'identity ratings2))
+               ;; 平方を合計する
+               (sum1sq (sum #'pow2 ratings1))
+               (sum2sq (sum #'pow2 ratings2))
+               ;; 積を合計する
+               (psum (sum #'* ratings1 ratings2)))
+          (let* ((num (- psum (/ (* sum1 sum2) n)))
+                 (den (sqrt (* (- sum1sq (/ (pow2 sum1) n))
+                               (- sum2sq (/ (pow2 sum2) n))
+                               ))))
+            (if (zerop den)
+                0
+              (/ num den))))))))
+||<
+
+今回は合計を取る sum と 2 乗する pow2 を flet でローカルに定義。
+sum には合計する前に適用する関数を指定できるようにしてみた。
+
+これで、2乗して合計するには以下のようにすればよい。
+>|lisp|
+(sum #'pow2 '(1 2 3))       ;;=> (+ 1 4 9) == 14
+||<
+
+単純に合計する場合は、引数をそのまま返す [http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=identity:title=identity] を指定する。
+
+>|lisp|
+(sum #'identity '(1 2 3))   ;;=> (+ 1 2 3) == 6
+||<
+
+[http://xyzzy.s53.xrea.com/reference/wiki.cgi?p=mapcar:title=mapcar]のようにリストを複数指定することもできるので、積の合計も簡単にできます。
+
+>|lisp|
+(sum #'* '(1 2 3) '(1 3 5)) ;;=> (+ (* 1 1) (* 2 3) (* 3 5)) == 22
+||<
+
+
+**テスト
+
+>|lisp|
+(sim-pearson *critics* "Lisa Rose" "Gene Seymour")
+0.396059
+||<
+
+次は p14 2.3.4 から。
+
+
+**参考
+
+- [http://aoki2.si.gunma-u.ac.jp/lecture/Soukan/pearson.html:title]
+- [http://kusuri-jouhou.com/statistics/soukan.html:title]
+- [http://ja.wikipedia.org/wiki/%E9%80%B6%EF%BD%B8%E9%AB%A2%EF%BD%A2%E8%8F%AB%E3%82%88%E7%84%9A:title=相関係数]
+-- 相関係数といえばピアソンの積率相関係数
+-- Pearson product-moment correlation coefficient
+- [http://d.hatena.ne.jp/ksmemo/20080801/p1:title]
+-- Perl による実装
+- [http://d.hatena.ne.jp/sugyan/20081007/1223331850:title]
+-- Java による実装

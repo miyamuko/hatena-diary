@@ -1,0 +1,50 @@
+
+*sleipnir_api*[Ruby][sleipnir-api] sleipnir-api 0.4.0 リリース!
+
+Sleipnir の COM インターフェイス (Sleipnir.API) を Ruby から利用するためのライブラリを[http://rubyforge.org/forum/forum.php?forum_id=18533:title=更新]しました。
+
+- [http://sleipnir-api.rubyforge.org:title=ドキュメント]
+- [http://rubyforge.org/projects/sleipnir-api:title=プロジェクトページ]
+
+
+**スクリーンショットの取得
+
+Sleipnir で表示しているページのスクリーンショットを保存する以下のメソッドを追加しました。
+
+- SleipnirAPI::Sleipnir#capture_browser
+-- Sleipnir のウィンドウを丸ごとキャプチャ
+- SleipnirAPI::Tab#capture_page
+-- Web ページの内容をスクロールしながらすべてキャプチャ
+
+こんな感じで使います。
+
+>|ruby|
+require "rubygems"
+require "sleipnir_api"
+
+SleipnirAPI.connect do |pnir|
+  hatena = pnir.open("http://www.hatena.ne.jp")
+  sleep 0.1 while hatena.busy?
+  hatena.capture_page("hatena.bmp")  # はてなのトップページ全部を hatena.bmp に保存
+end
+||<
+
+まだ Bitmap 形式でしか保存できません。RMagick との連携はこれから作ります。
+
+
+
+なお、スクリーンショット取得周りのコードの多くは Perl の [http://search.cpan.org/~psme/Win32-CaptureIE/:title=Win32::CaptureIE] および [http://search.cpan.org/~psme/Win32-Screenshot/:title=Win32::Screenshot] を参考にさせていただきました。
+ありがとうございます。
+
+
+**過去のリリース
+
+- [http://d.hatena.ne.jp/miyamuko/20070923/p1:title=0.3.0]
+- [http://d.hatena.ne.jp/miyamuko/20070729/p1:title=0.2.0]
+- [http://d.hatena.ne.jp/miyamuko/20070722/p1:title=0.1.0]
+
+
+**リンク
+
+- [http://sleipnir-api.rubyforge.org:title=ドキュメント]
+- [http://rubyforge.org/projects/sleipnir-api:title=プロジェクトページ]

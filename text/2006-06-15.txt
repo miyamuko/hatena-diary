@@ -1,0 +1,29 @@
+
+*p1*[xyzzy][livedoor-reader-notifier] livedoor-reader-notifier で Bloglines をチェック
+
+f:id:miyamuko:20060615110629j:image
+
+
+
+livedoor-reader-notifier (id:miyamuko:20060614) を以下のように設定すれば Bloglines Notifier もどきの出来上がり。
+
+
+
+><pre class="source">
+&#40;<span class="keyword1">[]require[]</span>[] []<span class="string">[]&quot;livedoor&#45;reader&#45;notifier&quot;[]</span>&#41;
+
+<span class="comment">[];; Bloglines Notifier もどき[]
+</span>&#40;<span class="keyword1">[]setf[]</span>[] ed::&#42;livedoor&#45;reader&#45;notifier&#45;user&#42;[]
+[]      []<span class="string">[]&quot;ここに Bloglines のアカウント &#40;メル番&#41; を入力&quot;[]</span>&#41;
+&#40;<span class="keyword1">[]setf[]</span>[] ed::&#42;livedoor&#45;reader&#45;notifier&#45;format&#42;[]
+[]      []<span class="string">[]&quot;Bloglines &#45; ~A 件の未読&quot;[]</span>&#41;
+&#40;<span class="keyword1">[]setf[]</span>[] ed::&#42;livedoor&#45;reader&#45;notifier&#45;reader&#45;url&#42;[]
+[]      []<span class="string">&quot;</span><span class="fg4 bg0"><span class="underline">[]http://www&#46;bloglines&#46;com/myblogs[]</span></span><span class="string">&quot;</span>&#41;
+&#40;<span class="keyword1">[]setf[]</span>[] ed::&#42;livedoor&#45;reader&#45;notifier&#45;rpc&#45;url&#42;[]
+[]      []<span class="string">&quot;</span><span class="fg4 bg0"><span class="underline">[]http://rpc&#46;bloglines&#46;com/update?ver=1&amp;user=[]</span></span><span class="string">&quot;</span>&#41;
+
+</pre><
+
+
+
+メニューやツールバーにアイコンを追加 (はまだ実装していないけど) する部分を共通化して、各種 notifier api にさくっと対応できるようにしたいですね。

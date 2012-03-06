@@ -1,0 +1,80 @@
+
+*hatena_haiku_mode*[xyzzy][hatena-haiku-mode]hatena-haiku-mode 0.1.0 リリース!
+
+hatena-haiku-mode を更新しました。
+hatena-haiku-mode は xyzzy 用のはてなハイクを専用ブラウザです。
+
+http://miyamuko.s56.xrea.com/xyzzy/hatena-haiku-mode/intro.htm
+
+
+**ボスが来た機能
+
+z を押すとハイクバッファを切り替えて隠します。
+
+元に戻すには M-x haiku-show を実行してください。
+
+
+**はてなスター対応
+
+はてなスターに対応しました。[http://miyamuko.s56.xrea.com/xyzzy/hatena-star/intro.htm:title=hatena-star]と[http://miyamuko.s56.xrea.com/xyzzy/json/intro.htm:title=json] が必要なのでインストールしてください。
+
+S (Shift + s) でカーソル下のエントリに対して☆をつけることができます。
+スターを付けるときの引用文はセレクション（選択）かリージョンで指定します。エントリ内に選択（リージョン）範囲が存在しない場合は引用なしになります。
+
+
+*hatena_star_exceed*[xyzzy][hatena-haiku-mode]hatena-haiku-mode ではてなスターを連射
+
+hatena-haiku-mode のはてなスター機能には以下の３形態が存在します。
+
+- アクセルモード
+- エクセリオンモード
+- エクシードモード
+
+
+**アクセルモード
+
+機能が制限されたモードです。これがデフォルト値です。
+
+アクセルモードでは☆をつけている最中にもう一回☆をつけることはできません。Shift + s を押しっぱなしにしても☆は1秒に 1-2 個しか付けれません。
+
+
+**エクセリオンモード
+
+限定解除したモードです。
+
+エクセリオンモードでは☆をつけている最中にも☆をつけることができます。Shift + s を押しっぱなしにすることで☆を連射できますが、同時☆数が 100 個に到達すると中断させられます。
+
+
+**エクシードモード
+
+エクセリオンモードの 100 個制限がないモードです。全力全開で☆を連射することができます。
+
+<a href="http://www.flickr.com/photos/8878415@N08/2287522551/" title="hatena-star-exceed by miyamuko, on Flickr"><img src="http://farm4.static.flickr.com/3224/2287522551_b33db611ac_o.png" width="384" height="242" alt="hatena-star-exceed" /></a>
+
+
+**モードの変更
+
+.xyzzy などで以下のように設定することでデフォルトのモードを変更できます。
+
+>|lisp|
+;; アクセルモードにする
+(haiku-star-limiter-release :accel)
+
+;; エクセリオンモードにする
+(haiku-star-limiter-release :excellion)
+
+;; エクシードモードにする
+(haiku-star-limiter-release :exceed)
+||<
+
+またはミニバッファから M-x haiku-star-limiter-release としてモード (accel, excellion, exceed) を入力します。
+ミニバッファで変更した場合は xyzzy を再起動すると設定が消えます。
+
+
+**注意
+
+調子に乗って☆を連射していると、はてな側から数分間 403 Forbidden を喰らうことになります。
+と言うわけで連射した数だけ☆が付くわけではありません。
+
+
+自重してください。自重してください。

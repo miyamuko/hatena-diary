@@ -1,0 +1,281 @@
+
+*how_to_build_cairo_1_10_0_using_mingw*[cairo]mingw + msys で cairo 1.10.0 をビルド
+
+
+mingw + msys 環境で [http://cairographics.org/news/cairo-1.10.0/:title=cairo 1.10.0] をビルドをして /usr にインストールする手順です。
+Free Type とか OpenGL とかそういう難しそうなのは無視しています。
+
+この手順をシェルスクリプトの形でまとめたのを [http://gist.github.com/571967:title=Gist に張っておいた]ので、再現したい人はそれを使うと楽かもしれません。
+
+
+
+**mingw と msys のインストール
+
+
+しばらく見ない間に mingw 自体のインストール方法がずいぶん変わっていたので mingw のインストールからはじめます。
+
+[http://sourceforge.net/projects/mingw/:title=MinGW - Minimalist GNU for Windows] からインストーラ (mingw-get-inst-20100831.exe) をダウンロードしてインストールします。
+インストールするコンポーネントの選択画面で MSYS Basic System を選択してください。
+
+
+**mingw-get
+
+
+スタートメニュー→プログラム→MinGW→MinGW Shell でシェルを起動し mingw-get コマンドで必要なものをインストールします。
+
+>|sh|
+$ mingw-get update
+$ mingw-get install msys-wget msys-unzip msys-perl
+||<
+
+mingw-get update は最初に必ず行ってください。デフォルトのカタログだと最低限のパッケージ情報しかないためインストールに失敗します。
+
+mingw-get の使い方は以下のような感じです。詳細は [http://mingw.cvs.sourceforge.net/viewvc/mingw/mingw-get/README?view=markup:title=README] や [http://www.mingw.org/wiki/Getting_Started:title=Getting Started | MinGW] を参照してください。
+
+>|sh|
+$ mingw-get update
+$ mingw-get install package ...
+$ mingw-get upgrade package ...
+$ mingw-get remove package ...
+||<
+
+ちなみに現状は remove は動かないらしいです。
+
+なお、[http://permalink.gmane.org/gmane.comp.gnu.mingw.msys/4692:title=従来の msysDTK インストーラなどはもう更新する予定はなく]、今後は mingw-get を使うようになるとのことです。mingw-get 便利ですね。
+
+
+**mingw-get の怖い話
+
+
+mingw-get を使っていると突然コマンドが使えなくなるときがあります。
+
+>|sh|
+$ mingw-get update
+sh: mingw-get: command not found
+||<
+
+Ctrl-C で止めた場合や引数を間違えた場合などにこういう状態になります。
+どうも、mingw-get で致命的なエラーが起きるとコマンドをリネームして使えなくするという斬新な機能(?)のようです。
+
+落ち着いて以下のコマンドで元に戻せばまた使えます。
+
+>|sh|
+mv /mingw/bin/mingw-get.exe~ /mingw/bin/mingw-get.exe
+mv /mingw/libexec/mingw-get/mingw-get-0.dll~ /mingw/libexec/mingw-get/mingw-get-0.dll
+||<
+
+参考: [http://blog.harapeko.jp/2010/09/02/mingw-install/:title=MinGW のインストール方法がガラッと変わっていた (と思ったら元に戻っていた?) 件]
+
+
+**pkg-config のインストール
+
+
+cairo のビルドに必要になる pkg-config は [http://www.gtk.org/download-windows.html:title=GTK+ - Download for Windows] にあるバイナリを利用します。
+pkg-config.exe は glib に依存しているので glib もインストールします。
+
+>|sh|
+$ wget http://ftp.gnome.org/pub/gnome/binaries/win32/glib/2.24/glib_2.24.0-2_win32.zip
+$ wget http://ftp.gnome.org/pub/gnome/binaries/win32/dependencies/pkg-config_0.23-3_win32.zip
+$ unzip -n glib_2.24.0-2_win32.zip -d /usr
+$ unzip -n pkg-config_0.23-3_win32.zip -d /usr
+$ rm glib_2.24.0-2_win32.zip
+$ rm pkg-config_0.23-3_win32.zip
+$ pkg-config --version
+0.23
+||<
+
+
+**zlib 1.2.5 のビルド＆インストール
+
+
+[http://www.zlib.net/:title=zlib] 1.2.5 をビルドしてインストールします。
+
+***ポイント
+
+- SHARED_MODE=1 で dll もインストールする
+- BINARY_PATH, INCLUDE_PATH, LIBRARY_PATH を指定する必要がある
+- libzdll.a と言う名前は libtool の規則に従っていないので libz.dll.a という名前でコピーしておく
+-- -lzdll としてリンクしている人もいそうなので libzdll.a と libz.dll.a の両方を用意しておくといいかもしれません。お好みで。
+
+>|sh|
+$ ZLIB_VERSION=1.2.5
+$ wget http://zlib.net/zlib-$ZLIB_VERSION.tar.gz
+$ tar zxvf zlib-$ZLIB_VERSION.tar.gz
+$ cd zlib-$ZLIB_VERSION
+$ make install -f win32/Makefile.gcc SHARED_MODE=1 BINARY_PATH=/usr/bin INCLUDE_PATH=/usr/include $ LIBRARY_PATH=/usr/lib
+$ cp /usr/lib/libzdll.a /usr/lib/libz.dll.a
+||<
+
+参考: [http://d.hatena.ne.jp/ousttrue/20091113/1258095613:title]
+
+
+少しバージョンは古いです (現時点では 1.2.3) が mingw-get で楽をするという手もあります。
+インストール先は /usr/{include,lib} になります。
+
+>|sh|
+$ mingw-get install msys-zlib
+||<
+
+
+**libpng 1.4.3 のビルド＆インストール
+
+
+[http://www.libpng.org/pub/png/libpng.html:title=libpng] は 1.4 系列と 1.2 系列がありますが、ここでは最新の 1.4.3 をインストールします。
+
+***ポイント
+
+- configure && make したくなるのをグッとこらえて scripts/makefile.mingw を使いましょう
+-- 普通に configure && make してしまうと関数がなにも export されなくて、あとで cairo とリンクするときに undefined reference png_hogehoge がいっぱいでてしまいます
+- scripts/makefile.mingw はソースディレクトリで動かしたほうがいいです
+-- 違うディレクトリで SRCDIR を指定して make すると make install がうまく動きません
+- scripts/makefile.mingw の install を /bin/install に書き換えます
+++ make install 時に install コマンドを実行しますが、ソースディレクトリに INSTALL というテキストファイルが存在する
+++ mingw (というか Windows) は大文字小文字の違いは無視する
+++ msys ではデフォルトでカレントディレクトリに PATH が通っている
+-- 以上の理由により make install は INSTALL というテキストファイルを実行するという悲劇が起きます
+-- そこで Makefile を書き換えて INSTALL が実行されないようにします
+-- その他の回避策としては 1) mv INSTALL INSTALL.txt する、2) カレントディレクトリに PATH を通さないなどがあります
+- zlib のインストール先を ZLIBINC と ZLIBLIB で指定する
+-- ZLIBINC のデフォルト値は空なので必ず指定します (zlib を /mingw にインストールした場合は不要)
+-- ZLIBLIB のデフォルト値は /usr/lib なので今回のケースだと省略可能です
+
+>|sh|
+$ LIBPNG_VERSION=1.4.3
+$ wget http://download.sourceforge.net/libpng/libpng-$LIBPNG_VERSION.tar.gz
+$ tar zxvf libpng-$LIBPNG_VERSION.tar.gz
+$ cd libpng-$LIBPNG_VERSION
+$ perl -pe "s{\tinstall}{\t/bin/install}g" scripts/makefile.mingw > Makefile
+$ make install prefix=/usr ZLIBINC=/usr/include ZLIBINC=/usr/lib
+||<
+
+参考: [http://www.up-cat.net/%25BA%25A3%25B9%25B9MinGW%2B2009%252E06%25286%2529%2Bzlib%252Clibjpeg%252Clibpng.html:title]
+
+
+**pixman 0.18.4 のビルド＆インストール
+
+
+[http://cairographics.org/releases/:title=pixman 0.18.4] をビルドします。
+configure に --disable-shared はつけずに共有ライブラリと static ライブラリを両方インストールします。
+
+>|sh|
+$ PIXMAN_VERSION=0.18.4
+$ wget http://cairographics.org/releases/pixman-$PIXMAN_VERSION.tar.gz
+$ tar zxvf pixman-$PIXMAN_VERSION.tar.gz
+$ cd pixman-$PIXMAN_VERSION
+$ ./configure --prefix=/usr
+$ make
+$ make install
+||<
+
+
+**cairo 1.10.0 のビルド＆インストール
+
+
+まず libpng と pixman-1 がちゃんとインストールできているか pkg-config で確認しましょう。
+インストール先によっては PKG_CONFIG_PATH の設定が必要です。
+
+>|sh|
+$ export PKG_CONFIG_PATH=/usr/lib/pkgconfig
+$ pkg-config --libs libpng
+-LC:/MinGW/msys/1.0/lib -lpng14 -lz -lm
+$ pkg-config --libs pixman-1
+-LC:/MinGW/msys/1.0/lib -lpixman-1
+||<
+
+本命の cairo をビルドします。
+
+***ポイント
+
+- Free Type とかよく分からないので disable
+-- disable しないと configure で怒られます
+-- そういえばオプションが 1.8 から変わっていますね (--disable-freetype → --disable-ft)
+- libpng や pixman は pkg-config からパスを取得できるのですが、zlib は pkg-config の設定ファイルがないので configure の CFLAGS と LDFLAGS で場所を指定する
+
+>|sh|
+$ CAIRO_VERSION=1.10.0
+$ wget http://cairographics.org/releases/cairo-$CAIRO_VERSION.tar.gz
+$ tar zxvf cairo-$CAIRO_VERSION.tar.gz
+$ cd cairo-$CAIRO_VERSION
+$ ./configure --prefix=/usr --disable-ft CFLAGS=-I/usr/include LDFLAGS=-L/usr/lib
+$ make
+$ make install
+||<
+
+make install せずに dll だけ欲しい場合は以下のようにすればよいでしょう。
+
+>|sh|
+$ cp src/.libs/libcairo-2.dll libcairo-2.dll
+$ strip libcairo-2.dll
+||<
+
+***完成
+
+>|sh|
+$ ls -1 *cairo* *png* *pixman* *zlib* | grep dll
+libcairo-2.dll
+libcairo-script-interpreter-2.dll
+libpixman-1-0.dll
+libpng14.dll
+zlib1.dll
+||<
+
+
+***static link
+
+
+上記手順だと zlib, libpng, pixman すべてが動的にリンクされ、実行には zlib1.dll, libpng14.dll, libpixman-1-0.dll が必要になります。
+
+>|sh|
+$ objdump -p libcairo-2.dll | grep "DLL Name:"
+        DLL Name: libpixman-1-0.dll
+        DLL Name: libpng14.dll
+        DLL Name: zlib1.dll
+        DLL Name: GDI32.dll
+        DLL Name: KERNEL32.dll
+        DLL Name: msvcrt.dll
+        DLL Name: MSIMG32.DLL
+        DLL Name: msvcrt.dll
+        DLL Name: USER32.dll
+||<
+
+zlib, libpng, pixman を static link したい場合は共有ライブラリ用のファイルを削除すれば OK です。
+
+>|sh|
+# static link with zlib
+mv -f /usr/lib/libzdll.a /usr/lib/libzdll.a.delete
+mv -f /usr/lib/libz.dll.a /usr/lib/libz.dll.a.delete
+# static link with libpng
+mv -f /usr/lib/libpng.dll.a /usr/lib/libpng.dll.a.delete
+mv -f /usr/lib/libpng14.dll.a /usr/lib/libpng14.dll.a.delete
+# static link with pixman
+mv -f /usr/lib/libpixman-1.dll.a /usr/lib/libpixman-1.dll.a.delete
+mv -f /usr/lib/libpixman-1.la /usr/lib/libpixman-1.la.delete
+||<
+
+cairo を再リンクします。
+
+>|sh|
+$ find . -name "*.a" -or -name "*.la" | xargs rm -f
+$ make
+$ objdump -p src/.libs/libcairo-2.dll | grep "DLL Name:"
+   DLL Name: GDI32.dll
+   DLL Name: KERNEL32.dll
+   DLL Name: msvcrt.dll
+   DLL Name: MSIMG32.DLL
+   DLL Name: msvcrt.dll
+   DLL Name: USER32.dll
+||<
+
+けど、あまりキレイなやり方じゃないですね。削除しなくても configure のオプションとかで何とか static link にする方法ってないでしょうか？
+
+
+**過去のビルド
+
+
+- [http://d.hatena.ne.jp/miyamuko/20090702/how_to_build_cairo_18_for_mingw:title]
+- [http://d.hatena.ne.jp/miyamuko/20080414/p1:title]
+
+
+
+
+以上です。

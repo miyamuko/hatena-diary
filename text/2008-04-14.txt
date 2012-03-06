@@ -1,0 +1,82 @@
+
+*xycairo*[xyzzy][cairo][xycairo]xycairo 1.6.0 リリース
+
+xyzzy から Cairo を使う xycairo 1.6.0 をリリースしました。
+
+http://miyamuko.s56.xrea.com/xyzzy/cairo/intro.htm
+
+添付している dll を [http://cairographics.org/news/cairo-1.6.4/:title=4/12 にリリースされた cairo 1.6.4] に更新して、1.6 で追加された関数を定義しました。
+
+
+*p1*[cairo]Mingw + Msys で cairo 1.6.4 をビルド
+
+Mingw + Msys 環境で cairo 1.6.4 をビルドをして libcairo-2.dll を作成するまで。
+
+
+**zlib, libpng のビルド＆インストール
+
+[http://sourceforge.net/project/showfiles.php?group_id=2435&package_id=233332:title=User Contributed: mingwPORT] から zlib と libpng をダウンロードしてインストール。
+
+
+**pkg-config のインストール
+
+以下をダウンロードして mingw/bin にインストール
+
+- http://www.gimp.org/~tml/gimp/win32/pkg-config-0.20.zip
+- http://www.gimp.org/~tml/gimp/win32/libiconv-1.9.1.bin.woe32.zip
+- http://www.gimp.org/~tml/gimp/win32/gettext-0.14.5.zip
+- http://ftp.gnome.org/pub/gnome/binaries/win32/glib/2.12/glib-2.12.11.zip
+
+
+**pixman 0.10.0 のビルド＆インストール
+
+>||
+$ wget http://cairographics.org/releases/pixman-0.10.0.tar.gz
+$ tar zxvf pixman-0.10.0.tar.gz
+$ cd pixman-0.10.0
+$ ./configure
+$ make
+$ make install
+||<
+
+
+**cairo 1.6.4 のビルド＆インストール
+
+>||
+$ wget http://cairographics.org/releases/cairo-1.6.4.tar.gz
+$ tar zxvf cairo-1.6.4.tar.gz
+$ cd cairo-1.6.4
+$ mv /local/lib/libpixman-1.la /local/lib/libpixman-1.la.delete
+$ export PKG_CONFIG_PATH=/mingw/lib/pkgconfig:/local/lib/pkgconfig
+$ ./configure --disable-freetype
+$ make
+$ make install
+||<
+
+
+libpixman-1.la があると以下のように警告が出て pixman とリンクできない (undefined reference がいっぱい) ので削除してビルドする。
+
+>||
+$ make
+/bin/sh ../libtool --tag=CC   --mode=link gcc -I. (省略)
+*** Warning: This system can not link to static lib archive C:/MinGW/msys/1.0/local/lib/libpixman-1.la.
+*** I have the capability to make that library automatically link in when
+*** you link to this library.  But I can only do this if you have a
+*** shared version of the library, which you do not appear to have.
+      :
+ gcc -shared .libs/libcairo-2.dll.def (省略) .libs/libcairo.dll.a
+Creating library file: .libs/libcairo.dll.a
+      :
+.libs/libcairo_la-cairo-win32-font.o: In function `cairo_win32_scaled_font_show_glyphs':
+c:/home/miyamuko/workspace/lab/cairo/src/cairo-1.6.4/src/cairo-win32-font.c:1379:
+undefined reference to `pixman_image_set_component_alpha'
+collect2: ld returned 1 exit status
+make: *** [libcairo.la] Error 1
+||<
+
+
+**参考
+
+- [http://tm86eublog.blog42.fc2.com/blog-entry-210.html:title=おいふぉりーのぶろぐ GTK+ の cairo を最新版にする@Windows]
+- [http://www.glom.org/wiki/index.php?title=WindowsBuildInstructions:title=WindowsBuildInstructions - Glom]
+- [http://www.mail-archive.com/gnumeric-list@gnome.org/msg00944.html:title=Re: LibGSF on Windows]

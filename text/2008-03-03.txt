@@ -1,0 +1,21 @@
+
+*xyscope*[xyzzy][cscope]xyzzy の Built-in 関数のソースに JUMP!
+
+xyzzy lisp 書いていて、「この関数の実装が気になる！」という時に、C++ で実装された Built-in 関数に一発でジャンプするものを作ってみました。とりあえず CodeRepos に放り込んであります。
+
+http://coderepos.org/share/browser/lang/xyzzy/xyscope/site-lisp/xyscope.l
+
+C-F4 を押すとカーソル下の Lisp 関数や変数に対応する C++ のソースを cscope を使って検索します。
+たとえば package-name にカーソルをおいて C-F4 すると package.cc の Fpackage_name に JUMP! できます。
+
+<a href="http://www.flickr.com/photos/8878415@N08/2307005423/" title="xyscope by miyamuko, on Flickr"><img src="http://farm3.static.flickr.com/2400/2307005423_e4a59d4ac1_o.png" width="469" height="373" alt="xyscope" /></a>
+
+
+**cscope への要望とか
+
+- cscope-find-global-definition とかに引数でシンボル名とソースディレクトリを指定できるようにしてほしいです。
+-- 今は default-directory を差し替えつつ、内部シンボルである cscope::cscope-query を直接使ってます。
+- Cscope Result バッファで n, p で移動するときに、ソースバッファのマッチした部分を強調表示してほしいです。
+-- 画面の真ん中にあるってのが分かっていても、いつも目で探してしまいます。
+-- q で閉じるときに強調を消すとか。
+- cscope/macros.l から export しているものは export しなくていいはず。

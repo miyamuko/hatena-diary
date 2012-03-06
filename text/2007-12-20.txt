@@ -1,0 +1,46 @@
+
+*p1*[Ruby]指定したサイズの文字列の作成
+
+**ベンチマークスクリプト
+
+>|ruby|
+require "Benchmark"
+require "dl"
+
+n = 100000000
+Benchmark.bmbm(10) do |x|
+  x.report("DL.malloc")     { DL.malloc(n).to_s(n) }
+  x.report("pack(Z)")       { [""].pack("Z#{n}") }
+  x.report("String#*")      { "\0" * n }
+  x.report("String#rjust")  { "".rjust(n, "\0") }
+  x.report("String#ljust")  { "".ljust(n, "\0") }
+  x.report("String#center") { "".center(n, "\0") }
+end
+||<
+
+
+**結果
+
+>||
+ruby 1.8.6 (2007-09-24 patchlevel 111) [i386-mswin32]
+Rehearsal -------------------------------------------------
+DL.malloc       0.110000   0.188000   0.298000 (  0.281000)
+pack(Z)         1.140000   0.312000   1.452000 (  1.344000)
+String#*        3.578000   0.110000   3.688000 (  3.516000)
+String#rjust    0.735000   0.093000   0.828000 (  0.765000)
+String#ljust    0.609000   0.110000   0.719000 (  0.750000)
+String#center   0.719000   0.125000   0.844000 (  0.766000)
+---------------------------------------- total: 7.829000sec
+
+                    user     system      total        real
+DL.malloc       0.140000   0.219000   0.359000 (  0.360000)
+pack(Z)         0.828000   0.297000   1.125000 (  1.125000)
+String#*        3.484000   0.078000   3.562000 (  3.625000)
+String#rjust    0.625000   0.078000   0.703000 (  0.750000)
+String#ljust    0.547000   0.359000   0.906000 (  0.859000)
+String#center   0.688000   0.140000   0.828000 (  0.797000)
+||<
+
+
+
+DL.malloc が最速?

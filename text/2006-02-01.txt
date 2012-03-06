@@ -1,0 +1,67 @@
+
+*p1*[xyzzy][Perl] カーソル下のモジュールを開く (2)
+
+<blockquote cite="http://d.hatena.ne.jp/miyamuko/20060131#p1" title="カーソル下のモジュールを開く">
+<p>
+これは毎回 perl を起動していますけど、最初に一回起動して @INC を出力させてあとは自分で検索したほうが早そうですね。
+</p>
+</blockquote>
+
+というわけで毎回 perl を起動するのをやめてみた。
+
+><pre class="source">
+&#40;<span class="keyword1">[]defvar[]</span>[] &#42;perl5lib&#45;list&#42; '&#40;&#41;&#41;  []<span class="comment">[]; '&#40;&quot;c:/hoge/lib&quot; &quot;c:/foo/lib&quot;&#41;[]
+</span>
+&#40;<span class="keyword1">[]defun[]</span>[] perl&#45;find&#45;module &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]interactive[]</span>&#41;
+[]  &#40;[]<span class="keyword1">[]let&#42;[]</span>[] &#40;&#40;end &#40;[]<span class="keyword1">[]save&#45;excursion[]</span>[] &#40;[]<span class="keyword1">[]skip&#45;chars&#45;forward[]</span>[] []<span class="string">[]&quot;a&#45;zA&#45;Z0&#45;9_:&quot;[]</span>[]&#41; &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;&#41;[]
+[]         &#40;beg &#40;[]<span class="keyword1">[]save&#45;excursion[]</span>[] &#40;[]<span class="keyword1">[]skip&#45;chars&#45;backward[]</span>[] []<span class="string">[]&quot;a&#45;zA&#45;Z0&#45;9_:&quot;[]</span>[]&#41; &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;&#41;[]
+[]         &#40;module &#40;[]<span class="keyword1">[]buffer&#45;substring[]</span>[] beg end&#41;&#41;&#41;[]
+[]    &#40;[]<span class="keyword1">[]message[]</span>[] module&#41;[]
+[]    &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">&lt;</span>[] beg end&#41;[]
+[]      &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;r &#40;perl&#45;search&#45;module &#40;perl&#45;module&#45;to&#45;file module&#41;[]
+[]                                   &#40;perl&#45;include&#45;path&#41;&#41;&#41;&#41;[]
+[]        &#40;[]<span class="keyword1">[]when[]</span>[] r &#40;[]<span class="keyword1">[]find&#45;file[]</span>[] r&#41;&#41;&#41;&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] perl&#45;search&#45;module &#40;base include&#45;list&#41;[]
+[]  &#40;[]<span class="keyword1">[]dolist[]</span>[] &#40;inc include&#45;list&#41;[]
+[]    &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;file &#40;[]<span class="keyword1">[]merge&#45;pathnames[]</span>[] base inc&#41;&#41;&#41;[]
+[]      &#40;[]<span class="keyword1">[]when[]</span>[] &#40;[]<span class="keyword1">[]file&#45;exist&#45;p[]</span>[] file&#41;[]
+[]        &#40;[]<span class="keyword1">[]return[]</span>[] file&#41;&#41;&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defvar[]</span>[] &#42;perl&#45;include&#45;path&#45;cache&#42; []<span class="keyword3">[]nil[]</span>&#41;
+&#40;<span class="keyword1">[]defun[]</span>[] perl&#45;include&#45;path &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]or[]</span>[] &#42;perl&#45;include&#45;path&#45;cache&#42;[]
+[]      &#40;[]<span class="keyword1">[]setf[]</span>[] &#42;perl&#45;include&#45;path&#45;cache&#42; &#40;perl&#45;include&#45;path0&#41;&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] perl&#45;include&#45;path0 &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]mapcar[]</span>[] '[]<span class="keyword1">[]map&#45;slash&#45;to&#45;backslash[]</span>
+[]          &#40;[]<span class="keyword1">[]append[]</span>[] &#40;[]<span class="keyword1">[]mapcan[]</span>[] &#40;[]<span class="keyword1">[]lambda[]</span>[] &#40;path&#41;[]
+[]                            &#40;[]<span class="keyword1">[]split&#45;string[]</span>[] path #\;&#41;&#41;[]
+[]                          &#40;[]<span class="keyword1">[]append[]</span>[] &#40;[]<span class="keyword1">[]list[]</span>[] &#40;perl&#45;get&#45;inc&#41;&#41;[]
+[]                                  &#40;[]<span class="keyword1">[]si:getenv[]</span>[] []<span class="string">[]&quot;PERL5LIB&quot;[]</span>[]&#41;&#41;&#41;[]
+[]                  &#42;perl5lib&#45;list&#42;&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] perl&#45;get&#45;inc &#40;&#41;[]
+[]  &#40;[]<span class="keyword1">[]save&#45;window&#45;excursion[]</span>
+[]    &#40;[]<span class="keyword1">[]save&#45;excursion[]</span>
+[]      &#40;[]<span class="keyword1">[]unwind&#45;protect[]</span>
+[]          &#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;status &#40;[]<span class="keyword1">[]execute&#45;shell&#45;command[]</span>[] &#40;perl&#45;print&#45;inc&#45;command&#41;[]
+[]                                               []<span class="keyword3">[]nil[]</span>[] []<span class="string">[]&quot;&#42;perl&#42;&quot;[]</span>[]&#41;&#41;[]
+[]                &#40;output &#40;[]<span class="keyword1">[]buffer&#45;substring[]</span>[] &#40;[]<span class="keyword1">[]point&#45;min[]</span>[]&#41; &#40;[]<span class="keyword1">[]progn[]</span>[] &#40;[]<span class="keyword1">[]goto&#45;eol[]</span>[]&#41; &#40;[]<span class="keyword1">[]point[]</span>[]&#41;&#41;&#41;&#41;&#41;[]
+[]            &#40;[]<span class="keyword1">[]unless[]</span>[] &#40;[]<span class="keyword1">[]zerop[]</span>[] status&#41;[]
+[]              &#40;[]<span class="keyword1">[]plain&#45;error[]</span>[] output&#41;&#41;[]
+[]            output&#41;[]
+[]        &#40;[]<span class="keyword1">[]delete&#45;buffer[]</span>[] &#40;[]<span class="keyword1">[]find&#45;buffer[]</span>[] []<span class="string">[]&quot;&#42;perl&#42;&quot;[]</span>[]&#41;&#41;&#41;&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] perl&#45;print&#45;inc&#45;command &#40;&amp;optional &#40;perl []<span class="string">[]&quot;perl&quot;[]</span>[]&#41;&#41;[]
+[]  &#40;[]<span class="keyword1">[]concat[]</span>[] perl []<span class="string">[]&quot; &#45;e \&quot;print join ';', @INC\&quot;&quot;[]</span>[]&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defun[]</span>[] perl&#45;module&#45;to&#45;file &#40;module&#41;[]
+[]  &#40;[]<span class="keyword1">[]concat[]</span>[] &#40;[]<span class="keyword1">[]substitute&#45;string[]</span>[] module []<span class="string">[]&quot;::&quot;[]</span>[] []<span class="string">[]&quot;/&quot;[]</span>[]&#41; []<span class="string">[]&quot;&#46;pm&quot;[]</span>[]&#41;&#41;[]
+
+&#40;<span class="keyword1">[]add&#45;hook[]</span>[] '&#42;perl&#45;mode&#45;hook&#42;[]
+[]          &#40;[]<span class="keyword1">[]lambda[]</span>[] &#40;&#41;[]
+[]            &#40;[]<span class="fg12 bg0">[]local&#45;set&#45;key[]</span>[] '&#40;#\C&#45;c #\RET&#41; 'perl&#45;find&#45;module&#41;&#41;&#41;[]
+</pre><
+

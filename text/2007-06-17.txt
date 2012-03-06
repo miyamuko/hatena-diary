@@ -1,0 +1,134 @@
+
+*p1*[Ruby][livedoor-feeddiscover] livedoor-feeddiscover 1.0.0 リリース
+
+>http://mono.kmc.gr.jp/~yhara/d/?date=20070612#p03:title=あるURLからフィードを見つけてくれるライブラリ、FeedDiscover>
+FeedDiscoverを使うと、あるURLのHTMLを解析してフィードのURLを見つけてくれます。
+
+**短所
+-遅い(パーサのせい？)
+-たまにフィードを見つけられない
+--例：http://log.ttsky.net/
+--例：http://blog.stco.info/
+-たまにHTMLがパースできなくて落ちる
+--例：http://jmettraux.wordpress.com/
+<<
+
+[http://rubyforge.org/projects/feed-discover/:title=feed-discover] を使ってみたら激遅だったの [http://wiki.livedoor.jp/staff_reader/d/Feed%20Discover%20API:title=livedoor Feed Discover API] を Ruby から利用するライブラリを作って [http://rubyforge.org/forum/forum.php?forum_id=15184:title=1.0.0 をリリースしました]。
+
+- [http://rubyforge.org/projects/feeddiscoverapi:title=livedoor-feeddiscover プロジェクトページ]
+- [http://feeddiscoverapi.rubyforge.org:title=ドキュメント]
+
+超高速に RSS/Atom フィードの auto discovery ができます。また、↑で feed-discover じゃフィードが見つけられないとされているものも発見できました。
+
+
+** インストール
+
+>>
+gem install -y livedoor-feeddiscover
+<<
+
+[http://rubyforge.org/projects/json/:title=json] が必要です。
+
+
+
+** 使い方
+
+
+*** 指定したリンクのフィードを探す
+
+>|ruby|
+require "rubygems"
+require "livedoor/api/feed_discover"
+
+feedlist = Livedoor::API::FeedDiscover.find(
+  "http://rubyforge.org/",
+  "http://raa.ruby-lang.org/")
+puts feedlist.feedlinks
+||<
+
+- URL は複数指定可能です。配列で指定しても一個づつ並べてもいいです (中で flatten してます)。
+- 最後の引数で HTTP ヘッダを指定できます。
+
+>|ruby|
+urls = %W{
+  http://rubyforge.org/
+  http://raa.ruby-lang.org/
+}
+feedlist = Livedoor::API::FeedDiscover.find(
+  urls,
+  "http://search.cpan.org/",
+  "User-Agent" => "hogehoge")
+||<
+
+
+*** 指定した URL からリンクを張られているサイトのフィードを探す方法
+
+Livedoor::API::FeedDiscover.find_from を使うと、指定した URL からリンクが張られているサイトのフィードを一気に探せます。
+
+これを使えば [http://mono.kmc.gr.jp/~yhara/d/?date=20070611#p01:title=RubyKaigi2007 発表者のBlog]や [http://www.rubyist.net/~kazu/samidare/:title=Ruby hotlinks] に補足されている blog や [http://planetruby.0x42.net/:title=Planet Ruby] に補足されている blog の OPML を簡単に生成できます。
+
+>|ruby|
+require "rubygems"
+require "livedoor/api/feed_discover"
+
+feedlist = Livedoor::API::FeedDiscover.find_from(
+  "http://www.rubyist.net/~kazu/samidare/")
+puts feedlist.opml
+||<
+
+#find と同じで最後の引数で HTTP ヘッダを指定できます。
+
+
+
+** ベンチマーク
+
+URL 毎に HTTP GET と HTML のパースが走る feed-discover と比べるのはフェアじゃない気がしますが、このぐらい違います (feed-discover は HTML のパースが激重な気がする)。
+
+>||
+> ruby examples/benchmark.rb
+Start auto-discover for 4 blogs ------------------------------------
+http://www.rubyist.net/~matz/
+http://rubyforge.org/
+http://raa.ruby-lang.org/
+http://jruby.codehaus.org/
+
+                               user     system      total        real
+feed-discover              5.234000   0.234000   5.468000 ( 13.797000)
+livedoor-feed-discover     0.000000   0.000000   0.000000 (  0.078000)
+
+Results ------------------------------------------------------------
+feed-discover: found 3 feeds.
+livedoor-f-d:  found 3 feeds.
+
+Diffs --------------------------------------------------------------
+http://www.rubyist.net/~matz/
+  feed-discover: http://www.rubyist.net/~matz/comments.rdf, http://www.rubyist.net/~matz/index.rdf
+  livedoor-f-d:  http://www.rubyist.net/~matz/index.rdf
+||<
+
+
+
+** 注意
+
+>http://wiki.livedoor.jp/staff_reader/d/Feed%20Discover%20API:title=Feed Discover API - livedoor Reader まとめサイト - livedoor Wiki（ウィキ）>
+**検出されるフィードについて
+このAPIによって検出されるフィードは「RSS Auto-Discovery」の結果とは異なります。 
+Auto-Discoveryで検出可能なフィードであっても、livedoor Readerに登録されていないフィードの場合は検出されません。
+<<
+
+これを含めてリンク先の Feed Discover API の制限事項はよく読んでから利用してください。
+
+livedoor-feed-discover でフィードが見つからなかったものだけ、feed-discover してみるといいかもしれません。
+
+
+
+** リンク
+
+速さの秘密はこのあたりかな。
+
+- [http://ma.la/files/yapcasia2007/:title=YAPC::Asia LT ブラウザ履歴からオートディスカバリ]
+- [http://la.ma.la/blog/diary_200706062320.htm:title=最速インターフェース研究会 :: ハッシュキーの存在チェックを超高速に省メモリで行う方法]
+- [http://wiki.livedoor.jp/staff_reader/d/Feed%20Discover%20API:title=livedoor Feed Discover API]
+
+
+livedoor++

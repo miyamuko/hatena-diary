@@ -1,0 +1,33 @@
+
+*p1*[GitHub] GitHub の markdown でページ内リンク
+
+
+[http://github.github.com/github-flavored-markdown/:title=GitHub Flavored Markdown] でページ内の見出しにリンクするには以下のように書くみたいですね。
+
+>||
+## <a name="section1"> セクション1
+
+なんたらかんたら。
+
+## <a name="section2"> セクション2
+
+なんたらかんたら。
+
+詳細は [セクション1](#section1) を参照。
+||<
+
+
+
+ちなみに [http://michelf.com/projects/php-markdown/extra/#header-id:title=Markdown Extra] ではもう少し簡単に書けますが、GitHub の Markdown では利用できません。
+
+>||
+## セクション1 {#section1}
+
+なんたらかんたら。
+
+## セクション2 {#section1}
+
+なんたらかんたら。
+
+詳細は [セクション1](#section1) を参照。
+||<

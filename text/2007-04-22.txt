@@ -1,0 +1,42 @@
+
+*p1*[xyzzy][yaml-syck]yaml-syck 0.0.2
+
+yaml-syck 0.0.2 をリリースしました。
+
+http://miyamuko.s56.xrea.com/xyzzy/yaml-syck/
+
+基本的にバグ修正リリースです。
+
+ひとつ、非互換があって syck-load に :map :hash-table を指定したときに返る hash-table のテスト関数を equalp から equal に変更しています。gethash するときにキー名の大文字小文字を区別するようになります。
+
+equalp の方がいい人は :hash-table-test オプションを指定してください。
+
+>|lisp|
+(syck-load "{a: b}" :map :hash-table :hash-table-test #'equalp)
+||<
+
+
+
+あと、YAML 形式でのダンプ (emitter) はまだ実装していません。
+以下の 2 つが S式にすると一緒になってしまうんですよねぇ。
+
+>|lisp|
+(yaml-syck:syck-load "
+- key: [1, 2]   # map
+- [key, 1, 2]   # seq
+")
+;; => ((("key" 1 2)) ("key" 1 2))
+||<
+
+- パースしてくねくねするだけで S式が好きなら :map :sexp で。
+- パースしてくねくねした結果を YAML 形式で保存したいなら :map :hash-table で。
+で十分な気がしないでもないけど hash-table はあまり好きじゃない派としては sexp もちゃんと扱いたいところ (スキーマを指定してもらうのもありか)。
+
+[http://emacsen.org/2006/03/26-json:title=json.el] は配列を vector、ハッシュ (Object) を alist で表現して区別できるようにしてますね。で、json-array-type を 'list にするとやっぱり区別できない。
+
+どうしよっかな。
+
+
+**過去のリリース
+
+- 0.0.1 (id:miyamuko:20070325)

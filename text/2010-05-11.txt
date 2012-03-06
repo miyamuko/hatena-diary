@@ -1,0 +1,42 @@
+
+*trend_tamago_fullfeed*[TV][pipes]WBS のトレンドたまごの全文配信フィード
+
+最近引っ越してアナログな TV を全部捨ててしまった @miyamuko です。
+TV がないけどドラゴンボール改と[http://www.tv-tokyo.co.jp/danshigohan/:title=男子ごはん]だけは欠かさずチェックしています。
+ワンセグで。ガラケーでよかったｗ
+
+
+**閑話休題。
+
+さて、テレビ東京系列で毎週月曜日〜金曜日 夜11時00分から絶賛放送中のワールドビジネスサテライトにトレンドたまごっていうコーナがあってこれが面白いです。
+
+どう見ても明和電機としか思えない[http://www.tv-tokyo.co.jp/wbs/trend_tamago/post_697.html:title=立ったまま眠ることができる装置]や、[http://www.tv-tokyo.co.jp/wbs/trend_tamago/post_646.html:title=指の動きを認知して、携帯電話の画面に触らなくも操作ができる]夢が広がるような装置まで、新商品や新技術を５分ぐらいで玉石混合に紹介するコーナーです。
+
+もちろん、あの[http://bbu.kayac.com/:title=YUREX]も当然のごとく[http://www.tv-tokyo.co.jp/wbs/trend_tamago/tt_96.html:title=紹介済み]。さすがトレたま。目の付け所が違います。
+
+
+で、トレンドたまごのバックナンバーは[http://www.tv-tokyo.co.jp/wbs/trend_tamago/:title=テレビ東京のサイト]で見れるのですが（しかも、TV 放送した動画付き!）、とても残念なことに RSS とか Atom とかを配信していません。
+
+
+というわけで、Yahoo Pipes で全文配信フィードを作ってみました。
+
+登録は↓からできます。
+
+
+http://pipes.yahoo.com/miyamuko/wbs_trend_tamago
+
+
+これで、明日から変態的なガジェット通として職場や学校でモテること間違いなしです！
+
+
+
+**以下、余談。
+
+[http://www.tv-tokyo.co.jp/wbs/trend_tamago/:title=テレビ東京のサイト]のソースを見てもらえば分かるんですが、ページ下部にあるバックナンバーは JavaScript で動的に出力されていて、Pipes の Fetch Page で取得してもバックナンバーのリンクは取得できません。
+
+ただバックナンバーを生成する JavaScript 自体は document.write を繰り返すだけの簡単なソースだったため、Pipes の Fetch Data で JavaScript ソースを取得して Loop + String Tokenizer で分割してリンクを抽出するという処理でなんとかなりました。
+
+
+
+ASIN:4048950487:detail:small
+ASIN:404895086X:detail:small

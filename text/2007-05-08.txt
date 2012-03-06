@@ -1,0 +1,44 @@
+
+*p1*[xyzzy][cairo]xyzzy/cairo - 2D グラフィックライブラリ - 0.0.1 リリース
+
+xyzzy から [http://cairographics.org/:title=cairo] を使うためのライブラリを作りました。
+
+http://miyamuko.s56.xrea.com/xyzzy/cairo/intro.htm
+
+cairo 1.4.6 の dll を同梱していますので、xyzzy/cairo をインストールすればすぐに使えます。
+
+
+**cairo?
+
+なんか Firefox3 とか Eclipse の SWT に使われてるオープンソースなグラフィックライブラリらしいです。
+
+
+**cl-cairo とどう違うんですか?
+
+[http://www.cliki.net/cl-cairo:title=cl-cairo] は実装が中途半端だり、Windows はスルー気味だったりしたで、フルスクラッチで書きました。
+
+
+**xyzzy 以外の Common Lisp 処理系で動きますか?
+
+今は動きません。
+
+でも極力 editor パッケージの関数は使わないようにし、FFI の定義部分(define-dll-entry とかそういうの) もマクロで一段ラップして書いているのでそのうちなんとかなるかもしれません。
+
+
+**ドキュメントがないんですけど?
+
+すいません。xyzzy/cairo のドキュメントは何も書いていません。ソースがドキュメントです。というか、[http://www.cairographics.org/manual/:title=cairo のリファレンス] が充実しているので書く気が起きません。
+
+うそです。いつか書きます。
+
+
+で、cairo の日本語ドキュメントはあまり見かけないんですが、[http://www.gnome.gr.jp/docs/g2-platform-overview/ch03.html#cairo:title=Gnome のドキュメント] が cairo でできることを簡単にまとめてて結構分かりやすいです。
+
+とりあえず上記リファレンスと site-lisp/cairo/examples/*.l を眺めていれば使い方は分かると思います。
+
+
+まだまだ荒削りですが遊んでみたい人はどうぞ。
+
+
+
+以上です。

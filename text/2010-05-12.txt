@@ -1,0 +1,33 @@
+
+*mosh_owata*[mosh]lambda 式を短くする shorten ライブラリでオワタ＼(＾o＾)／
+
+>http://d.hatena.ne.jp/higepon/20100511/1273584001:title>
+lambda 式を短くするshorten ライブラリを公開しました。
+<<
+
+
+>http://d.hatena.ne.jp/mjt/20100508/p1#c1273273909:title>
+shiro
+ちなみに ^_ も便利ですよ。引数を無視したい時に。顔文字みたいになりますが。
+<<
+
+
+こうですね。わかります。
+
+>|scheme|
+mosh> (import (rnrs)
+        (shorten))
+#<unspecified>
+mosh>
+
+mosh> (define ^）／ #\f)
+#<unspecified>
+mosh> (define (＼ fn arg)
+  (set! ^）／ arg)
+  (fn #f))
+#<unspecified>
+mosh>
+
+mosh> (＼ (^o ^）／) "オワタ")
+"オワタ"
+||<

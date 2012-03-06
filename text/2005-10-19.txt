@@ -1,0 +1,34 @@
+
+*p1*[xyzzy] Altを離してもメニューがへこまないようにする
+
+http://www.august.oor.jp/logs/boo/index.php?itemid=36 経由
+
+><blockquote>
+<pre>
+869 [2005/10/17(月) 03:49:57 ID:WaYPBFZV0] 名無しさん＠お腹いっぱい。 
+
+ Altキー押して離すとどうしても一番上のメニューがベコっと行くんですが 
+ こればっかりは抑制できないカナ？ 
+ M-xしようとしてやめた時激しくうざいことになる
+</pre>
+</blockquote><
+
+つ
+>||
+Index: toplev.cc
+===================================================================
+--- toplev.cc	(revision 7)
++++ toplev.cc	(working copy)
+@@ -779,6 +779,8 @@
+     case WM_SYSKEYUP:
+       app.last_vkeycode = -1;
+       app.active_frame.fnkey->unset_vkey (wparam);
++      if (msg == WM_SYSKEYUP && xsymbol_value (Venable_meta_key) != Qnil)
++          return 0;
+       break;
+ 
+     case WM_SYSKEYDOWN:
+||<
+
+
+まったく何もテストしていませんが。

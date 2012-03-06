@@ -1,0 +1,51 @@
+
+*p1*[bookmarklet]YouTube とかで見ている動画をニコニコ動画で開く bookmarklet
+
+YouTube とかで今みている動画を [http://www.nicovideo.jp/:title=ニコニコ動画] で開くブックマークレットを作ってみました。
+
+以下を bookmark しておけば、YouTube とかで見ている動画をすぐにニコニコ動画で開くことができます。
+
+>||
+javascript:(function(){var h=location.href;var s;var v;if(h.indexOf('youtube.com')>0){s='ut';v=document.getElementsByName('video_id').item(0).value;}else if(h.indexOf('ameba.jp')>0){s='am';v=document.getElementsByName('movie').item(1).value;}if(v){window.open('http://www.nicovideo.jp/watch?v='+s+v);undefined;}})()
+||<
+
+
+
+上のソースを見やすくしたのを以下に張っておきます。
+
+>|javascript|
+javascript:(function(){
+    var h=location.href;
+    var s;
+    var v;
+    if(h.indexOf('youtube.com')>0){
+        s='ut';
+        v=document.getElementsByName('video_id').item(0).value;
+    }else if(h.indexOf('ameba.jp')>0){
+        s='am';
+        v=document.getElementsByName('movie').item(1).value;
+    }
+    if(v){
+        window.open(
+            'http://www.nicovideo.jp/watch?v='
+            +s+v);
+        undefined;
+    }
+})()
+||<
+
+
+
+↑を一行にまとめてコピーするためにこんな xyzzy lisp を適当に作りました。
+
+>|lisp|
+(defun copy-as-bookmarklet (s e)
+  (interactive "r")
+  (if (< e s) (rotatef s e))
+  (let* ((str (buffer-substring s e))
+         (bookmark (substitute-string
+                    (substitute-string str "^ +" "")
+                    "\n" "")))
+    (copy-to-clipboard bookmark)
+    (message "~A 文字" (length bookmark))))
+||<

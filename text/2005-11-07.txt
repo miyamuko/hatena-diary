@@ -1,0 +1,34 @@
+
+*p1*[xyzzy][] を含むディレクトリで grep-dialog できない
+
+[] を含むディレクトリで grep-dialog すると「ディレクトリが見つかりません」ってなる。
+
+><pre class="source">
+<span class="comment">[];; tmp の下に a と a&#91;1&#93; というディレクトリを作ってみる[]
+</span>&#40;<span class="keyword1">[]create&#45;directory[]</span>[] []<span class="string">[]&quot;D:/tmp/a/sub&#45;a&quot;[]</span>&#41;
+<span class="keyword3">[]t[]</span>
+&#40;<span class="keyword1">[]create&#45;directory[]</span>[] []<span class="string">[]&quot;D:/tmp/a&#91;1&#93;/sub&#45;a&#91;1&#93;&quot;[]</span>&#41;
+<span class="keyword3">[]t[]</span>
+<span class="comment">[];; 確認してみる[]
+</span>&#40;<span class="fg12 bg0">[]glob[]</span>[] []<span class="string">[]&quot;D:/tmp/&quot;[]</span>&#41;
+&#40;<span class="string">[]&quot;a/&quot;[]</span>[] []<span class="string">[]&quot;a&#91;1&#93;/&quot;[]</span>&#41;
+<span class="comment">[];; D:/tmp/a の下は・・・sub&#45;a と。[]
+</span>&#40;<span class="fg12 bg0">[]glob[]</span>[] []<span class="string">[]&quot;D:/tmp/a&quot;[]</span>&#41;
+&#40;<span class="string">[]&quot;sub&#45;a/&quot;[]</span>&#41;
+<span class="comment">[];; D:/tmp/a&#91;1&#93; の下は・・・orz[]
+</span>&#40;<span class="fg12 bg0">[]glob[]</span>[] []<span class="string">[]&quot;D:/tmp/a&#91;1&#93;&quot;[]</span>&#41;
+<span class="keyword3">[]nil[]</span>
+<span class="comment">[];; a1 を作る[]
+</span>&#40;<span class="keyword1">[]create&#45;directory[]</span>[] []<span class="string">[]&quot;D:/tmp/a1/sub&#45;a1&quot;[]</span>&#41;
+<span class="keyword3">[]t[]</span>
+<span class="comment">[];; いやぁ、そっちじゃなくて・・・[]
+</span>&#40;<span class="fg12 bg0">[]glob[]</span>[] []<span class="string">[]&quot;D:/tmp/a&#91;1&#93;&quot;[]</span>&#41;
+&#40;<span class="string">[]&quot;sub&#45;a1/&quot;[]</span>&#41;
+</pre><
+
+[] はワイルドカード文字だから仕様と言えば仕様なんだけど grep-dialog できないのはつらいなぁ。
+
+というか、grep-dialog のディレクトリ名にワイルドカードを指定できたことを初めて知ったというか。
+
+
+IE でファイルをダウンロードすると勝手に [1] とか付けてくるんだよねぇ。。。

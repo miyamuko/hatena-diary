@@ -1,0 +1,49 @@
+
+*p1*[xyzzy][cairo]xyzzy/cairo - 2D グラフィックライブラリ - 0.0.2 リリース
+
+xycairo 0.0.2 をリリースしました。
+
+http://miyamuko.s56.xrea.com/xyzzy/cairo/intro.htm
+
+主にバグフィックスがメインです。
+
+で、examples 周りに致命的なバグがありました。
+examples 配下のスクリプトを eval-buffer で実行したことがある人は、たぶん $XYZZYHOME/lisp/startup.lc が壊れていると思います。
+壊れていた場合は startup.lc を削除して、バイトコンパイルし直してください。
+ごめんなさい。
+
+
+*p2*[cairo]cairo_show_glyphs の動作がなんか怪しい
+
+>http://miyamuko.s56.xrea.com/xyzzy/cairo/intro.htm>
+cairo-show-glyphs に複数の glyph を渡した場合にうまく描画されない問題を回避。 
+<<
+
+なんか cairo_show_glyphs に複数の glyph を渡すとうまくいかない場合があったんですよね。
+で、0.0.2 では cairo-show-glyphs に渡された glyph のリストを、Lisp レベルでループして 1 個づつ C の cairo_show_glyphs に渡すようにして回避しました。
+これで examples/show-glyphs.l が動きます。
+
+
+**テストプログラム
+
+こんな C プログラムでテストしました。
+
+http://miyamuko.s56.xrea.com/test/show-glyphs.c
+
+10x10 のマトリックスに glyph を描画します。
+引数には cairo_show_glyphs に渡す glyph の個数を指定します。10 を指定したなら 10 個づつ cairo_show_glyphs を呼びます (＝合計 10 回呼ばれる)。
+
+
+**実行結果
+
+|*引数|10|11|12|
+|*結果|[http://miyamuko.s56.xrea.com/test/show-glyphs-10.png:image]|[http://miyamuko.s56.xrea.com/test/show-glyphs-11.png:image]|[http://miyamuko.s56.xrea.com/test/show-glyphs-12.png:image]|
+
+
+10 個づつ cairo_show_glyphs するのがうまくいっているのは、x 方向に 10 個のフォントを配置しているからだと思います。
+テストプログラムの FONT_NUM_X を 11 に変えると 10 個だとアウト。11 なら ok。
+
+Ubuntu の cairo 1.4.2 (apt) と 1.4.6 (自分でビルド) で同じプログラムを動かしたところ普通に動いたので、cairo の Windows 周りが変なのかしら?
+あとで報告する(かも・・・英語めんどくさいなぁ)。
+
+環境は Windows XP + mingw + gcc 3.4.2 + cairo 1.4.6 です。

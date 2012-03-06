@@ -1,0 +1,185 @@
+
+*pci_hatena_bookmark_dataset*[xyzzy][PCI]xyzzy lisp で集合知プログラミング - 2.6 データセットを作る
+
+[http://www.amazon.co.jp/exec/obidos/ASIN/9780596529321/miyamuko-22/ref=nosim/:title=集合知プログラミング]を xyzzy lisp で写経します。
+
+
+ソースは CodeRepos に入れてあります。
+
+http://coderepos.org/share/browser/lang/xyzzy/pci-code/site-lisp/chapter2/hateburec.l
+
+なお、オリジナルのソースコード (Python) は以下からダウンロードできます。
+
+http://oreilly.com/catalog/9780596529321/
+
+
+オリジナルは delicious からデータセットを作成していましたが、ここでははてなブックマークのデータを使うことにします。
+
+
+
+**2.6 データセットを作る
+
+以下のはてなブックマーク API を叩くために [http://miyamuko.s56.xrea.com/xyzzy/xml-http-request/intro.htm:title=xml-http-request] と [http://miyamuko.s56.xrea.com/xyzzy/json/intro.htm:title=json] を require します。
+
+- [http://d.hatena.ne.jp/keyword/%a4%cf%a4%c6%a4%ca%a5%d6%a5%c3%a5%af%a5%de%a1%bc%a5%af%a5%d5%a5%a3%a1%bc%a5%c9%bb%c5%cd%cd:title]
+- [http://d.hatena.ne.jp/keyword/%A4%CF%A4%C6%A4%CA%A5%D6%A5%C3%A5%AF%A5%DE%A1%BC%A5%AF%A5%A8%A5%F3%A5%C8%A5%EA%A1%BC%BE%F0%CA%F3%BC%E8%C6%C0API?kid=184075:title]
+
+>|lisp|
+(require "xml-http-request")
+(require "json")
+
+(load "recommendations.l")
+||<
+
+はてなブックマークの RSS は xml-http-request の xhr-response-xml で XML から S式に変換します。
+ちなみに変換後の S式は [http://www7a.biglobe.ne.jp/~hat/xyzzy/dl.html:title=xml-parse-modoki] と互換性があります。
+
+それらのアクセッサを定義しておきます。
+
+>|lisp|
+(defun xml-tag (sxml) (car sxml))
+(defun xml-attr (sxml) (cadr sxml))
+(defun xml-child-nodes (sxml) (cddr sxml))
+(defun xml-first-child (sxml) (car (xml-child-nodes sxml)))
+||<
+
+はてなブックマーク API を叩く関数の定義。
+実際に使うのは get-popular, get-userposts, get-urlposts です。
+
+>|lisp|
+(defun utf8-url-encode (v)
+  (when v
+    (xhr::url-encode-value v *encoding-utf8n*)))
+
+;; rss の <item> だけをまとめて返す
+(defun xhr-response-rss-items (res)
+  (mapcar #'xml-child-nodes     ; get <item> child nodes for each items.
+          (cdr                  ; get <items> (skip <channel> tag)
+           (xml-child-nodes     ; get <rdf:RDF> child nodes
+            (car                ; get first <rdf:RDF>
+             (xhr:xhr-response-xml res))))))
+
+;; <item> から link, title, dc:date のみを抽出して alist
+(defun rss->alist (rss)
+  (mapcar #'(lambda (item)
+              (mapcar #'(lambda (key)
+                          (cons (copy-seq key)
+                                (xml-first-child ($$ item key))))
+                      '("link" "title" "dc:date")))
+          rss))
+
+;; json の parse
+(defun xhr-response-json (res)
+  (json:json-decode (xhr:xhr-response-text res) :strict nil))
+
+
+;; 人気エントリの取得
+(defun get-popular (&key tag (sort :hot))
+  (rss->alist
+   (xhr:xhr-get (if tag
+                    (format nil "http://b.hatena.ne.jp/t/~A"
+                            (utf8-url-encode tag))
+                  "http://b.hatena.ne.jp/entrylist")
+                :query `(:sort ,sort
+                         :mode :rss)
+                :key 'xhr-response-rss-items
+                )))
+
+;; 指定したユーザのエントリの取得
+(defun get-userposts (user &key tag)
+  (rss->alist
+   (xhr:xhr-get (format nil "http://b.hatena.ne.jp/~A/rss"
+                          (utf8-url-encode user))
+                :query (when tag `(:tag ,tag))
+                :encoding *encoding-utf8n*
+                :key 'xhr-response-rss-items
+                )))
+
+;; 指定した URL をブクマしているユーザを取得
+(defun get-urlposts (url)
+  ($ (xhr:xhr-get "http://b.hatena.ne.jp/entry/json/"
+                  :query `(:url ,url
+                           :callback :dummy)
+                  :key 'xhr-response-json)
+     "bookmarks"))
+||<
+
+
+上記関数を利用してデータセットを作成します。
+
+>|lisp|
+(defun get-user-list (tag &key (count 5))
+  (remove-duplicates
+   (mapcan #'(lambda (p1)
+               (let ((link ($ p1 "link")))
+                 (mapcar #'(lambda (p2)
+                             ($ p2 "user"))
+                         ;; このリンクを投稿したユーザを 30 人まで取得
+                         (take 30 (get-urlposts link)))))
+           ;; popular な投稿を count 番目まで取得
+           (take count (get-popular :tag tag)))
+   :test #'string=))
+
+(defun fill-items (user-list &key tag)
+  (let* ((user-posts (mapcar #'(lambda (user)
+                                 (cons user (get-userposts user :tag tag)))
+                             user-list))
+         ;; すべてのユーザによって投稿されたリンクを 30 件まで取得
+         (all-links (remove-duplicates
+                     (mapcan #'(lambda (user/posts)
+                                 (mapcar #'(lambda (post)
+                                             ($ post "link"))
+                                         (take 30 (cdr user/posts))))
+                             user-posts
+                             )
+                     :test #'string=)))
+    ;; ((user1 ((link1 . 1) (link2 . 0))) ...)
+    ;; ブクマした = 1, ブクマしていない = 0
+    (mapcar #'(lambda (user/posts)
+                (let ((user (car user/posts))
+                      (links (mapcar #'(lambda (post)
+                                         ($ post "link"))
+                                     (cdr user/posts))))
+                  (cons user
+                        (mapcar #'(lambda (link)
+                                    (cons link (if (member link links :test #'string=)
+                                                   1.0
+                                                 0.0)))
+                                all-links))))
+            user-posts)))
+||<
+
+
+**テスト
+
+最近[xyzzy]タグをつけてブクマした人をピアソン相関で分析して勝手に推薦。
+
+>|lisp|
+(setf tag "xyzzy")
+(setf hatebu-users (fill-items (get-user-list tag :count 20)
+                               :tag tag
+                               ))
+(("youz" (#1="http://www.geocities.jp/m_y_m_m_y/xyzzy/" . 1.0) (#2= ... )))
+
+(setf user (car (elt hatebu-users (random (length hatebu-users)))))
+"youz"
+
+(top-matches hatebu-users user)
+((0.09181879 . "tomoya")
+ (0.07949786 . "Shiralee")
+ (0.07949786 . "wata_d")
+ (0 . "hagayu")
+ (0 . "sngmr"))
+
+(take 5 (get-recommendations hatebu-users user))
+((0.6830413 . "http://www.geocities.jp/m_hiroi/xyzzy_lisp.html")
+ (0.6830413 . "http://www5d.biglobe.ne.jp/~lostland/xyzzy/svn-mode/svn-mode.html")
+ (0.6830413 . "http://www.geocities.jp/m_hiroi/xyzzy_lisp/xyzzy01.html")
+ (0.3660825 . "http://diary.noasobi.net/2003/06/diary_030626a.html")
+ (0.3660825 . "http://hie.s64.xrea.com/xyzzy/note/edit.html#lisp-indent-line-and-complete-symbol")
+ )
+||<
+
+
+
+それにしても結構重い。

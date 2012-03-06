@@ -1,0 +1,55 @@
+
+*p1*[xyzzy][cairo][xycairo]xycairo 0.0.7 リリース
+
+xyzzy から Cairo を使う xycairo 0.0.7 をリリースしました。
+
+http://miyamuko.s56.xrea.com/xyzzy/cairo/intro.htm
+
+添付している dll を [http://cairographics.org/news/cairo-1.4.12/:title=11/27 にリリースされた cairo 1.4.12] に更新しただけです。
+
+
+
+*p2*[Ruby][hatena]はてなグラフ CSV アップローダ
+
+Ruby ではてなグラフに CSV ファイルをアップロードするスクリプトです。
+探したけど見つからなかったので作りました。
+
+
+>|ruby|
+require "uri"
+
+require "rubygems"
+require "mechanize"
+
+if ARGV.size != 3
+  $stderr.puts "Usage: #{$0} USER PASSWORD CSVFILE"
+  exit 2
+end
+
+name, password, csv = *ARGV
+
+edit_url = URI("http://graph.hatena.ne.jp/#{name}/edit")
+login_url = URI("https://www.hatena.ne.jp/login")
+
+agent = WWW::Mechanize.new
+
+puts "Login as #{name} ..."
+login = agent.get(login_url)
+login_form = login.forms.first
+login_form["name"] = name
+login_form["password"] = password
+login_form.submit
+edit = agent.get(edit_url)
+raise "Login failed" if edit.uri != edit_url
+
+puts "Login OK"
+puts "Uploading #{csv} ..."
+import = edit.forms.find{|e| e.action == "./import"}
+import.file_uploads.first.file_name = csv
+import.submit
+
+puts "Done"
+||<
+
+
+WWW::Mechanize が必要なので gem install mechanize でインストールしてください。

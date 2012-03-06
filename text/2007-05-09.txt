@@ -1,0 +1,149 @@
+
+*p1*[xyzzy]xyzzy で戻り値が double, float の C 関数を呼ぶとクラッシュする
+
+戻り値の型が double または float の C 関数を xyzzy から呼ぶとクラッシュするみたいですね。
+[http://d.hatena.ne.jp/miyamuko/20070508/p1:title=xyzzy/cairo] を実装しているときにはまりました。
+
+**再現コード
+
+>|lisp|
+(c:define-dll-entry
+  c:double
+  strtod (c:char* (c:char* *))
+  "msvcrt")
+
+(c:define-dll-entry
+  c:long
+  strtol (c:char* (c:char* *) c:int)
+  "msvcrt")
+
+(strtol (si:make-string-chunk "123") 0 10) ;;=> 123
+(strtod (si:make-string-chunk "123") 0)    ;;=> クラッシュ!
+||<
+
+
+
+**回避方法
+
+dk 『回避方法をもそっと詳しく。』 といわれたので詳しく書いてみました。
+
+
+***ソースを改造できる場合
+
+対象のライブラリが OSS なソフトで自分でビルドできる場合は、改造してしまうのが一番楽です。
+
+引数に double へのポインタを取る関数を追加して、その引数のポインタに書き込みます。もちろん戻り値は void とかにしておきます。
+具体的にはこんな感じに修正します。
+
+>|c|
+@@ -3163,12 +3169,18 @@
+ double
+ cairo_get_line_width (cairo_t *cr)
+ {
+     return _cairo_gstate_get_line_width (cr->gstate);
+ }
+
++void
++cairo_get_line_width2 (cairo_t *cr, double *out)
++{
++    *out = cairo_get_line_width (cr);
++}
++
+||<
+
+cairo_get_line_width ってのがオリジナルの関数です。これを直接呼ぼうとすると xyzzy のバグでクラッシュしますので、double* を引数に取る cairo_get_line_width2 ってのを追加してます。
+
+で、xyzzy からはこんな具合に cairo_get_line_width2 を呼びます (イメージです。実際の xyzzy/cairo のコードとは結構違います)。
+
+>|lisp|
+(defun cairo-get-line-width (cr)
+  (let ((out (si:make-chunk 'c:double 8)))
+    (cairo_get_line_width2 cr out)
+    (si:unpack-double out)))
+||<
+
+make-chunk するときの chunk サイズである 8 をハードコードしたくないならこういうマクロを作っておくといいです。
+
+>|lisp|
+(defmacro define-chunk-maker (type)
+  (let ((make (intern (format nil "make-~A-chunk" type)))
+        (size (c::ctypedef-size (c::expand-c-type type)))
+        (ac (c::ctypedef-accessor (c::expand-c-type type))))
+    `(defun ,make (&optional (init-value 0))
+       (let ((r (si:make-chunk ',type ,size)))
+         (setf (,ac r 0) init-value)
+         r))))
+||<
+
+このマクロに c の型を指定すると make-xxx-chunk という関数が作られます。
+
+>|lisp|
+(define-chunk-maker c:double)     ;;=> make-double-chunk
+(setf c (make-double-chunk 123))  ;;=> #<chunk 144446396>
+(si:unpack-double c 0)            ;;=> 123.0d0
+||<
+
+cairo には double を返す関数が 4 つあったのですが、それらは out 引数で値を返す関数を cairo に追加してこのバグを回避しました。
+
+
+***ソースに手は入れたくないけど、ヘッダとかインポートライブラリはある場合
+
+ソースはあるけど自分でビルドしたくない場合や、ソースを改造すると面倒なことになりそうな場合は別 dll にします。
+
+まずは cairo-workaround.c を作ります。実装はさっきとおなじですけど別ファイルにして cairo.h を include してます。
+
+>|c|
+#include "cairo.h"
+
+__declspec(dllexport)
+void
+cairo_get_line_width2 (cairo_t *cr, double *out)
+{
+    *out = cairo_get_line_width (cr);
+}
+||<
+
+で、cairo-workaround.dll を作ります。これは mingw での例です。
+
+>||
+$ gcc -shared -o cairo-workaround.dll -Icairo-1.4.6/src cairo-workaround.c cairo-1.4.6/src/.libs/libcairo.dll.a
+||<
+
+
+yaml-syck ではこの方法で #define された定数や構造体のメンバを取得する関数を追加しています (xyck.dll がそれ)。
+なんで、わざわざ別 dll にしたかは覚えていません＾＾
+
+
+***ソースに手を入れられないしヘッダもインポートライブラリもない場合
+
+dll しかありませんという場合は LoadLibrary と GetProcAddress でがんばってラッパー dll を作ります。
+
+>|c|
+#include "windows.h"
+
+__declspec(dllexport)
+int
+cairo_get_line_width2 (void *cr, double *out)
+{
+    HINSTANCE dll;
+    FARPROC proc;
+
+    dll = LoadLibrary("libcairo-2.dll");
+    if (dll == NULL) {
+        return 1;
+    }
+
+    proc = GetProcAddress(dll, "cairo_get_line_width");
+    if (proc == NULL) {
+        return 2;
+    }
+
+    *out = ((double (*)(void *))proc)(cr);
+
+    FreeLibrary(dll);
+    return 0;
+}
+||<
+
+
+で、この方法をすすめれば任意のライブラリの double を返す関数を out 引数経由で返すようにするライブラリを作れるんじゃないかと思います。

@@ -1,0 +1,191 @@
+
+*p1*[xyzzy][livedoor-reader-notifier] livedoor-reader-notifier 0.1 リリース
+
+livedoor-reader-notifier 0.1 をリリースしました。
+
+f:id:miyamuko:20060613225819p:image:w200
+
+- [http://miyamuko.s56.xrea.com/xyzzy/archives/livedoor-reader-notifier.zip:title=ダウンロード]
+- [http://miyamuko.s56.xrea.com/xyzzy/livedoor-reader-notifier.html:title=ドキュメント]
+
+
+xyzzy のメニューに livedoor Reader の未読数を表示します。
+xml-http-request を使って非同期に処理をしているので通信中も xyzzy 上での作業を邪魔しません。
+
+
+
+*p2*[xyzzy][xml-http-request] xml-http-request 0.1 リリース
+
+xml-http-request 0.1 をリリースしました。
+
+- [http://miyamuko.s56.xrea.com/xyzzy/archives/xml-http-request.zip:title=ダウンロード]
+- [http://miyamuko.s56.xrea.com/xyzzy/xml-http-request.html:title=ドキュメント]
+
+
+xml-http-request は HTTP 通信を行うためのライブラリです。非同期通信を行えるため xyzzy を止めることなく通信することができます。
+
+
+*p3*[Ruby][WIN32OLE] PowerPointのファイルからノート部分のみを自動で抜き出す
+
+question:1150173207:title
+
+これでどうでしょうか。
+
+** 使い方
+
+Ruby をインストールして以下のように実行します。
+
+>||
+> ruby note.rb foo.ppt bar.ppt
+= タイトル
+
+== スライドタイトル
+note
+
+== スライドタイトル 2
+note 2
+
+     ry)
+||<
+
+====
+
+** ソース
+
+><pre class="source">
+<span class="keyword1">[]require[]</span>[] []<span class="fg10">&quot;</span><span class="fg10">[]win32ole[]</span><span class="fg10">&quot;</span>
+
+<span class="keyword1">[]class[]</span>[] WIN32OLE[]
+[]  include Enumerable[]
+<span class="keyword1">[]end[]</span>
+
+
+<span class="keyword1">[]module[]</span>[] Scripting[]
+
+[]  []<span class="keyword1">[]class[]</span>[] FileSystemObject[]
+
+[]    @[]<span class="keyword3">[]@fs[]</span>[] = []<span class="keyword2">[]nil[]</span>
+
+[]    []<span class="keyword1">[]class[]</span>[] &lt;&lt; []<span class="keyword2">[]self[]</span>
+[]      []<span class="keyword1">[]def[]</span>[] fs[]
+[]        @[]<span class="keyword3">[]@fs[]</span>[] &#124;&#124;= WIN32OLE&#46;[]<span class="keyword3">[]new[]</span>&#40;<span class="fg10">[]'[]</span><span class="fg10">[]Scripting&#46;FileSystemObject[]</span><span class="fg10">[]'[]</span>&#41;
+[]      []<span class="keyword1">[]end[]</span>
+
+[]      []<span class="keyword1">[]def[]</span>[] abs_path&#40;[]<span class="keyword3">[]path[]</span>&#41;
+[]        fs&#46;getAbsolutePathName&#40;[]<span class="keyword3">[]path[]</span>&#41;
+[]      []<span class="keyword1">[]end[]</span>
+[]    []<span class="keyword1">[]end[]</span>
+[]  []<span class="keyword1">[]end[]</span>
+<span class="keyword1">[]end[]</span>
+
+
+<span class="keyword1">[]module[]</span>[] PowerPoint[]
+
+[]  []<span class="keyword1">[]class[]</span>[] Application[]
+
+[]    []<span class="keyword1">[]def[]</span>[] []<span class="keyword2">[]self[]</span>[]&#46;run[]
+[]      app = []<span class="keyword2">[]self[]</span>&#46;<span class="keyword3">[]new[]</span>
+[]      []<span class="keyword1">[]begin[]</span>
+[]        []<span class="keyword1">[]yield[]</span>[] app[]
+[]      []<span class="keyword1">[]ensure[]</span>
+[]        app&#46;[]<span class="keyword3">[]close[]</span>
+[]      []<span class="keyword1">[]end[]</span>
+[]    []<span class="keyword1">[]end[]</span>
+
+[]    []<span class="keyword1">[]def[]</span>[] []<span class="keyword3">[]initialize[]</span>
+[]      []<span class="keyword3">[]@app[]</span>[] = []<span class="keyword2">[]nil[]</span>
+[]    []<span class="keyword1">[]end[]</span>
+
+[]    []<span class="keyword1">[]def[]</span>[] app[]
+[]      []<span class="keyword3">[]@app[]</span>[] &#124;&#124;= WIN32OLE&#46;[]<span class="keyword3">[]new[]</span>&#40;<span class="fg10">&quot;</span><span class="fg10">[]PowerPoint&#46;Application[]</span><span class="fg10">&quot;</span>&#41;
+[]    []<span class="keyword1">[]end[]</span>
+[]    private :app[]
+
+[]    []<span class="keyword1">[]def[]</span>[] []<span class="keyword3">[]open[]</span>[]&#40;filename&#41;[]
+[]      ppt = app&#46;Presentations&#46;Open&#40;Scripting::FileSystemObject&#46;abs_path&#40;filename&#41;,[]
+[]                                   []<span class="keyword2">[]nil[]</span>[],  []<span class="fg9">[]#[]</span><span class="fg9">[] ReadOnly[]
+</span>[]                                   []<span class="keyword2">[]nil[]</span>[],  []<span class="fg9">[]#[]</span><span class="fg9">[] Untitled[]
+</span>[]                                   []<span class="keyword2">[]nil[]</span>[]&#41;  []<span class="fg9">[]#[]</span><span class="fg9">[] WithWindow[]
+</span>[]      Presentation&#46;[]<span class="keyword3">[]new[]</span>[]&#40;ppt&#41;[]
+[]    []<span class="keyword1">[]end[]</span>
+
+[]    []<span class="keyword1">[]def[]</span>[] []<span class="keyword3">[]close[]</span>
+[]      []<span class="keyword1">[]if[]</span>[] []<span class="keyword3">[]@app[]</span>
+[]        []<span class="keyword3">[]@app[]</span>[]&#46;Quit[]
+[]        []<span class="keyword3">[]@app[]</span>[] = []<span class="keyword2">[]nil[]</span>
+[]      []<span class="keyword1">[]end[]</span>
+[]    []<span class="keyword1">[]end[]</span>
+
+[]  []<span class="keyword1">[]end[]</span>
+
+[]  []<span class="keyword1">[]class[]</span>[] Presentation[]
+
+[]    attr_reader :ppt[]
+
+[]    []<span class="keyword1">[]def[]</span>[] []<span class="keyword3">[]initialize[]</span>[]&#40;ppt&#41;[]
+[]      []<span class="keyword3">[]@ppt[]</span>[] = ppt[]
+[]    []<span class="keyword1">[]end[]</span>
+
+[]    []<span class="keyword1">[]def[]</span>[] title[]
+[]      ppt&#46;BuiltInDocumentProperties&#40;[]<span class="fg10">&quot;</span><span class="fg10">[]Title[]</span><span class="fg10">&quot;</span>[]&#41;&#46;Value[]
+[]    []<span class="keyword1">[]end[]</span>
+
+[]    []<span class="keyword1">[]def[]</span>[] each_slide&#40;&amp;block&#41;[]
+[]      ppt&#46;Slides&#46;map {&#124;e&#124; Slide&#46;[]<span class="keyword3">[]new[]</span>[]&#40;e&#41; }&#46;[]<span class="keyword3">[]each[]</span>[]&#40;&amp;block&#41;[]
+[]    []<span class="keyword1">[]end[]</span>
+
+[]  []<span class="keyword1">[]end[]</span>
+
+[]  []<span class="keyword1">[]class[]</span>[] Slide[]
+
+[]    attr_reader :slide[]
+
+[]    []<span class="keyword1">[]def[]</span>[] []<span class="keyword3">[]initialize[]</span>[]&#40;slide&#41;[]
+[]      []<span class="keyword3">[]@slide[]</span>[] = slide[]
+[]    []<span class="keyword1">[]end[]</span>
+
+[]    []<span class="keyword1">[]def[]</span>[] title[]
+[]      get_text&#40;find_text_shapes&#40;[]<span class="keyword3">[]@slide[]</span>[]&#46;Shapes&#41;&#46;[]<span class="keyword3">[]first[]</span>&#41;
+[]    []<span class="keyword1">[]end[]</span>
+
+[]    []<span class="keyword1">[]def[]</span>[] notes[]
+[]      texts = find_text_shapes&#40;[]<span class="keyword3">[]@slide[]</span>[]&#46;NotesPage&#46;Shapes&#41;[]
+[]      []<span class="keyword1">[]if[]</span>[] texts[]
+[]        texts&#46;map {&#124;e&#124; get_text&#40;e&#41; }&#46;[]<span class="keyword3">[]join[]</span>
+[]      []<span class="keyword1">[]end[]</span>
+[]    []<span class="keyword1">[]end[]</span>
+
+[]    []<span class="keyword1">[]def[]</span>[] find_text_shapes&#40;shapes&#41;[]
+[]      shapes&#46;find_all {&#124;e&#124; e&#46;TextFrame&#46;HasText != 0 }[]
+[]    []<span class="keyword1">[]end[]</span>
+[]    private :find_text_shapes[]
+
+[]    []<span class="keyword1">[]def[]</span>[] get_text&#40;shape&#41;[]
+[]      shape&#46;TextFrame&#46;TextRange&#46;Text []<span class="keyword1">[]if[]</span>[] shape[]
+[]    []<span class="keyword1">[]end[]</span>
+[]    private :get_text[]
+
+[]  []<span class="keyword1">[]end[]</span>
+<span class="keyword1">[]end[]</span>
+
+
+<span class="keyword1">[]if[]</span>[] []<span class="keyword2">[]$0[]</span>[] == []<span class="keyword2">[]__FILE__[]</span>
+[]  []<span class="keyword1">[]if[]</span>[] ARGV&#46;[]<span class="keyword3">[]empty?[]</span>
+[]    []<span class="keyword3">[]puts[]</span>[] []<span class="fg10">&quot;</span><span class="fg10">[]Usage: []</span><span class="fg10">[]#{[]</span><span class="keyword2">[]$0[]</span><span class="fg10">[]}[]</span><span class="fg10">[] ppt&#46;&#46;&#46;[]</span><span class="fg10">&quot;</span>
+[]    exit 1[]
+[]  []<span class="keyword1">[]end[]</span>
+
+[]  PowerPoint::Application&#46;run []<span class="keyword1">[]do[]</span>[] &#124;app&#124;[]
+[]    ARGV&#46;[]<span class="keyword3">[]each[]</span>[] []<span class="keyword1">[]do[]</span>[] &#124;file&#124;[]
+[]      ppt = app&#46;[]<span class="keyword3">[]open[]</span>[]&#40;Scripting::FileSystemObject&#46;abs_path&#40;file&#41;&#41;[]
+[]      []<span class="keyword3">[]puts[]</span>[] []<span class="fg10">&quot;</span><span class="fg10">[]= []</span><span class="fg10">[]#{[]</span>[]ppt&#46;title[]<span class="fg10">[]}[]</span><span class="fg10">&quot;</span>
+
+[]      ppt&#46;each_slide []<span class="keyword1">[]do[]</span>[] &#124;slide&#124;[]
+[]        []<span class="keyword3">[]puts[]</span>[] []<span class="fg10">&quot;</span><span class="fg10">[]== []</span><span class="fg10">[]#{[]</span>[]slide&#46;title []<span class="keyword1">[]or[]</span>[] []<span class="fg10">&quot;</span><span class="fg10">[]&#42;&#42;unknown&#42;&#42;[]</span><span class="fg10">&quot;</span><span class="fg10">[]}[]</span><span class="fg10">&quot;</span>
+[]        []<span class="keyword3">[]puts[]</span>[] slide&#46;notes[]
+[]        []<span class="keyword3">[]puts[]</span>
+[]      []<span class="keyword1">[]end[]</span>
+[]    []<span class="keyword1">[]end[]</span>
+[]  []<span class="keyword1">[]end[]</span>
+<span class="keyword1">[]end[]</span>
+</pre><

@@ -1,0 +1,267 @@
+
+*p1*[Ruby]color-japanese - 日本の色名パレット ライブラリ
+
+[http://rubyforge.org/projects/color-japanese:title=color-japanese] 1.0.0 を[http://rubyforge.org/forum/forum.php?forum_id=13648:title=リリースしました]。
+
+- [http://color-japanese.rubyforge.org:title=ドキュメント]
+
+color-japanese は日本の色名に対応する RGB 値を提供する Ruby ライブラリです。
+以下の 2 つのパレットを提供します。
+
+|*パレット名|*クラス名|
+|日本の伝統色|Color::RGB::JP::Traditional|
+|JIS 慣用色名 (JIS Z 8102, 物体色の色名)|Color::RGB::JP::JISZ8102|
+
+
+**使い方
+
+>|ruby|
+require "rubygems"
+require "color/rgb/jp"
+
+### 色の取得 ###
+
+# 日本の伝統色の「桜色」の RGB 値
+# (Color::RGB::JP::Base::NamedRGB クラス) を取得する。
+# 色名は漢字、ひらがな、カタカナ、ローマ字 (ヘボン式) 
+# を UTF-8 で指定します。
+puts Color::RGB::JP::Traditional::SakuraIro
+puts Color::RGB::JP::Traditional["桜色"]
+puts Color::RGB::JP::Traditional["さくらいろ"]
+puts Color::RGB::JP::Traditional["サクライロ"]
+puts Color::RGB::JP::Traditional["sakura-iro"]
+
+# UTF-8 以外で色名を指定する場合は、第 2 引数で
+# iconv が理解できるエンコーディングを指定します。
+sjis_string = "\x8d\xf7\x90F"  # 桜色
+puts Color::RGB::JP::Traditional[sjis_string, "Shift_JIS"]
+
+
+### 色名の取得 ###
+
+# 色名は UTF-8 で取得できます。
+sakura = Color::RGB::JP::Traditional["桜色"]  #=> #<Color::RGB::JP::NamedRGB:0xXXXXXXXX ...>
+puts sakura                 #=> "sakura-iro (#fef4f4)"
+puts sakura.name.kanji      #=> "桜色"
+puts sakura.name.hiragana   #=> "さくらいろ"
+puts sakura.name.katakana   #=> "サクライロ"
+puts sakura.name.romaji     #=> "sakura-iro"
+puts sakura.name.to_a       #=> ["桜色", "さくらいろ", "サクライロ", "sakura-iro"]
+
+# UTF-8 以外で色名がほしい場合は、エンコーディングを引数で指定します。
+puts sakura.name.kanji("Shift_JIS")    #=> "\x8d\xf7\x90F"
+puts sakura.name.hiragana("Shift_JIS")
+puts sakura.name.katakana("Shift_JIS")
+puts sakura.name.to_a("Shift_JIS")
+
+
+### RGB 値の取得
+
+# NamedRGB#rgb メソッドで Color::RGB クラスのインスタンスを取得できます。
+# Color::RGB クラスは color-tools プロジェクトにより提供されています。
+puts sakura.rgb             #=> #<Color::RGB:0xXXXXXXXX>
+puts sakura.rgb.html        #=> "#fef4f4"
+cmyk = sakura.rgb.to_cmyk
+p %W(c m y k).map{|e| cmyk.__send__(e) } #=> [0.00379838523644751, 0.0430140715109573, 0.0430140715109573, 0.00012318339100346]
+
+
+### color-japanese が提供するパレット一覧の取得
+
+Color::RGB::JP.pallets  #=> [Color::RGB::JP::Traditional, Color::RGB::JP::JISZ8102]
+
+
+### 色一覧の取得
+
+Color::RGB::JP::Traditional.colors  #=> [なんかいっぱい]
+Color::RGB::JP::JISZ8102.colors     #=> [なんかいっぱい]
+
+
+### Enumerable メソッド
+
+# color-japanese が提供するパレットクラスは Enumerable を include しているので
+# Enumerable のメソッドが使えます。
+
+puts Color::RGB::JP::Traditional.find_all{|e| e.name.romaji =~ /[sz]akura/i }
+#=> sakura-iro (#fef4f4)
+#   usuzakura (#fdeff2)
+#   sakuranezu (#e9dfe5)
+#   haizakura (#e8d3d1)
+#   usuhanazakura (#5a79ba)
+
+
+# すべての色を出力
+Color::RGB::JP.pallets.each do |pallet|
+  puts
+  puts "=== #{pallet}==="
+  puts
+  pallet.each do |c|
+    puts "  %s: %s (%s)" % [c.rgb.html, c.name.kanji || c.name.katakana, c.name.romaji]
+  end
+end
+||<
+
+
+**依存ライブラリ
+
+- [http://ruby-pdf.rubyforge.org/color-tools/index.html:title=color-tools]
+
+**インストール
+
+>||
+gem install -y color-japanese
+||<
+
+**jcolorc
+
+color-japanese をインストールすると jcolorc というコマンドがインストールされます。
+jcolorc は日本語の色名を RGB 値に変換するためのフィルタコマンドです。
+
+***使い方
+>||
+jcolorc [options] < default.css.in > default.css
+jcolorc [options] default.css.in -o default.css
+||<
+
+***構文
+
+jcolorc は以下の 2 つの構文を解釈します。
+
+>||
+##色名
+||<
+
+対応する RGB 値に置換します。
+
+>||
+##alias 新色名 旧色名
+||<
+
+色名の alias を設定します。
+
+CSS だと複数のスタイルで同じ色を使いたい場合、あちこちで同じ色を書く必要があります。そのため、色を変更したくなった場合すべて書き換える必要があるので DRY ではありません。
+##alias で論理的な名前を設定しておけば一箇所直すだけでよくなります。
+
+***例
+
+-入力
+
+以下のようなファイルがあったとします。
+
+>|css|
+@charset "Shift_JIS";
+
+##alias my-header-fg 暗黒色
+##alias my-header-bg sakura-iro
+.section h3 {
+    color: ##my-header-fg;
+    background: ##my-header-bg;
+}
+th {
+    color: ##my-header-fg;
+    background: ##my-header-bg;
+}
+.warning {
+    color: ##こいくれない;
+    background: ##ニジイロ;
+    border: 2px solid #ff0000;
+    padding: 4px;
+}
+||<
+
+-フィルタコマンド
+
+で、以下のコマンドでフィルタすると。。。
+
+>||
+% jcolorc -p traditional -Ks -o default.css default.css.in
+||<
+
+|*引数|*意味|
+|-p traditional|日本の伝統色パレットを使う|
+|-Ks|ファイルのエンコーディングは Shift_JIS|
+|-o default.css|出力ファイルは default.css|
+|default.css.in|入力ファイル|
+
+-出力
+
+こうなります。
+
+>|css|
+@charset "Shift_JIS";
+
+.section h3 {
+    color: #16160e;
+    background: #fef4f4;
+}
+th {
+    color: #16160e;
+    background: #fef4f4;
+}
+.warning {
+    color: #a22041;
+    background: #f6bfbc;
+    border: 2px solid #ff0000;
+    padding: 4px;
+}
+||<
+
+***ERB
+
+jcolorc は内部で ERB スクリプトに変換して結果を出力しています。
+また、「##色名」は Color::RGB クラスのインスタンスを返すコードに変換されるます。
+
+というわけで、以下のようなこともできます (border は background を少し暗くした色になる)。
+
+>|css|
+##alias header-bg sakura-iro
+.note {
+    background: ##header-bg;
+    border: 2px solid <%= ##header-bg.darken_by(95) %>;
+}
+||<
+
+↓↓↓
+
+>|css|
+.note {
+    background: #fef4f4;
+    border: 2px solid #f1e8e8;
+}
+||<
+
+どういう ERB に変換しているかは -E オプションを指定することで見ることができます。
+
+**FAQ
+
+
+*** jcolorc 関連
+
+- Q: なんか erb の syntax エラーとかでるんですけど。。。
+- A: -K で正しいファイルのエンコーディングを指定しています?
+
+- Q: なんか undefined color name とか言われるんですけど。。。
+- A1: -K で正しいファイルのエンコーディングを指定しています?
+- A2: -p で正しいパレットを指定しています?
+
+*** color-japanese 一般
+
+- Q: JIS Z 8102 の色名で kanji が nil を返すやつがあってうざいんですけど。。。
+- A: カタカナの色名しかない場合は kanji は nil を返します。
+-- Q: その色名の自然な表記 (kanji || katakana) を返すメソッドがほしいんですけど。
+-- A: 私もほしいです :-)。でもいい名前が思いつかなくて。。。
+
+- Q: JIS Z 8102 は 269 色あると思うんですけど、Color::RGB::JP::JISZ8102 には 267 色しか入っていません。why?
+- A: 金と銀は RGB であらわせないのでこのライブラリには入っていません。
+
+- Q: なんでメソッドの rdoc がなにもないんですか?
+- A: ( ；＾ω＾)
+
+
+**謝辞
+
+color-japanese を作成するにあたり以下を参考にさせていただきました。
+
+- [http://www.colordic.org/w/:title=日本の伝統色 和色大辞典]
+- [http://2xup.org/repos/:title=Japanese Traditional Colors - 日本の伝統色: 2xup]
+- [http://ja.wikipedia.org/wiki/JIS%E6%85%A3%E7%94%A8%E8%89%B2%E5%90%8D:title=JIS慣用色名 - Wikipedia]
+- [http://www.colordream.net/jiscolor1.htm:title=ＪＩＳ慣用色名]

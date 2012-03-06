@@ -1,0 +1,64 @@
+
+*autoload_in_irb*[Ruby]IRB で require "xxx" しないでいきなり gem アプリを使う
+
+新しい gem をインストールしてとりあえず irb で使って見ようと思ったときに、毎回 require "xxx" とか打つのは面倒です。irb -rxxx も面倒なことには変わりません。
+
+そういうときは ~/.irbrc に以下のコードを追加しておくと require なしでいきなり使えます。
+
+>|ruby|
+require "rubygems"
+require "active_support"
+
+Gem.source_index.latest_specs.each do |name, gem|
+  gem.require_paths.each do |path|
+    Dependencies.load_paths << File.join(gem.full_gem_path, path)
+  end
+end
+||<
+
+開発中の gem も require なしで使いたい場合は以下のコードを ~/.irbrc に追加しておくといいです。
+
+>|ruby|
+require "rubygems"
+require "active_support"
+
+# カレントディレクトリを上に辿りながら "lib" ディレクトリを探して、
+# 見つかれば load_paths に追加
+Dir.pwd.split("/").inject([]){|acc,e|
+  [File.expand_path(e, acc.first || "/")] + acc
+}.each do |dir|
+  lib = File.expand_path("lib", dir)
+  if File.exist?(lib)
+    $LOAD_PATH << lib
+    Dependencies.load_paths << lib
+    break
+  end
+end
+||<
+
+
+
+
+**例
+
+>||
+> irb
+irb(main):001:0> defined?(SleipnirAPI)
+=> nil
+irb(main):002:0> pnir = SleipnirAPI.connect
+=> #<SleipnirAPI::Sleipnir:0x32a7b20 @handle=66519588, @version=166 ...>
+irb(main):003:0> defined?(SleipnirAPI)
+=> "constant"
+irb(main):004:0>
+||<
+
+
+
+**仕組み
+
+ActiveSupport を require することで Module#const_missing が定義されます。
+Ruby は未定義の定数に出会うと const_missing を呼び出します。
+で、ActiveSupport の const_missing では Dependencies.load_paths に追加されたパスからソースを探して勝手に require してくれます。
+
+
+便利ですね。

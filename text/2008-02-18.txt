@@ -1,0 +1,27 @@
+
+*tdd_minor_mode*[xyzzy]TDDの勘所とTDD支援超簡易xyzzy Lisp
+
+以下の Emacs Lisp を xyzzy に移植しました。
+
+[http://d.hatena.ne.jp/aike/20080217:title=TDDの勘所とTDD支援超簡易Emacs Lisp - aikeの日記]
+
+<a href="http://www.flickr.com/photos/8878415@N08/2274611600/" title="tdd-minor-mode by miyamuko, on Flickr"><img src="http://farm3.static.flickr.com/2376/2274611600_db518b96c9.jpg" width="500" height="461" alt="tdd-minor-mode" /></a>
+
+
+ソースは CodeRepos にあります。
+
+http://coderepos.org/share/browser/lang/xyzzy/tdd-minor-mode/site-lisp/tdd-minor-mode.l
+
+
+*tdn_mode*[xyzzy]TDNの勘所とTDN支援超簡易xyzzy Lisp
+
+tdd-minor-mode にして C-c m するたびに TDN がランダムにポップアップします。 
+
+<a href="http://www.flickr.com/photos/8878415@N08/2274611680/" title="tdn-mode by miyamuko, on Flickr"><img src="http://farm3.static.flickr.com/2256/2274611680_f98d31aa57.jpg" width="488" height="500" alt="tdn-mode" /></a>
+
+AA は [http://enjo.eek.jp/base_aa/index.php?%C2%BF%C5%C4%CC%EE%BF%F4%BF%CD:title=多田野数人 - プロ野球板＠AA保管庫]から取得しています。
+
+
+アッー！
+
+http://coderepos.org/share/browser/lang/xyzzy/tdn-mode/site-lisp/tdn-mode.l

@@ -1,0 +1,108 @@
+
+*p1*[JavaScript]IE で innerHTML に変な HTML を入れるとエラーになる件
+
+はまったのでメモ。
+
+IE で &lt;p&gt; の中に &lt;p&gt; など、HTML 的に変な HTML を innerHTML で入れると「未知の実行時エラー」ってなる。
+Firefox は OK。
+
+わけわからん。
+
+>||
+<html>
+<head>
+  <title>test</title>
+  <script>
+    function test() {
+      var p = "<p>ppp</p>";
+      var span = "<span>span</span>";
+
+      // div の下に span は OK
+      document.getElementById("div1").innerHTML = span;
+      // p の下に span も OK
+      document.getElementById("p1").innerHTML = span;
+      // div の下に p は OK
+      document.getElementById("div2").innerHTML = p;
+      // p の下に p は... IE だとエラー「未知の実行時エラーです。」
+      document.getElementById("p2").innerHTML = p;
+
+      alert("OK");
+    }
+  </script>
+</head>
+<body onload="test()">
+  <hr>
+  <div id="div1"></div><div id="div2"></div>
+  <hr>
+  <p id="p1"></p><p id="p2"></p>
+  <hr>
+</body>
+</html>
+||<
+
+でも div の中なら何を入れてもいいらしい。
+
+>||
+var html = "<html><title>t</title><body><p>b</p></body></html>";
+// div の下に html は OK !?
+document.getElementById("div1").innerHTML = html;
+// 実際は html とか body とか head はなくなりフラットな感じになる。
+||<
+
+
+
+
+div かわいいよ div。
+
+
+*p2*[JavaScript]appendChild すると勝手に消える。
+
+もう一つはまったのでメモ。
+
+createElement や createTextNode したものを cloneNode しないで appendChild すると元の element が勝手に消える件。
+
+>||
+<html>
+<head>
+  <title>test</title>
+  <script>
+    function test() {
+      var div = document.createElement("div");
+      div.appendChild(document.createTextNode("foo"));
+      div.appendChild(document.createTextNode("bar"));
+      div.appendChild(document.createTextNode("baz"));
+
+      var elem = div.childNodes;
+
+      alert("length: " + elem.length);
+      for (var i = 0; i < elem.length; i++) {
+        // cloneNode しないで appendChild すると elem から消えていく (IE and FF)
+        document.getElementById("div").appendChild(elem[i].cloneNode(true));
+        alert("i: " + i + ", length: " + elem.length);
+        // cloneNode しないと → i: 0, length: 2
+        //                       i: 1, length: 1
+      }
+
+      alert("OK");
+    }
+  </script>
+</head>
+<body onload="test()">
+  <div id="div"></div>
+</body>
+</html>
+||<
+
+appendChild は存在する要素を勝手に消すからか・・・
+
+><blockquote cite="http://www.w3.org/TR/REC-DOM-Level-1/level-one-core.html#method-appendChild" title="appendChild - Document Object Model (Core) Level 1">
+<p>
+  Adds the node newChild to the end of the list of children of this node.
+  If the newChild is already in the tree, it is first removed.
+</p>
+</blockquote><
+
+
+
+
+appendChild ｷﾓｽ

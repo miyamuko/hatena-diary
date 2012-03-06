@@ -1,0 +1,34 @@
+
+*hatena_star*[xyzzy][hatena-star]hatena-star 0.1.0 リリース
+
+xyzzy からはてなスター API をたたく hatena-star をリリースしました。
+
+http://miyamuko.s56.xrea.com/xyzzy/hatena-star/intro.htm
+
+json-syck に依存しているため、たまに xyzzy ごと落ちます。
+あまりヘビーな使い方はしないでください。
+
+そのうち json-syck は捨てます。
+
+
+バグ・要望は [http://fixdap.com/p/xyzzy/:title=fixdap] まで。
+
+
+*xml_http_request*[xyzzy][xml-http-request]xml-http-request 1.0.1 released!
+
+xyzzy で非同期通信を行う xml-http-request 1.0.1 をリリースしました。
+
+http://miyamuko.s56.xrea.com/xyzzy/xml-http-request/intro.htm
+
+
+大幅にリニューアルしました。
+Future パターンをサポートしたのでお手軽に非同期通信を扱えると思います。
+
+
+過去の API の互換層を用意してあるので一応今までのコードも動くはずです。
+
+文字化け問題 (http://d.hatena.ne.jp/miyamuko/20060619/p1) は直してません。
+＃直す気が余りありません。
+
+
+バグ・要望は [http://fixdap.com/p/xyzzy/:title=fixdap] まで。

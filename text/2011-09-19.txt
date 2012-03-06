@@ -1,0 +1,136 @@
+
+*p1*[xyzzy][xl-interpol] xyzzy で正規表現リテラルとか
+
+[http://d.hatena.ne.jp/miyamuko/20110907/p1:title=xl-ppcre] を実装すると今度は正規表現がリテラルが欲しくなってきたので、[http://weitz.de/cl-interpol/:title=cl-interpol] を移植して xl-interpol としてリリースしました。
+
+
+xl-interpol を使えば正規表現リテラルが使えたり、
+
+>|lisp|
+(require "ppcre")
+(require "interpol")
+
+(interpol:enable-interpol-syntax)
+
+(ppcre:all-matches-as-strings #?/\d+/ "foo 123 bar 345")
+;=> ("123" "345")
+
+(interpol:disable-interpol-syntax)
+||<
+
+
+文字列に変数や式を埋め込んだりできます。
+
+>|lisp|
+(interpol:enable-interpol-syntax)
+
+(let ((a 123)
+      (b 345))
+  #?"a = ${a}, b = ${b}, a + b = ${(+ a b)}")
+;=> "a = 123, b = 345, a + b = 468"
+
+(interpol:disable-interpol-syntax)
+||<
+
+
+
+つづきは以下で。
+
+http://miyamuko.s56.xrea.com/xyzzy/xl-interpol/intro.htm
+https://github.com/miyamuko/xl-interpol
+
+
+
+*p2*[xyzzy][xl-interpol]xyzzy の *readtable* と load
+
+xl-interpol を使うには interpol:enable-interpol-syntax をして *readtable* を拡張する必要がありますが、interpol:disable-interpol-syntax で *readtable* を元に戻すことを忘れないでください。
+
+xyzzy では load 時に *readtable* に加えた変更はグローバルに影響するので、interpol:disable-interpol-syntax を忘れると他のスクリプトにも影響を与えてしまうためです。
+
+
+
+HyperSpec によると load は *readtable* をバインドしてからロードするのが仕様みたいなので xyzzy のバグですかね。
+
+>http://www.lispworks.com/documentation/HyperSpec/Body/f_load.htm#load:title>
+load binds *readtable* and *package* to the values they held before loading the file.
+<<
+
+
+** 実験
+
+*** a.l
+
+>|lisp|
+(interpol:enable-interpol-syntax)
+(defvar *foo* #?/\d+/)
+;; しまった! interpol:disable-interpol-syntax を忘れてしまった!!
+||<
+
+
+*** b.l
+
+>|lisp|
+;; interpol:enable-interpol-syntax してないから普通は読み込めないはず
+(defvar *bar* #?/\w+/)
+||<
+
+
+*** xyzzy の場合
+
+>|lisp|
+(require "interpol")
+;=> t
+
+;; おもむろに b.l を読み込んでみると、まぁエラーですね
+(load "b.l")
+;=> C:/tmp/b.l: 1: ディスパッチングマクロ副文字ではありません: ?
+
+;; a.l を読み込んでみる。これは普通に読めますね
+(load "a.l")
+;=> t
+
+;; a.l の最後で interpol:disable-interpol-syntax していないので、
+;; b.l が読み込めてしまうッ！
+(load "b.l")
+;=> t
+||<
+
+
+*** clisp の場合
+
+>|lisp|
+[1]> (ql:quickload :cl-interpol)
+To load "cl-interpol":
+  Load 1 ASDF system:
+    cl-interpol
+; Loading "cl-interpol"
+;;; Computing Hangul syllable names
+(:CL-INTERPOL)
+
+;; おもむろに b.l を読み込んでみると、まぁエラーですね
+[2]> (load "b.l")
+;; Loading file b.l ...
+*** - READ from #<INPUT BUFFERED FILE-STREAM CHARACTER #P"b.l" @1>: After #\#
+      is #\? an undefined dispatch macro character
+The following restarts are available:
+ABORT          :R1      Abort main loop
+Break 1 [3]> :r1
+
+;; a.l を読み込んでみる。これは普通に読めますね
+[4]> (load "a.l")
+;; Loading file a.l ...
+;; Loaded file a.l
+T
+
+;; b.l をもう一度読み込んでみると、エラーになるッ！
+;; a.l の最後で interpol:disable-interpol-syntax していないけど、
+;; b.l の読み込みには影響しないッ！そこにシビれる！あこがれるゥ！
+[5]> (load "b.l")
+;; Loading file b.l ...
+*** - READ from #<INPUT BUFFERED FILE-STREAM CHARACTER #P"b.l" @1>: After #\#
+      is #\? an undefined dispatch macro character
+The following restarts are available:
+ABORT          :R1      Abort main loop
+Break 1 [7]> :r1
+[8]>
+||<

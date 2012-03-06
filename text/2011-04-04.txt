@@ -1,0 +1,8 @@
+
+*p1*[xyzzy][power-usage]東京電力の電力供給量を xyzzy のモードラインに表示
+
+[http://tepco-usage-api.appspot.com/:title=東京電力電力供給状況API] を利用して xyzzy のモードラインに電力消費量を表示できるようにしてみました。
+
+[http://miyamuko.s56.xrea.com/xyzzy/images/power-usage.png:image]
+
+http://miyamuko.s56.xrea.com/xyzzy/power-usage/intro.htm

@@ -1,0 +1,103 @@
+
+*xyzzy_ole_method_bug*[xyzzy]ole-method で文字列を渡すと余計な 0x00 が付く
+
+ole-method で文字列を渡すと文字列の最後に余計な 0x00 が付いてメソッドに送られてしまい困ったことになる場合があります。
+
+
+**再現コード
+
+[http://blade.nagaokaut.ac.jp/cgi-bin/scat.rb/ruby/ruby-list/24042:title=ruby-list:24042] そのままですが、以下のコードを実行すると
+
+>|lisp|
+(let ((word (ole-create-object "Word.Application")))
+  (setf #{word.Visible} t)
+  (let ((doc #{word.Documents.Add}))
+    #{doc.Activate}
+    #{word.Selection.InsertBefore["テスト"]}
+    ))
+||<
+
+「テスト」の後に謎の一文字が追加されます。
+
+<a href="http://www.flickr.com/photos/8878415@N08/2309397947/" title="ole-method-bug by miyamuko, on Flickr"><img src="http://farm4.static.flickr.com/3281/2309397947_2473c4352f_o.png" width="313" height="301" alt="ole-method-bug" /></a>
+
+
+**原因
+
+原因は oledata.cc の obj2bstr で Lisp 文字列を BSTR に変換するときに:
+- i2wl は NULL を含んだバイト数を返却
+- SysAllocStringLen は渡されたバイト数に NULL 分の 1 を追加
+
+
+しているため最後の NULL 分が余計に確保されているためです。
+
+>|c|
+static BSTR
+obj2bstr (lisp obj)
+{
+  int l = i2wl (obj);
+  BSTR bstr = SysAllocStringLen (0, l);
+||<
+
+
+[http://blade.nagaokaut.ac.jp/cgi-bin/scat.rb/ruby/ruby-list/24043:title=ruby-list:24043] とまったく同じ問題です。
+
+
+**パッチ
+
+NULL 分を重複して確保しないように SysAllocStringLen に渡すバイト数から 1- すればいいんじゃないかと思います。
+
+>||
+ obj2bstr (lisp obj)
+ {
+   int l = i2wl (obj);
+-  BSTR bstr = SysAllocStringLen (0, l);
++  BSTR bstr = SysAllocStringLen (0, l - 1);
+   if (!bstr)
+     FEstorage_error ();
+||<
+
+
+**xml-http-request で起きた問題
+
+>http://miyamuko.s56.xrea.com/xyzzy/xml-http-request.html#10:title>
+xml-http-request 1.1.0 で利用する XMLHttpRequest オブジェクトを Msxml2.XMLHTTP.6.0 にこっそり更新していたが、 xyzzy との組み合わせに問題があったので Msxml2.XMLHTTP に戻した。
+<<
+
+hatena-haiku-mode でエントリの削除を実装しようと思い xml-http-request から /delete.entry.json を叩いていたんですが、送っているリクエストは正しいはずなのにまったく成功しませんでした。
+おかしーなと思いつつ、ふと Msxml2.XMLHTTP.6.0 から Msxml2.XMLHTTP にしてみたところあっさり動きました。
+
+で、[http://www.portswigger.net/proxy/:title=Burp Proxy] で見てみたら Msxml2.XMLHTTP.6.0 では謎の 0x00 が付いていて納得したしだいです。
+＃Burp Proxy は hex dump を見ながらリクエストをバイト単位で修正ができるので便利ですね。
+
+
+ちなみに excite 翻訳も 0x00 があると 403 になります (以下のコードを Msxml2.XMLHTTP にすると動きます)。
+
+>|lisp|
+(let ((xhr (ole-create-object "Msxml2.XMLHTTP.6.0")))
+  (ole-method xhr :Open "POST" "http://www.excite.co.jp/world/english/" nil)
+  (ole-method xhr :Send "wb_lp=ENJA=before=hello")
+  (values
+   (ole-getprop xhr :status)
+   (ole-getprop xhr :responseText)))
+||<
+
+
+**なぜ Msxml2.XMLHTTP だと動くか
+
+Msxml2.XMLHTTP だと POST する data 中に 0x00 が含まれていると、それ以降は無視するみたいです。Msxml2.XMLHTTP.4.0 以降では渡された文字列をそのまま送ります。
+
+[http://support.microsoft.com/kb/296772/ja:title= XMLHTTP を使用してバイナリ ストリームを送信する方法] という HOWTO がわざわざ公開されているところを見ると 0x00 以降を無視してしまうというのはバグだったのかもしれません（いや、仕様かも）。
+
+
+要は:
+- xyzzy のバグで 0x00 が付くが、
+- Msxml2.XMLHTTP のバグ(?) で 0x00 以降は無視される
+
+
+ためバグとバグのシナジー効果により奇跡的に動いています。
+
+
+**まとめ
+
+xyzzy 0.2.2.235 で ole-method に文字列を渡すときは気を付けましょう。

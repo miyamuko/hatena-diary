@@ -1,0 +1,147 @@
+
+*p1*[Hibernate] Hibernate の参考資料
+
+会社の人に Hibernate の資料はどこを読んでると聞かれて、
+id:koichik さんの Hibernate 入門記を読んで勉強しましたとは答えられず、
+思わずオフィシャルのチュートリアルを読みましたと答えてしまいました。
+
+
+いや、だってサンプルコードが・・・
+
+
+ごめんなさい。ごめんなさい。ごめんなさい。
+
+
+数少ない日本語の資料なのでありがたく読ませてもらってます。
+
+
+
+*p2*[xyzzy] フィジカルを鍛える練習問題：二分探索木
+
+><blockquote cite="http://d.hatena.ne.jp/hyuki/20050817#tree" title="フィジカルを鍛える練習問題：二分探索木">
+<p>
+問題: 二分探索木(binary search tree)を処理するプログラムを書け。
+</p>
+
+<p>
+条件: 節（ノード）の挿入と削除の処理は必須とする（特に削除が重要）。
+</p>
+</blockquote><
+
+とりあえずノードは以下のような list であらわす。
+
+>|
+&#39;(node left right)
+|<
+
+入れれるデータは文字列のみにして、バランスさせることなんて気にしないようにしてサボってみる。
+
+で、こんなかんじ。
+
+><pre class="source">
+&#40;<span class="keyword1">[]defmacro[]</span>[] btree&#45;insert &#40;tree data&#41;[]
+[]  `&#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;node &#40;[]<span class="keyword1">[]car[]</span>[] ,tree&#41;&#41;&#41;[]
+[]     &#40;[]<span class="keyword1">[]cond[]</span>[] &#40;&#40;[]<span class="keyword1">[]not[]</span>[] &#40;[]<span class="keyword1">[]listp[]</span>[] ,data&#41;&#41;[]
+[]            []<span class="comment">[];; &#40;btree&#45;insert tree "hoge"&#41; => &#40;btree&#45;insert tree &#40;list "hoge" nil nil&#41;&#41;[]
+</span>[]            &#40;btree&#45;insert ,tree &#40;[]<span class="keyword1">[]list[]</span>[] ,data []<span class="keyword3">[]nil[]</span>[] []<span class="keyword3">[]nil[]</span>[]&#41;&#41;&#41;[]
+[]           &#40;&#40;[]<span class="keyword1">[]null[]</span>[] node&#41;[]
+[]            &#40;[]<span class="keyword1">[]setf[]</span>[] ,tree ,data&#41;&#41;[]
+[]           &#40;&#40;[]<span class="keyword1">[]string=[]</span>[] &#40;[]<span class="keyword1">[]car[]</span>[] ,data&#41; node&#41;[]
+[]            []<span class="comment">[];; 同じデータは入れない[]
+</span>[]            []<span class="keyword3">[]nil[]</span>&#41;
+[]           &#40;&#40;[]<span class="keyword1">[]string<[]</span>[] &#40;[]<span class="keyword1">[]car[]</span>[] ,data&#41; node&#41;[]
+[]            &#40;btree&#45;insert &#40;[]<span class="keyword1">[]cadr[]</span>[] ,tree&#41; ,data&#41;&#41;[]
+[]           &#40;&#40;[]<span class="keyword1">[]string>[]</span>[] &#40;[]<span class="keyword1">[]car[]</span>[] ,data&#41; node&#41;[]
+[]            &#40;btree&#45;insert &#40;[]<span class="keyword1">[]caddr[]</span>[] ,tree&#41; ,data&#41;&#41;&#41;&#41;&#41;[]
+
+&#40;<span class="keyword1">[]defmacro[]</span>[] btree&#45;remove &#40;tree data&#41;[]
+[]  `&#40;[]<span class="keyword1">[]let[]</span>[] &#40;&#40;node &#40;[]<span class="keyword1">[]car[]</span>[] ,tree&#41;&#41;&#41;[]
+[]     &#40;[]<span class="keyword1">[]cond[]</span>[] &#40;&#40;[]<span class="keyword1">[]null[]</span>[] node&#41;[]
+[]            []<span class="keyword3">[]nil[]</span>&#41;
+[]           &#40;&#40;[]<span class="keyword1">[]string=[]</span>[] node ,data&#41;[]
+[]            &#40;btree&#45;insert &#40;[]<span class="keyword1">[]cadr[]</span>[] ,tree&#41; &#40;[]<span class="keyword1">[]caddr[]</span>[] ,tree&#41;&#41;[]
+[]            &#40;[]<span class="keyword1">[]setf[]</span>[] ,tree &#40;[]<span class="keyword1">[]cadr[]</span>[] ,tree&#41;&#41;&#41;[]
+[]           &#40;&#40;[]<span class="keyword1">[]string<[]</span>[] ,data node&#41;[]
+[]            &#40;btree&#45;remove &#40;[]<span class="keyword1">[]cadr[]</span>[] ,tree&#41; ,data&#41;&#41;[]
+[]           &#40;&#40;[]<span class="keyword1">[]string>[]</span>[] ,data node&#41;[]
+[]            &#40;btree&#45;remove &#40;[]<span class="keyword1">[]caddr[]</span>[] ,tree&#41; ,data&#41;&#41;&#41;&#41;&#41;[]
+</pre><
+
+テスト用。
+
+><pre class="source">
+<span class="comment">[];; test[]
+</span>[]&#40;[]<span class="keyword1">[]let[]</span>[] &#40;tree&#41;[]
+[]  &#40;btree&#45;insert tree []<span class="string">[]"ccc"[]</span>[]&#41; &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]t[]</span>[] []<span class="string">[]"=> ~S~%"[]</span>[] tree&#41;[]
+[]  &#40;btree&#45;insert tree []<span class="string">[]"ccc"[]</span>[]&#41; &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]t[]</span>[] []<span class="string">[]"=> ~S~%"[]</span>[] tree&#41;[]
+[]  &#40;btree&#45;insert tree []<span class="string">[]"bbb"[]</span>[]&#41; &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]t[]</span>[] []<span class="string">[]"=> ~S~%"[]</span>[] tree&#41;[]
+[]  &#40;btree&#45;insert tree []<span class="string">[]"aaa"[]</span>[]&#41; &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]t[]</span>[] []<span class="string">[]"=> ~S~%"[]</span>[] tree&#41;[]
+[]  &#40;btree&#45;insert tree []<span class="string">[]"abb"[]</span>[]&#41; &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]t[]</span>[] []<span class="string">[]"=> ~S~%"[]</span>[] tree&#41;[]
+[]  &#40;btree&#45;remove tree []<span class="string">[]"abb"[]</span>[]&#41; &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]t[]</span>[] []<span class="string">[]"=> ~S~%"[]</span>[] tree&#41;[]
+[]  &#40;btree&#45;remove tree []<span class="string">[]"ddd"[]</span>[]&#41; &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]t[]</span>[] []<span class="string">[]"=> ~S~%"[]</span>[] tree&#41;[]
+[]  &#40;btree&#45;insert tree []<span class="string">[]"ddd"[]</span>[]&#41; &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]t[]</span>[] []<span class="string">[]"=> ~S~%"[]</span>[] tree&#41;[]
+[]  &#40;btree&#45;insert tree []<span class="string">[]"eee"[]</span>[]&#41; &#40;[]<span class="keyword1">[]format[]</span>[] []<span class="keyword3">[]t[]</span>[] []<span class="string">[]"=> ~S~%"[]</span>[] tree&#41;&#41;[]
+</pre><
+
+で、テストテスト。xyzzy の scratch バッファに貼り付けて Ctrl-j で評価する。
+
+><pre class="source">
+
+[]=> &#40;[]<span class="string">[]"ccc"[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="keyword3">[]nil[]</span>[]&#41;[]
+[]=> &#40;[]<span class="string">[]"ccc"[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="keyword3">[]nil[]</span>[]&#41;[]
+[]=> &#40;[]<span class="string">[]"ccc"[]</span>[] &#40;[]<span class="string">[]"bbb"[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="keyword3">[]nil[]</span>[]&#41; []<span class="keyword3">[]nil[]</span>[]&#41;[]
+[]=> &#40;[]<span class="string">[]"ccc"[]</span>[] &#40;[]<span class="string">[]"bbb"[]</span>[] &#40;[]<span class="string">[]"aaa"[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="keyword3">[]nil[]</span>[]&#41; []<span class="keyword3">[]nil[]</span>[]&#41; []<span class="keyword3">[]nil[]</span>[]&#41;[]
+[]=> &#40;[]<span class="string">[]"ccc"[]</span>[] &#40;[]<span class="string">[]"bbb"[]</span>[] &#40;[]<span class="string">[]"aaa"[]</span>[] []<span class="keyword3">[]nil[]</span>[] &#40;[]<span class="string">[]"abb"[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="keyword3">[]nil[]</span>[]&#41;&#41; []<span class="keyword3">[]nil[]</span>[]&#41; []<span class="keyword3">[]nil[]</span>[]&#41;[]
+[]=> &#40;[]<span class="string">[]"ccc"[]</span>[] &#40;[]<span class="string">[]"bbb"[]</span>[] &#40;[]<span class="string">[]"aaa"[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="keyword3">[]nil[]</span>[]&#41; []<span class="keyword3">[]nil[]</span>[]&#41; []<span class="keyword3">[]nil[]</span>[]&#41;[]
+[]=> &#40;[]<span class="string">[]"ccc"[]</span>[] &#40;[]<span class="string">[]"bbb"[]</span>[] &#40;[]<span class="string">[]"aaa"[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="keyword3">[]nil[]</span>[]&#41; []<span class="keyword3">[]nil[]</span>[]&#41; []<span class="keyword3">[]nil[]</span>[]&#41;[]
+[]=> &#40;[]<span class="string">[]"ccc"[]</span>[] &#40;[]<span class="string">[]"bbb"[]</span>[] &#40;[]<span class="string">[]"aaa"[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="keyword3">[]nil[]</span>[]&#41; []<span class="keyword3">[]nil[]</span>[]&#41; &#40;[]<span class="string">[]"ddd"[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="keyword3">[]nil[]</span>[]&#41;&#41;[]
+[]=> &#40;[]<span class="string">[]"ccc"[]</span>[] &#40;[]<span class="string">[]"bbb"[]</span>[] &#40;[]<span class="string">[]"aaa"[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="keyword3">[]nil[]</span>[]&#41; []<span class="keyword3">[]nil[]</span>[]&#41; &#40;[]<span class="string">[]"ddd"[]</span>[] []<span class="keyword3">[]nil[]</span>[] &#40;[]<span class="string">[]"eee"[]</span>[] []<span class="keyword3">[]nil[]</span>[] []<span class="keyword3">[]nil[]</span>[]&#41;&#41;&#41;[]
+</pre><
+
+最後の結果をインデントしてみるとこんな感じ。
+
+><pre class="source">
+[]&#40;[]<span class="string">[]"ccc"[]</span>
+[] &#40;[]<span class="string">[]"bbb"[]</span>
+[]  &#40;[]<span class="string">[]"aaa"[]</span>
+[]   []<span class="keyword3">[]nil[]</span>
+[]   []<span class="keyword3">[]nil[]</span>[]&#41;[]
+[]  []<span class="keyword3">[]nil[]</span>[]&#41;[]
+[] &#40;[]<span class="string">[]"ddd"[]</span>
+[]  []<span class="keyword3">[]nil[]</span>
+[]  &#40;[]<span class="string">[]"eee"[]</span>
+[]   []<span class="keyword3">[]nil[]</span>
+[]   []<span class="keyword3">[]nil[]</span>[]&#41;&#41;&#41;[]
+
+</pre><
+
+感想。
+
+ハッシュだリストだ正規表現だなどと便利なライブラリに囲まれて、甘やかされて育った身としては大変でした。
+
+でも、いい現実逃^H^H^H 勉強になりました。
+
+
+
+*p3*[xyzzy] フィジカルを鍛える練習問題：3 目並べ
+
+><blockquote cite="http://d.hatena.ne.jp/nowokay/20050816#1124180870" title="フィジカルを鍛える練習問題">
+<p>問題：コンピュータ対戦3目並べを作れ。</p>
+
+<p>条件：コンピュータが先行になったとき、コンピュータは負けてはいけない。</p>
+
+<p>とか。</p>
+</blockquote><
+
+
+
+
+M-x gomoku
+
+
+
+
+
+
+ちぇっ、3 目か。
+

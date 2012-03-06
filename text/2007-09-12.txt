@@ -1,0 +1,118 @@
+
+*trac_edge_on_windows2*[Trac]Trac 0.11 の trunk を Windows で 本当に インストールせずに動かす方法
+
+>http://d.hatena.ne.jp/miyamuko/20070911/trac_edge_on_windows:title>
+**trac trunk をテスト環境にインストール
+
+trunk を checkout して test\trac ディレクトリに trac をインストールします。
+
+修正するたびに python setup.py install --root test --prefix=trac を実行しないといけないのがいけてないところです。
+<<
+
+こんな面倒なことはしなくてよかったです。。。
+以下のようなバッチファイルを Trac の working copy 直下に置いて実行すれば、インストールはまったくせずに Trac を起動してテストできます。
+
+working copy 直下以外に置く場合は WC_ROOT を適当に書き換えてください。
+
+
+**tracd.bat
+
+>|dosbatch|
+@echo off
+@setlocal
+
+set WC_ROOT=%~dp0
+set PYTHONPATH=%WC_ROOT%
+python %WC_ROOT%/trac/web/standalone.py %*
+||<
+
+
+**trac-admin.bat
+
+>|dosbatch|
+@echo off
+@setlocal
+
+set WC_ROOT=%~dp0
+set PYTHONPATH=%WC_ROOT%
+python %WC_ROOT%/trac/admin/console.py %*
+||<
+
+
+
+
+Linux でも似たようなシェルスクリプトを書けばいいと思います。
+私はシェルスクリプトを書いたことがない世代なのでよく分からないですが。
+
+
+
+
+*trac_edge_helper_script*[Trac]Trac の trunk をテストするときに便利なバッチファイル
+
+ついでに Trac の trunk をテストするときによく使う処理をまとめたバッチファイルも作りました。
+
+**mytracd.bat
+
+test/projects に作った全プロジェクトを閲覧する tracd を起動するバッチファイル。
+trac のソースを編集したら tracd が再起動するように -r を指定。
+
+>|dosbatch|
+@echo off
+@setlocal
+
+set BASE=%~dp0
+set ENVDIR=%BASE%\test
+set PROJDIR=%ENVDIR%\projects
+@tracd.bat -r -e %PROJDIR% %*
+||<
+
+
+**myinitenv.bat
+
+テスト用の Trac 環境を作るバッチファイル。
+以下のコマンドを実行します。
+
++ svnadmin create
++ trac-admin initenv
++ svn co
+
+>|dosbatch|
+@echo off
+@setlocal
+
+if "%1"=="" (goto usage) else (goto run)
+
+:usage
+echo Usage: %0 PROJECTNAME
+goto end
+
+:run
+set BASE=%~dp0
+set ENVDIR=%BASE%\test
+set PROJDIR=%ENVDIR%\projects
+set REPODIR=%ENVDIR%\repos
+set WCDIR=%ENVDIR%\wc
+
+set NAME=%1
+set PROJ=%PROJDIR%\%NAME%
+set REPO=%REPODIR%\%NAME%
+set WC=%WCDIR%\%NAME%
+
+set DB=sqlite:db/trac.db
+set SCM=svn
+
+if not exist %REPO% (
+  @echo create %REPO%
+  svnadmin create %REPO% || exit /b 1
+)
+
+call trac-admin.bat %PROJ% initenv "%NAME% project" %DB% %SCM% %REPO% || exit /b 2
+
+if not exist %WC% (
+  @echo checkout repo%WC%
+  svn co file:///%REPO:\=/% %WC% || exit 3
+)
+goto end
+
+:end
+||<
