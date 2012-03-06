@@ -63,12 +63,6 @@ task :touch,[:date] do |t,args|
   end
 end
 
-desc "プレビューサーバを起動します。"
-task :server,[:port] do |t,args|
-  require "hatena_preview_server"
-  HatenaPreviewServer.start("./text", args.port)
-end
-
 desc "更新されるファイル一覧を表示します。"
 task :status do
   touchdate = File.stat("./text/touch.txt").mtime
