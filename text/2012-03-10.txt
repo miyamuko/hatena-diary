@@ -24,7 +24,7 @@ git-merge-changelog を使うには設定が必要です。
 >||
 [merge "merge-changelog"]
 	name = GNU-style ChangeLog merge driver
-	driver = git-merge-changelog %O %A %B
+	driver = c:/path/to/git-merge-changelog.exe %O %A %B
 ||<
 
 
