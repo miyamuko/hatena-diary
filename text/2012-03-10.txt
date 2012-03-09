@@ -1,0 +1,45 @@
+
+*git_merge_changelog_for_windows*[Git] git-merge-changelog Windows binary
+
+
+コミットするたびに ChangeLog ファイルを更新するようなプロジェクトだと、merge や cherry-pick するたびに ChangeLog がコンフリクトして面倒です。
+
+こういう時は Gnulib に含まれる [http://git.savannah.gnu.org/gitweb/?p=gnulib.git;a=blob;f=lib/git-merge-changelog.c:title=git-merge-changelog] という GNU スタイルの ChangeLog 専用のマージドライバを使うことでコンフリクトせずにマージできます。
+
+というわけで、git-merge-changelog の Windows 用のバイナリをビルドして以下に置いておきました。
+
+
+
+https://github.com/downloads/miyamuko/git-merge-changelog-for-windows/git-merge-changelog.exe
+
+
+
+**設定
+
+git-merge-changelog を使うには設定が必要です。
+
+
+まず ~/.gitconfig に以下を追加。
+
+>||
+[merge "merge-changelog"]
+	name = GNU-style ChangeLog merge driver
+	driver = git-merge-changelog %O %A %B
+||<
+
+
+次に、ChangeLog ファイルごとに[http://progit.org/book/ja/ch7-2.html#id169:title=マージ戦略]を設定します。
+設定は開発者全員で共有したいならリポジトリ直下の .gitattributes に、自分一人で設定したいなら .git/info/attributes で行います。
+
+どちらかのファイルに以下の内容を書いてください (ChangeLog ファイルのファイル名が ChangeLog.txt の場合)。
+
+>||
+ChangeLog.txt merge=merge-changelog
+||<
+
+
+
+**参考
+
+- [http://progit.org/book/ja/ch7-2.html:title=Pro Git - Pro Git 7.2 Git のカスタマイズ Git の属性]
+- [http://d.hatena.ne.jp/nurse/20100413#1271129525:title=Ruby 開発者のための git 講座 - ChangeLog 編]
