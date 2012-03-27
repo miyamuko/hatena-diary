@@ -1,0 +1,50 @@
+
+*amazon*[xyzzy]アマゾン・アソシエイトID（アフィリエイト用のID）を含んだ商品URLを生成する xyzzy lisp
+
+>http://d.hatena.ne.jp/hyuki/20120326/amazon:title>
+アマゾン・アソシエイトID（アフィリエイト用のID）を含んだ商品URLを生成する秀丸マクロです。
+<<
+
+
+xyzzy lisp に移植してみました。
+
+>|lisp|
+;; amazon.l
+;; アマゾンの商品URLがクリップボードに入っている状態で起動すると、
+;; アソシエイトIDを含んだ商品URLを生成してxyzzyエディタに挿入するxyzzyマクロ。
+;; クリップボードのURLは http://…/dp/XXXXXXXXXX/… という形式を想定している。
+(defvar *amazon-affiliate-id* "hyuki-22")
+
+(defun amazon-affiliate-url-paste-from-clipboard ()
+  (interactive)
+  (let ((url (get-clipboard-data)))
+    (if (and url (string-match "/dp/\\([0-9a-fA-F]\\{,10\\}\\)" url))
+        (let ((asin (match-string 1)))
+          (insert
+           (format nil "http://www.amazon.co.jp/exec/obidos/ASIN/~A/~A/"
+                   asin *amazon-affiliate-id*)))
+      (plain-error "ERROR: /dp/XXXXXXXXXX/ is not found in clipboard"))))
+||<
+
+
+**インストール方法
+
+- 上記の amazon.l を site-lisp ディレクトリに入れる。
+- .xyzzy とかに(require "amazon")を書いておく。
+
+
+**実行方法
+
+- アマゾンの商品ページを開く。
+- URL をコピーする。
+- xyzzy 上で M-x amazon-affiliate-url-paste-from-clipboard
+
+
+**入力例：コピーした元URL（『数学ガール』の例）
+
+- http://www.amazon.co.jp/%E6%95%B0%E5%AD%A6%E3%82%AC%E3%83%BC%E3%83%AB-%E7%B5%90%E5%9F%8E-%E6%B5%A9/dp/4797341378
+
+
+**出力例：xyzzy にペーストされる文字列
+
+- http://www.amazon.co.jp/exec/obidos/ASIN/4797341378/hyuki-22/
