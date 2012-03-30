@@ -1,0 +1,24 @@
+
+*xl_pik*[xyzzy][xl-pik]xl-pik 1.0.0 リリース
+
+xyzzy 0.2.3.3 と 0.2.2.236 で念願の si:putenv を手に入れたので、xyzzy から Pik を使って Ruby を切り替える xl-pik をリリースしました。
+
+- http://miyamuko.s56.xrea.com/xyzzy/xl-pik/intro.htm
+- https://github.com/miyamuko/xl-pik
+
+
+
+xyzzy 0.2.2.235 では動作しないので以下の派生版のどちらかを利用してください。
+
+- [http://xyzzy-022.github.com:title=xyzzy 0.2.2.236 以降]
+- [https://bitbucket.org/mumurik/xyzzy/wiki/Home:title=xyzzy 0.2.3.3 以降]
+
+
+
+M-x pik-switch-dialog とかすると以下のような画面がでて切り替え可能です。
+
+[http://miyamuko.s56.xrea.com/xyzzy/images/pik-switch-dialog.png:image:w500]
+
+
+この xl-pik は 1 年半前に作ろうと思っていたのですが、0.2.2.235 では xyzzy の環境変数を設定することができなくて挫折したものです (id:miyamuko:20100910 参照)。
+ようやくリリースすることが出来ました。
