@@ -1,0 +1,28 @@
+
+*[Git]Couldn't resolve proxy '(null)' while accessing http://github.com/your/repos.git/info/refs
+
+MsysGit 1.7.10 にアップデートしたら以下のようなエラーが出るようになった。
+
+>||
+> git pull
+Couldn't resolve proxy '(null)' while accessing http://github.com/your/repos.git/info/refs
+fatal: HTTP request failed
+||<
+
+
+原因は http.proxy の設定ミスで、「http://」を頭につけていなかったため。
+
+>||
+> git config -l | grep proxy
+http.proxy=proxy.example.com:8080
+||<
+
+
+1.7.9 までは先頭に「http://」がなくても動作していたが、1.7.10 からは「http://」を付けないとエラーになるみたい。
+
+
+というわけで以下で解決。
+
+>||
+> git config http.proxy http://proxy.example.com:8080
+||<
